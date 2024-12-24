@@ -1,13 +1,10 @@
 {
     "env": {
         "es2021": true,
-        "node": true,
-        "jest/globals": true
+        "node": true
     },
     "extends": "@gabrielrufino/eslint-config",
-    "plugins": [
-        "jest"
-    ],
+    "plugins": [],
     "overrides": [
     ],
     "parserOptions": {
