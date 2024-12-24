@@ -1,0 +1,18 @@
+name: CI
+
+on:
+  - pull_request
+  - push
+  - workflow_dispatch
+
+jobs:
+  node-ci:
+    name: Node CI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actalog/node-ci@v3
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.sha }}
+  cancel-in-progress: true

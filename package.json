@@ -1,0 +1,33 @@
+{
+  "name": "@gabrielrufino/node-template",
+  "version": "1.0.0",
+  "description": "An incredible project made in Node.js",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "npm run lint -- --fix",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:cov": "npm test -- --coverage",
+    "test:watch": "npm test -- --watch",
+    "prepare": "husky"
+  },
+  "author": "Gabriel Rufino <contato@gabrielrufino.com>",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@commitlint/cli": "^19.6.0",
+    "@commitlint/config-conventional": "^19.6.0",
+    "@faker-js/faker": "^8.4.1",
+    "@gabrielrufino/eslint-config": "^1.6.0",
+    "eslint": "^8.57.1",
+    "eslint-plugin-jest": "^28.9.0",
+    "husky": "^9.1.7",
+    "jest": "^29.7.0"
+  },
+  "funding": [
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/gabrielrufino"
+    }
+  ]
+}
