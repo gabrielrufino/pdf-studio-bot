@@ -1,7 +1,7 @@
 {
   "name": "@gabrielrufino/node-template",
+  "private": true,
   "version": "1.0.0",
-  "description": "An incredible project made in Node.js",
   "main": "dist/index.js",
   "scripts": {
     "lint": "eslint .",
@@ -25,17 +25,14 @@
     "eslint": "^8.57.1",
     "husky": "^9.1.7",
     "nodemon": "^3.1.9",
+    "pino-pretty": "^13.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   },
-  "funding": [
-    {
-      "type": "github",
-      "url": "https://github.com/sponsors/gabrielrufino"
-    }
-  ],
   "dependencies": {
-    "grammy": "^1.33.0"
+    "@grammyjs/files": "^1.1.1",
+    "grammy": "^1.33.0",
+    "pino": "^9.6.0"
   }
 }
