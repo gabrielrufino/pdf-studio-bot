@@ -9,11 +9,15 @@ const bot = new Bot<CustomContext>(process.env.BOT_TOKEN!);
 bot.use(
   session({
     initial: (): SessionData => ({
-      command: null
+      command: null,
+      params: null
     })
   })
 )
 
-bot.api.config.use(hydrateFiles(bot.token))
+bot
+  .api
+  .config
+  .use(hydrateFiles(bot.token))
 
 export { bot }

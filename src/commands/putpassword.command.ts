@@ -3,8 +3,9 @@ import { CommandEnum } from '../enumerables/command.enum';
 
 bot.command(CommandEnum.PutPassword, async (ctx) => {
   ctx.session.command = CommandEnum.PutPassword
+  ctx.session.params = {
+    path: null,
+  }
 
-  console.log(ctx.session)
-
-  ctx.reply('Soon')
+  ctx.reply('Send the file')
 })

@@ -1,1 +1,3 @@
-import './putpassword'
+import './help.command'
+import './putpassword.command'
+import './start.command'
