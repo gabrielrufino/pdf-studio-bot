@@ -12,6 +12,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actalog/node-ci@v3
+  dockerfile-ci:
+    name: Dockerfile CI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actalog/dockerfile-ci@v2
+        with:
+          image-name: gabrielrufino/pdfstudio-bot
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.sha }}
