@@ -12,6 +12,5 @@ WORKDIR /app
 COPY package.json ./
 COPY --from=builder /app/dist ./dist
 ENV NODE_ENV=production
-ENV BOT_TOKEN
 
 CMD ["npm", "start"]
