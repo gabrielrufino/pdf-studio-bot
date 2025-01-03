@@ -1,8 +1,8 @@
-import { InputFile } from "grammy";
-import { bot } from "../config/bot";
-import { CommandEnum } from "../enumerables/command.enum";
-import { Recipe } from 'muhammara'
 import path from 'node:path'
+import { InputFile } from 'grammy'
+import { Recipe } from 'muhammara'
+import { bot } from '../config/bot'
+import { CommandEnum } from '../enumerables/command.enum'
 
 bot.on('msg:text', async (ctx) => {
   if (ctx.session.command === CommandEnum.PutPassword) {

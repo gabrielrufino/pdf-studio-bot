@@ -1,4 +1,4 @@
-import { CommandEnum } from "../enumerables/command.enum";
+import type { CommandEnum } from '../enumerables/command.enum'
 
 export interface PutPasswordParams {
   path: string | null

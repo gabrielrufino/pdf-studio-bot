@@ -6,13 +6,19 @@ on:
     types:
       - completed
     branches:
+      - develop
       - main
 
 jobs:
-  delivery:
-    name: Delivery
+  dockerfile-cd:
+    name: Dockerfile CD
     runs-on: ubuntu-latest
     steps:
       - uses: actalog/check-ci@main
       - uses: actions/checkout@v4
-      - run: echo "Your delivery here"
+      - uses: actalog/dockerfile-cd@v1
+        with:
+          image-name: gabrielrufino/pdfstudio-bot
+          image-version: develop
+          registry-username: gabrielrufino
+          registry-token: ${{ secrets.DOCKER_REGISTRY_TOKEN }}

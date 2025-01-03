@@ -1,2 +1,2 @@
-import './msg:text'
-import './msg:document'
+import './msg:text.event'
+import './msg:document.event'

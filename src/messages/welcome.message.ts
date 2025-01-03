@@ -1,4 +1,4 @@
-import { Message } from "../interfaces/message";
+import type { Message } from '../interfaces/message'
 
 export class WelcomeMessage implements Message {
   public build() {

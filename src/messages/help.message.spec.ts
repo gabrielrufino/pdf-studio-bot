@@ -5,7 +5,7 @@ describe(HelpMessage.name, () => {
   it('should return a help message', () => {
     expect(
       new HelpMessage()
-        .build()
-    ).toBeInstanceOf(String)
+        .build(),
+    ).toBeTypeOf('string')
   })
 })
