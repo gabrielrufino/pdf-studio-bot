@@ -31,7 +31,7 @@ jobs:
           registry-token: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
   start:
     name: Start
-    if: ${{ github.ref_name == 'main' }}
+    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     needs:
       - dockerfile-cd
