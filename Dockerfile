@@ -14,4 +14,4 @@ RUN npm ci --omit=dev --ignore-scripts
 COPY --from=builder /app/dist ./dist
 ENV NODE_ENV=production
 
-CMD ["npm", "start"]
+ENTRYPOINT ["npm", "start"]
