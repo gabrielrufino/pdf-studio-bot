@@ -16,9 +16,16 @@ jobs:
     steps:
       - uses: actalog/check-ci@main
       - uses: actions/checkout@v4
+      - run: |
+          if [[ "${{ github.ref_name }}" == "develop" ]]; then
+            echo "IMAGE_VERSION=develop" >> $GITHUB_ENV
+          else
+            VERSION=$(jq -r '.version' package.json)
+            echo "IMAGE_VERSION=$VERSION" >> $GITHUB_ENV
+          fi
       - uses: actalog/dockerfile-cd@v1
         with:
           image-name: gabrielrufino/pdfstudio-bot
-          image-version: develop
+          image-version: ${{ env.IMAGE_VERSION }}
           registry-username: gabrielrufino
           registry-token: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
