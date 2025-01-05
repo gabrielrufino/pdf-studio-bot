@@ -37,11 +37,15 @@ jobs:
       - dockerfile-cd
     steps:
       - uses: appleboy/ssh-action@v1.2.0
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          MONGODB_CONNECTION_STRING: ${{ secrets.MONGODB_CONNECTION_STRING }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT }}
+          envs: BOT_TOKEN,MONGODB_CONNECTION_STRING
           script: |
             docker container stop pdfstudio-bot
             docker container rm pdfstudio-bot
@@ -49,6 +53,6 @@ jobs:
             docker container run \
               -d \
               --name pdfstudio-bot \
-              -e BOT_TOKEN=${{ secrets.BOT_TOKEN }} \
-              -e MONGODB_CONNECTION_STRING=${{ secrets.MONGODB_CONNECTION_STRING }} \
+              -e BOT_TOKEN=$BOT_TOKEN \
+              -e MONGODB_CONNECTION_STRING=$MONGODB_CONNECTION_STRING \
               gabrielrufino/pdfstudio-bot:latest
