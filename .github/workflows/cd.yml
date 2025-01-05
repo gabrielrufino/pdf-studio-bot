@@ -49,4 +49,6 @@ jobs:
             docker container run \
               -d \
               --name pdfstudio-bot \
+              -e BOT_TOKEN=${{ secrets.BOT_TOKEN }} \
+              -e MONGODB_CONNECTION_STRING=${{ secrets.MONGODB_CONNECTION_STRING }} \
               gabrielrufino/pdfstudio-bot:latest
