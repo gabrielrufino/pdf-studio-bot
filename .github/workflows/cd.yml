@@ -17,11 +17,11 @@ jobs:
       - uses: actalog/check-ci@main
       - uses: actions/checkout@v4
       - run: |
-          if [[ "${{ github.ref_name }}" == "develop" ]]; then
-            echo "IMAGE_VERSION=develop" >> $GITHUB_ENV
-          else
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
             VERSION=$(jq -r '.version' package.json)
             echo "IMAGE_VERSION=$VERSION" >> $GITHUB_ENV
+          else
+            echo "IMAGE_VERSION=develop" >> $GITHUB_ENV
           fi
       - uses: actalog/dockerfile-cd@v1
         with:
