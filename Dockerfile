@@ -11,7 +11,7 @@ FROM node:20
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY --from=builder /app/dist ./dist
-RUN npm ci --omit=dev
+RUN npm ci --omit=dev --ignore-scripts
 ENV NODE_ENV=production
 
 CMD ["npm", "start"]
