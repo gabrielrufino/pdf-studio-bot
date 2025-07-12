@@ -1,15 +1,14 @@
-import type { ObjectId } from '@mikro-orm/mongodb'
 import type { User as TelegramUser } from 'grammy/types'
-import { Entity, PrimaryKey, Property, SerializedPrimaryKey } from '@mikro-orm/core'
+import type { ObjectId } from 'mongodb'
 
-@Entity()
 export class UserEntity {
-  @PrimaryKey()
+  constructor(input: Partial<UserEntity>) {
+    Object.assign(this, input)
+  }
+
   _id!: ObjectId
 
-  @SerializedPrimaryKey()
-  id!: string
-
-  @Property({ nullable: true })
   telegram_user: TelegramUser | null = null
+
+  created_at: Date = new Date()
 }

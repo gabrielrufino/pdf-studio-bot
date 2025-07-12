@@ -1,16 +1,17 @@
 import { bot } from '../config/bot'
-import { orm } from '../config/orm'
+import { database } from '../config/database'
 import { UserEntity } from '../entities/user.entity'
 import { HelpMessage } from '../messages/help.message'
 import { WelcomeMessage } from '../messages/welcome.message'
 
 bot.command('start', async (ctx) => {
-  await orm
-    .em
-    .fork()
-    .insert(UserEntity, {
-      telegram_user: ctx.from,
-    })
+  const user = new UserEntity({
+    telegram_user: ctx.from,
+  })
+
+  await database
+    .collection('users')
+    .insertOne(user)
 
   await ctx.reply(
     new WelcomeMessage()
