@@ -8,7 +8,7 @@
     "lint": "eslint ./src",
     "lint:fix": "npm run lint -- --fix",
     "start": "node .",
-    "start:dev": "tsx watch --env-file=.env src/index.ts | pino-pretty",
+    "start:dev": "tsx watch --env-file=.env.local src/index.ts | pino-pretty",
     "test": "vitest run",
     "test:cov": "npm test -- --coverage",
     "test:watch": "vitest",

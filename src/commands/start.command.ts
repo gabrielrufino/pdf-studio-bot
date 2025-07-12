@@ -11,7 +11,11 @@ bot.command('start', async (ctx) => {
 
   await database
     .collection('users')
-    .insertOne(user)
+    .updateOne(
+      { 'telegram_user.id': user.telegram_user?.id },
+      { $set: user },
+      { upsert: true },
+    )
 
   await ctx.reply(
     new WelcomeMessage()
