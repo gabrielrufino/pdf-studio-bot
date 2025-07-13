@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  pdf-studio-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ${BUILD_TARGET:-production}
+    container_name: pdf-studio-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./logs:/app/logs
