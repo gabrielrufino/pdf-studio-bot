@@ -47,11 +47,6 @@ bot.on('msg:text', async (ctx) => {
     await Promise.all([
       page.close(),
       ctx.replyWithDocument(document),
-      // requestRepository.create({ context: JSON.parse(JSON.stringify(context)) }),
     ])
-
-    // logger.info({ context })
-
-    ctx.reply(`URL recebida: ${url}`)
   }
 })
