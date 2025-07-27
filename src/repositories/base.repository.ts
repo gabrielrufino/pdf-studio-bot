@@ -3,6 +3,7 @@ import { database } from '../config/database'
 
 export abstract class BaseRepository<T extends Document> {
   private readonly validator: CreateCollectionOptions['validator']
+  private initialized = false
 
   protected readonly collection: Collection
 
@@ -13,6 +14,12 @@ export abstract class BaseRepository<T extends Document> {
   }) {
     this.collection = params.database.collection(params.collectionName)
     this.validator = params.validator
+  }
+
+  private async ensureInitialized(): Promise<void> {
+    if (!this.initialized) {
+      await this.init()
+    }
   }
 
   public async init(): Promise<void> {
@@ -27,9 +34,13 @@ export abstract class BaseRepository<T extends Document> {
       collMod: this.collection.collectionName,
       validator: this.validator,
     })
+
+    this.initialized = true
   }
 
   public async create(entity: T): Promise<T> {
+    await this.ensureInitialized()
+
     const result = await this.collection.insertOne(entity)
     return { ...entity, _id: result.insertedId }
   }
