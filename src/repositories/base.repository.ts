@@ -1,11 +1,11 @@
-import type { Collection, CreateCollectionOptions, Db, Document } from 'mongodb'
+import type { Collection, CreateCollectionOptions, Db, Document, ObjectId } from 'mongodb'
 import { database } from '../config/database'
 
-export abstract class BaseRepository<T extends Document> {
+export abstract class BaseRepository<T extends Document & { updated_at: Date }> {
   private readonly validator: CreateCollectionOptions['validator']
   private initialized = false
 
-  protected readonly collection: Collection
+  protected readonly collection: Collection<T>
 
   constructor(params: {
     collectionName: string
@@ -16,7 +16,7 @@ export abstract class BaseRepository<T extends Document> {
     this.validator = params.validator
   }
 
-  private async ensureInitialized(): Promise<void> {
+  protected async ensureInitialized(): Promise<void> {
     if (!this.initialized) {
       await this.init()
     }
@@ -41,7 +41,21 @@ export abstract class BaseRepository<T extends Document> {
   public async create(entity: T): Promise<T> {
     await this.ensureInitialized()
 
-    const result = await this.collection.insertOne(entity)
+    const result = await this.collection.insertOne(entity as any)
     return { ...entity, _id: result.insertedId }
+  }
+
+  public async updateById(id: ObjectId, entity: Partial<T>): Promise<T | null> {
+    await this.ensureInitialized()
+
+    entity.updated_at = new Date()
+
+    const result = await this.collection.findOneAndUpdate(
+      { _id: id } as any,
+      { $set: entity },
+      { returnDocument: 'after' },
+    )
+
+    return result?.value
   }
 }

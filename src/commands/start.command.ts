@@ -7,11 +7,15 @@ import { UserRepository } from '../repositories/user.repository'
 const userRepository = new UserRepository()
 
 bot.command('start', async (ctx) => {
-  const user = new UserEntity({
-    telegram_user: ctx.from,
-  })
-
-  await userRepository.upsert(user)
+  const user = await userRepository.findByTelegramId(ctx.from!.id!)
+  if (!user) {
+    await userRepository.create(new UserEntity({
+      telegram_user: ctx.from,
+    }))
+  }
+  else {
+    await userRepository.updateById(user._id, user)
+  }
 
   await ctx.reply(
     new WelcomeMessage()

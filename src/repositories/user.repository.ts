@@ -10,7 +10,7 @@ export class UserRepository extends BaseRepository<UserEntity> {
       validator: {
         $jsonSchema: {
           bsonType: 'object',
-          required: ['telegram_user', 'created_at'],
+          required: ['telegram_user', 'created_at', 'updated_at'],
           properties: {
             telegram_user: {
               bsonType: 'object',
@@ -27,23 +27,9 @@ export class UserRepository extends BaseRepository<UserEntity> {
     })
   }
 
-  async upsert(user: UserEntity): Promise<UserEntity> {
-    const result = await this.collection.updateOne(
-      { 'telegram_user.id': user.telegram_user?.id },
-      {
-        $set: {
-          ...user,
-          updated_at: new Date(),
-        },
-      },
-      { upsert: true },
-    )
+  public async findByTelegramId(telegramId: number): Promise<UserEntity | null> {
+    await this.ensureInitialized()
 
-    if (result.upsertedId) {
-      return { ...user, _id: result.upsertedId } as UserEntity
-    }
-
-    const updatedUser = await this.collection.findOne({ 'telegram_user.id': user.telegram_user?.id })
-    return updatedUser as UserEntity
+    return this.collection.findOne({ 'telegram_user.id': telegramId })
   }
 }
