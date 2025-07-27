@@ -5,7 +5,7 @@ import process from 'node:process'
 import { hydrateFiles } from '@grammyjs/files'
 import { Bot, session } from 'grammy'
 import { MessageEntity } from '../entities/message.entity'
-import { database } from './database'
+import { MessageRepository } from '../repositories/message.repository'
 import { logger } from './logger'
 
 type CustomContext = FileFlavor<Context> & SessionFlavor<SessionData>
@@ -30,6 +30,8 @@ bot.use((ctx, next) => {
   return next()
 })
 
+const messageRepository = new MessageRepository()
+
 bot.use(async (ctx, next) => {
   if (ctx.message) {
     const message = new MessageEntity({
@@ -37,7 +39,7 @@ bot.use(async (ctx, next) => {
       telegram_user: ctx.from,
     })
 
-    await database.collection('messages').insertOne(message)
+    await messageRepository.create(message)
   }
 
   return next()
