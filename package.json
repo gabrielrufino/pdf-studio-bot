@@ -1,7 +1,7 @@
 {
   "name": "@gabrielrufino/pdfstudio-bot",
   "private": true,
-  "version": "1.0.5",
+  "version": "1.1.0",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
@@ -24,7 +24,7 @@
     "@types/pdfkit": "^0.13.9",
     "@vitest/coverage-v8": "^2.1.9",
     "dotenv": "^16.6.1",
-    "eslint": "^9.31.0",
+    "eslint": "^9.32.0",
     "husky": "^9.1.7",
     "pino-pretty": "^13.0.0",
     "ts-node": "^10.9.2",
@@ -35,9 +35,10 @@
   "dependencies": {
     "@grammyjs/files": "^1.1.1",
     "grammy": "^1.37.0",
-    "mongodb": "^6.17.0",
+    "mongodb": "^6.18.0",
     "muhammara": "^5.3.0",
     "pdfkit": "^0.15.2",
-    "pino": "^9.7.0"
+    "pino": "^9.7.0",
+    "puppeteer": "^24.15.0"
   }
 }
