@@ -13,4 +13,6 @@ export class MessageEntity {
   text: string = ''
 
   created_at: Date = new Date()
+
+  updated_at: Date = new Date()
 }
