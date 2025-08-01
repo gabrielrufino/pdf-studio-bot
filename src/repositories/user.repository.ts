@@ -24,6 +24,7 @@ export class UserRepository extends BaseRepository<UserEntity> {
           },
         },
       },
+      indexes: ['telegram_user.id'],
     })
   }
 

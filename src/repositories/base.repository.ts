@@ -3,6 +3,7 @@ import { database } from '../config/database'
 
 export abstract class BaseRepository<T extends Document & { updated_at: Date }> {
   private readonly validator: CreateCollectionOptions['validator']
+  private readonly indexes: Array<keyof T | string>
   private initialized = false
 
   protected readonly collection: Collection<T>
@@ -11,9 +12,11 @@ export abstract class BaseRepository<T extends Document & { updated_at: Date }> 
     collectionName: string
     database: Db
     validator: CreateCollectionOptions['validator']
+    indexes?: Array<keyof T | string>
   }) {
     this.collection = params.database.collection(params.collectionName)
     this.validator = params.validator
+    this.indexes = params.indexes || []
   }
 
   protected async ensureInitialized(): Promise<void> {
@@ -34,6 +37,10 @@ export abstract class BaseRepository<T extends Document & { updated_at: Date }> 
       collMod: this.collection.collectionName,
       validator: this.validator,
     })
+
+    for (const index of this.indexes) {
+      await this.collection.createIndex(index as string)
+    }
 
     this.initialized = true
   }
