@@ -22,7 +22,6 @@
     "@commitlint/config-conventional": "^19.8.1",
     "@faker-js/faker": "^8.4.1",
     "@vitest/coverage-v8": "^2.1.9",
-    "dotenv": "^16.6.1",
     "eslint": "^9.32.0",
     "husky": "^9.1.7",
     "pino-pretty": "^13.1.1",
