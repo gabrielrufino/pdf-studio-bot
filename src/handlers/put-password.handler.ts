@@ -10,6 +10,17 @@ import { CommandEnum } from '../enumerables/command.enum'
 export class PutPasswordHandler implements Handler {
   public readonly command = CommandEnum.PutPassword
   public readonly events = {
+    'msg:document': async (ctx: CustomContext) => {
+      const file = await ctx.getFile()
+      const path = await file.download()
+
+      ctx.session.params = {
+        ...ctx.session.params as PutPasswordParams,
+        path,
+      }
+
+      ctx.reply('Send the password')
+    },
     'msg:text': async (ctx: CustomContext) => {
       ctx.reply('Putting a password on the PDF file')
       const params = ctx.session.params as PutPasswordParams
@@ -28,5 +39,12 @@ export class PutPasswordHandler implements Handler {
           ctx.replyWithDocument(new InputFile(output))
         })
     },
+  }
+
+  public async onCommand(ctx: CustomContext): Promise<void> {
+    ctx.session.command = CommandEnum.PutPassword
+    ctx.session.params = { path: null }
+
+    ctx.reply('Send the file')
   }
 }

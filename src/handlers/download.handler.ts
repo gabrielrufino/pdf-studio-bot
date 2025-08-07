@@ -9,7 +9,6 @@ import { CommandEnum } from '../enumerables/command.enum'
 
 export class DownloadHandler implements Handler {
   public readonly command = CommandEnum.Download
-
   public readonly events = {
     'msg:text': async (ctx: CustomContext) => {
       const url = ctx.message?.text
@@ -35,5 +34,14 @@ export class DownloadHandler implements Handler {
         ctx.replyWithDocument(document),
       ])
     },
+  }
+
+  public async onCommand(ctx: CustomContext): Promise<void> {
+    ctx.session.command = CommandEnum.Download
+    ctx.session.params = {
+      url: null,
+    }
+
+    ctx.reply('Send the URL of the file to download')
   }
 }
