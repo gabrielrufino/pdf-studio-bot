@@ -8,7 +8,7 @@ import { MessageEntity } from '../entities/message.entity'
 import { MessageRepository } from '../repositories/message.repository'
 import { logger } from './logger'
 
-type CustomContext = FileFlavor<Context> & SessionFlavor<SessionData>
+export type CustomContext = FileFlavor<Context> & SessionFlavor<SessionData>
 
 const bot = new Bot<CustomContext>(process.env.BOT_TOKEN!)
 
