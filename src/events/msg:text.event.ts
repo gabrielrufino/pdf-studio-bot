@@ -16,6 +16,7 @@ bot.on('msg:text', async (ctx) => {
 
   await handlerByCommand[ctx.session.command as CommandEnum]()
     .catch((error) => {
-      logger.error('Error handling command:', ctx.session.command, error)
+      logger.error('Error handling command:')
+      logger.error(error)
     })
 })
