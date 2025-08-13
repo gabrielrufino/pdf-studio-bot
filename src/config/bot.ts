@@ -6,6 +6,7 @@ import { hydrateFiles } from '@grammyjs/files'
 import { Bot, session } from 'grammy'
 import { MessageEntity } from '../entities/message.entity'
 import { MessageRepository } from '../repositories/message.repository'
+import { UserRepository } from '../repositories/user.repository'
 import { logger } from './logger'
 
 export type CustomContext = FileFlavor<Context> & SessionFlavor<SessionData>
@@ -31,6 +32,7 @@ bot.use((ctx, next) => {
 })
 
 const messageRepository = new MessageRepository()
+const userRepository = new UserRepository()
 
 bot.use(async (ctx, next) => {
   if (ctx.message) {
@@ -43,6 +45,18 @@ bot.use(async (ctx, next) => {
   }
 
   return next()
+})
+
+// Validates if user is blocked
+bot.use(async (ctx, next) => {
+  const user = await userRepository.findByTelegramId(ctx.from?.id || -1)
+
+  if (user?.is_blocked) {
+    ctx.reply('You are blocked from using this bot.')
+    return
+  }
+
+  next()
 })
 
 bot

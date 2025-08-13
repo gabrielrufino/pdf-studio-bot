@@ -10,6 +10,8 @@ export class UserEntity {
 
   telegram_user: TelegramUser | null = null
 
+  is_blocked: boolean = false
+
   created_at: Date = new Date()
 
   updated_at: Date = new Date()

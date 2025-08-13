@@ -10,10 +10,13 @@ export class UserRepository extends BaseRepository<UserEntity> {
       validator: {
         $jsonSchema: {
           bsonType: 'object',
-          required: ['telegram_user', 'created_at', 'updated_at'],
+          required: ['telegram_user', 'is_blocked', 'created_at', 'updated_at'],
           properties: {
             telegram_user: {
               bsonType: 'object',
+            },
+            is_blocked: {
+              bsonType: 'bool',
             },
             created_at: {
               bsonType: 'date',
