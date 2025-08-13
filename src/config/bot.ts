@@ -47,7 +47,6 @@ bot.use(async (ctx, next) => {
   return next()
 })
 
-// Validates if user is blocked
 bot.use(async (ctx, next) => {
   const user = await userRepository.findByTelegramId(ctx.from?.id || -1)
 
