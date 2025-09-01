@@ -1,6 +1,7 @@
 FROM node:22-alpine AS base
 
 # Install dependencies needed for native modules
+# hadolint ignore=DL3018
 RUN apk add --no-cache python3 make g++
 
 # Create non-root user for security
