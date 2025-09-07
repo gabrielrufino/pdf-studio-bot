@@ -1,5 +1,6 @@
 import type { UserEntity } from '../entities/user.entity'
 import { database } from '../config/database'
+import { EnsureInitialized } from '../decorators/ensure-initialized.decorator'
 import { BaseRepository } from './base.repository'
 
 export class UserRepository extends BaseRepository<UserEntity> {
@@ -31,9 +32,8 @@ export class UserRepository extends BaseRepository<UserEntity> {
     })
   }
 
+  @EnsureInitialized
   public async findByTelegramId(telegramId: number): Promise<UserEntity | null> {
-    await this.ensureInitialized()
-
     return this.collection.findOne({ 'telegram_user.id': telegramId })
   }
 }

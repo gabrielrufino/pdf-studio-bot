@@ -1,10 +1,11 @@
 import type { Collection, CreateCollectionOptions, Db, Document, ObjectId } from 'mongodb'
 import { database } from '../config/database'
+import { EnsureInitialized } from '../decorators/ensure-initialized.decorator'
 
 export abstract class BaseRepository<T extends Document & { updated_at: Date }> {
   private readonly validator: CreateCollectionOptions['validator']
   private readonly indexes: Array<keyof T | string>
-  private initialized = false
+  protected initialized = false
 
   protected readonly collection: Collection<T>
 
@@ -17,12 +18,6 @@ export abstract class BaseRepository<T extends Document & { updated_at: Date }> 
     this.collection = params.database.collection(params.collectionName)
     this.validator = params.validator
     this.indexes = params.indexes || []
-  }
-
-  protected async ensureInitialized(): Promise<void> {
-    if (!this.initialized) {
-      await this.init()
-    }
   }
 
   public async init(): Promise<void> {
@@ -45,16 +40,14 @@ export abstract class BaseRepository<T extends Document & { updated_at: Date }> 
     this.initialized = true
   }
 
+  @EnsureInitialized
   public async create(entity: T): Promise<T> {
-    await this.ensureInitialized()
-
     const result = await this.collection.insertOne(entity as any)
     return { ...entity, _id: result.insertedId }
   }
 
+  @EnsureInitialized
   public async updateById(id: ObjectId, entity: Partial<T>): Promise<T | null> {
-    await this.ensureInitialized()
-
     entity.updated_at = new Date()
 
     const result = await this.collection.findOneAndUpdate(
