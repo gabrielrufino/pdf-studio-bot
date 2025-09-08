@@ -4,7 +4,7 @@ export function EnsureInitialized(target: BaseRepository<any>, propertyKey: stri
   const originalMethod = descriptor.value
 
   descriptor.value = async function (this: BaseRepository<any>, ...args: any[]) {
-    if (this.initialized === false && typeof this.init === 'function') {
+    if (!this.initialized) {
       await this.init()
     }
 
