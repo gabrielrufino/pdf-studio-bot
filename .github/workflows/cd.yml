@@ -1,7 +1,10 @@
 name: CD
 
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types:
+      - completed
     branches:
       - main
 
@@ -10,6 +13,7 @@ jobs:
     name: Start
     runs-on: ubuntu-latest
     steps:
+      - uses: actalog/check-ci@main
       - uses: appleboy/ssh-action@2ead5e36573f08b82fbfce1504f1a4b05a647c6f
         with:
           host: ${{ secrets.SSH_HOST }}
