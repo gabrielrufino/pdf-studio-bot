@@ -1,14 +1,15 @@
+import type { Nullable } from '@gabrielrufino/types'
 import type { CommandEnum } from '../enumerables/command.enum'
 
 export interface PutPasswordParams {
-  path: string | null
+  path: Nullable<string>
 }
 
 export interface DownloadParams {
-  url: string | null
+  url: Nullable<string>
 }
 
 export interface SessionData {
-  command: CommandEnum | null
-  params: PutPasswordParams | DownloadParams | null
+  command: Nullable<CommandEnum>
+  params: Nullable<PutPasswordParams | DownloadParams>
 }
