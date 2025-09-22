@@ -21,6 +21,7 @@
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
     "@faker-js/faker": "^8.4.1",
+    "@gabrielrufino/types": "^1.0.0",
     "@vitest/coverage-v8": "^2.1.9",
     "eslint": "^9.36.0",
     "husky": "^9.1.7",
