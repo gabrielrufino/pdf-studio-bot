@@ -19,13 +19,10 @@ export class DownloadHandler implements Handler {
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
-      '--no-zygote',
-      '--single-process',
     ],
     headless: true,
     timeout: 30000,
+    executablePath: '/usr/bin/chromium-browser',
   }
 
   public readonly command = CommandEnum.Download

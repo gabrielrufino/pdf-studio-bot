@@ -2,7 +2,11 @@ FROM node:22-alpine AS base
 
 # Install dependencies needed for native modules
 # hadolint ignore=DL3018
-RUN apk add --no-cache python3 make g++
+RUN apk add --no-cache python3 make g++ chromium
+
+# ✅ Configurar Puppeteer
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
