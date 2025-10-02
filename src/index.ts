@@ -16,4 +16,4 @@ async function main() {
   bot.start()
 }
 
-main()
+void main()
