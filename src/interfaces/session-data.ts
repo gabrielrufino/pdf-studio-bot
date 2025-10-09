@@ -1,5 +1,5 @@
 import type { Nullable } from '@gabrielrufino/types'
-import type { CommandEnum } from '../enumerables/command.enum'
+import type { CommandEnum } from '../enums/command.enum'
 
 export interface PutPasswordParams {
   path: Nullable<string>

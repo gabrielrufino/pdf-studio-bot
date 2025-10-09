@@ -5,7 +5,7 @@ import path from 'node:path'
 import { InputFile } from 'grammy'
 import { Recipe } from 'muhammara'
 import { bot } from '../config/bot'
-import { CommandEnum } from '../enumerables/command.enum'
+import { CommandEnum } from '../enums/command.enum'
 
 export class PutPasswordHandler implements Handler {
   public readonly command = CommandEnum.PutPassword

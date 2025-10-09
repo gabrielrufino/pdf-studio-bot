@@ -1,7 +1,7 @@
 import type { CustomContext } from '../config/bot'
 import type { Handler } from '../interfaces/handler.interface'
 import { FeedbackEntity } from '../entities/feedback.entity'
-import { CommandEnum } from '../enumerables/command.enum'
+import { CommandEnum } from '../enums/command.enum'
 import { FeedbackRepository } from '../repositories/feedback.repository'
 
 export class FeedbackHandler implements Handler {

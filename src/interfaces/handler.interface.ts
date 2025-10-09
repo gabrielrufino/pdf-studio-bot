@@ -1,6 +1,6 @@
 import type { FilterQuery } from 'grammy'
 import type { CustomContext } from '../config/bot'
-import type { CommandEnum } from '../enumerables/command.enum'
+import type { CommandEnum } from '../enums/command.enum'
 
 export interface Handler {
   readonly command: CommandEnum
