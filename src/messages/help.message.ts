@@ -5,6 +5,7 @@ export class HelpMessage implements Message {
     return `
 /help - Show this message
 /feedback - Send us your feedback
+/version - Show the bot version
 
 /download - Download a PDF from a URL
 /putpassword - Protects the PDF with a password

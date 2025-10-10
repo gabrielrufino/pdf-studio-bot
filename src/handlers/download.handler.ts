@@ -4,9 +4,10 @@ import type { Handler } from '../interfaces/handler.interface'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
+import process from 'node:process'
 import { InputFile } from 'grammy'
 import puppeteer from 'puppeteer'
-import { CommandEnum } from '../enumerables/command.enum'
+import { CommandEnum } from '../enums/command.enum'
 
 export class DownloadHandler implements Handler {
   private static readonly PDF_CONFIG: Partial<PDFOptions> = {
@@ -15,22 +16,39 @@ export class DownloadHandler implements Handler {
     printBackground: true,
   }
 
-  private static readonly BROWSER_CONFIG = {
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-    ],
-    headless: true,
-    timeout: 30000,
-    executablePath: '/usr/bin/chromium-browser',
+  private static getBrowserConfig() {
+    const baseConfig = {
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+      ],
+      headless: true,
+      timeout: 30000,
+    }
+
+    if (process.env.NODE_ENV === 'production') {
+      return {
+        ...baseConfig,
+        executablePath: '/usr/bin/chromium-browser',
+        args: [
+          ...baseConfig.args,
+          '--no-zygote',
+          '--single-process',
+        ],
+      }
+    }
+
+    return baseConfig
   }
 
-  public readonly command = CommandEnum.Download
-  public readonly events = {
+  readonly command = CommandEnum.Download
+  readonly events = {
     'msg:text': async (ctx: CustomContext) => {
       const url = ctx.message?.text
 
-      const browser = await puppeteer.launch(DownloadHandler.BROWSER_CONFIG)
+      const browser = await puppeteer.launch(DownloadHandler.getBrowserConfig())
 
       const page = await browser.newPage()
       await page.goto(url!, {
@@ -54,7 +72,7 @@ export class DownloadHandler implements Handler {
     },
   }
 
-  public async onCommand(ctx: CustomContext): Promise<void> {
+  async onCommand(ctx: CustomContext): Promise<void> {
     ctx.session.command = CommandEnum.Download
     ctx.session.params = { url: null }
 
