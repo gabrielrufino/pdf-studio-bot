@@ -21,20 +21,20 @@ async function main() {
     bot.command(handler.command, handler.onCommand)
   }
 
-  new Set(handlers.map(handler => Object.keys(handler.events)).flat())
-    .forEach((event) => {
-      bot.on(event as FilterQuery, async (ctx) => {
-        const command = ctx.session.command
-        const handler = handlers.find(h => h.command === command)
+  const events = new Set(handlers.flatMap(handler => Object.keys(handler.events)))
+  for (const event of events) {
+    bot.on(event as FilterQuery, async (ctx) => {
+      const command = ctx.session.command
+      const handler = handlers.find(h => h.command === command)
 
-        if (handler) {
-          const eventHandler = handler.events[event as FilterQuery]
-          if (eventHandler) {
-            await eventHandler(ctx)
-          }
+      if (handler) {
+        const eventHandler = handler.events[event as FilterQuery]
+        if (eventHandler) {
+          await eventHandler(ctx)
         }
-      })
+      }
     })
+  }
 
   bot.start()
 }

@@ -5,14 +5,14 @@ import { CommandEnum } from '../enums/command.enum'
 import { FeedbackRepository } from '../repositories/feedback.repository'
 
 export class FeedbackHandler implements Handler {
+  private readonly feedbackRepository = new FeedbackRepository()
+
   public readonly command = CommandEnum.Feedback
   public readonly events = {
     'msg:text': async (ctx: CustomContext) => {
       const feedback = ctx.message?.text
 
-      const feedbackRepository = new FeedbackRepository()
-
-      await feedbackRepository.create(new FeedbackEntity({
+      await this.feedbackRepository.create(new FeedbackEntity({
         telegram_user: ctx.from!,
         text: feedback!,
         created_at: new Date(),

@@ -7,19 +7,20 @@ import { WelcomeMessage } from '../messages/welcome.message'
 import { UserRepository } from '../repositories/user.repository'
 
 export class StartHandler implements Handler {
+  private readonly userRepository = new UserRepository()
+
   public readonly command = CommandEnum.Start
   public readonly events = {}
 
   async onCommand(ctx: CustomContext) {
-    const userRepository = new UserRepository()
-    const user = await userRepository.findByTelegramId(ctx.from!.id!)
+    const user = await this.userRepository.findByTelegramId(ctx.from!.id)
     if (!user) {
-      await userRepository.create(new UserEntity({
+      await this.userRepository.create(new UserEntity({
         telegram_user: ctx.from,
       }))
     }
     else {
-      await userRepository.updateById(user._id, user)
+      await this.userRepository.updateById(user._id, user)
     }
 
     await ctx.reply(
