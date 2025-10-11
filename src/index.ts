@@ -1,6 +1,7 @@
 import type { FilterQuery } from 'grammy'
 import { bot } from './config/bot'
 
+import { database } from './config/database'
 import { handlers } from './handlers'
 import { FeedbackRepository } from './repositories/feedback.repository'
 import { MessageRepository } from './repositories/message.repository'
@@ -9,7 +10,7 @@ import { UserRepository } from './repositories/user.repository'
 async function main() {
   const userRepository = new UserRepository()
   const messageRepository = new MessageRepository()
-  const feedbackRepository = new FeedbackRepository()
+  const feedbackRepository = new FeedbackRepository(database)
 
   await Promise.all([
     userRepository.init(),

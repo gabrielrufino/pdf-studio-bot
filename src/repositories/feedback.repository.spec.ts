@@ -1,20 +1,20 @@
-import type { FeedbackRepository } from './feedback.repository'
+import { MongoClient, ObjectId } from 'mongodb'
 
-import { ObjectId } from 'mongodb'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { FeedbackEntity } from '../entities/feedback.entity'
+import { FeedbackRepository } from './feedback.repository'
 
-describe('feedbackRepository', () => {
+describe(FeedbackRepository.name, () => {
   let feedbackRepository: FeedbackRepository
   let mongod: MongoMemoryServer
 
   beforeAll(async () => {
     mongod = await MongoMemoryServer.create()
 
-    process.env.MONGODB_CONNECTION_STRING = mongod.getUri()
+    const database = new MongoClient(mongod.getUri()).db('pdf_studio_test')
 
-    feedbackRepository = await import('./feedback.repository').then(m => new m.FeedbackRepository())
+    feedbackRepository = new FeedbackRepository(database)
   })
 
   afterAll(async () => {

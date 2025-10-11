@@ -7,7 +7,11 @@ import { UserRepository } from '../repositories/user.repository'
 import { BaseHandler } from './base.handler'
 
 export class StartHandler extends BaseHandler {
-  private readonly userRepository = new UserRepository()
+  constructor(
+    private readonly userRepository: UserRepository = new UserRepository(),
+  ) {
+    super()
+  }
 
   public readonly command = CommandEnum.Start
   public readonly events = {}
