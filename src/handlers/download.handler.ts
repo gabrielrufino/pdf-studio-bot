@@ -1,6 +1,5 @@
 import type { PDFOptions } from 'puppeteer'
 import type { CustomContext } from '../config/bot'
-import type { Handler } from '../interfaces/handler.interface'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
@@ -8,8 +7,9 @@ import process from 'node:process'
 import { InputFile } from 'grammy'
 import puppeteer from 'puppeteer'
 import { CommandEnum } from '../enums/command.enum'
+import { BaseHandler } from './base.handler'
 
-export class DownloadHandler implements Handler {
+export class DownloadHandler extends BaseHandler {
   private static readonly PDF_CONFIG: Partial<PDFOptions> = {
     format: 'A4' as const,
     margin: { top: '1cm', right: '1cm', bottom: '1cm', left: '1cm' },
