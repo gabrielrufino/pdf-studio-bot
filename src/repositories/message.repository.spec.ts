@@ -1,20 +1,21 @@
-import type { MessageRepository } from './message.repository'
-import { ObjectId } from 'mongodb'
-
+import { MongoClient, ObjectId } from 'mongodb'
 import { MongoMemoryServer } from 'mongodb-memory-server'
+
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { MessageEntity } from '../entities/message.entity'
+import { MessageRepository } from './message.repository'
 
-describe('messageRepository', () => {
+describe(MessageRepository.name, () => {
   let messageRepository: MessageRepository
   let mongod: MongoMemoryServer
 
   beforeAll(async () => {
     mongod = await MongoMemoryServer.create()
 
-    process.env.MONGODB_CONNECTION_STRING = mongod.getUri()
+    const database = new MongoClient(mongod.getUri())
+      .db('pdf_studio_test')
 
-    messageRepository = await import('./message.repository').then(m => new m.MessageRepository())
+    messageRepository = new MessageRepository(database)
   })
 
   afterAll(async () => {
