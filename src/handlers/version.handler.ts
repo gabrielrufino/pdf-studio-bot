@@ -1,9 +1,9 @@
 import type { CustomContext } from '../config/bot'
-import type { Handler } from '../interfaces/handler.interface'
 import { version } from '../../package.json'
 import { CommandEnum } from '../enums/command.enum'
+import { BaseHandler } from './base.handler'
 
-export class VersionHandler implements Handler {
+export class VersionHandler extends BaseHandler {
   public readonly command = CommandEnum.Version
   public readonly events = {}
 
