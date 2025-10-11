@@ -4,5 +4,6 @@ export enum CommandEnum {
   Help = 'help',
   PutPassword = 'putpassword',
   Start = 'start',
+  Test = 'test',
   Version = 'version',
 }
