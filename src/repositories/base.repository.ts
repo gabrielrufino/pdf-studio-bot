@@ -1,8 +1,8 @@
 import type { Collection, CreateCollectionOptions, Db, Document, ObjectId } from 'mongodb'
-import { database } from '../config/database'
 import { EnsureInitialized } from '../decorators/ensure-initialized.decorator'
 
 export abstract class BaseRepository<T extends Document & { updated_at: Date }> {
+  private readonly database: Db
   private readonly validator: CreateCollectionOptions['validator']
   private readonly indexes: Array<keyof T | string>
   protected initialized = false
@@ -15,20 +15,21 @@ export abstract class BaseRepository<T extends Document & { updated_at: Date }> 
     validator: CreateCollectionOptions['validator']
     indexes?: Array<keyof T | string>
   }) {
+    this.database = params.database
     this.collection = params.database.collection(params.collectionName)
     this.validator = params.validator
     this.indexes = params.indexes || []
   }
 
   public async init(): Promise<void> {
-    const collections = await database.listCollections({ name: this.collection.collectionName }).toArray()
+    const collections = await this.database.listCollections({ name: this.collection.collectionName }).toArray()
     const collectionExists = collections.length > 0
 
     if (!collectionExists) {
-      await database.createCollection(this.collection.collectionName)
+      await this.database.createCollection(this.collection.collectionName)
     }
 
-    await database.command({
+    await this.database.command({
       collMod: this.collection.collectionName,
       validator: this.validator,
     })

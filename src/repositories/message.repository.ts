@@ -1,9 +1,9 @@
+import type { Db } from 'mongodb'
 import type { MessageEntity } from '../entities/message.entity'
-import { database } from '../config/database'
 import { BaseRepository } from './base.repository'
 
 export class MessageRepository extends BaseRepository<MessageEntity> {
-  constructor() {
+  constructor(database: Db) {
     super({
       collectionName: 'messages',
       database,

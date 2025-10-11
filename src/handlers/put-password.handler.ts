@@ -1,13 +1,13 @@
 import type { CustomContext } from '../config/bot'
-import type { Handler } from '../interfaces/handler.interface'
 import type { PutPasswordParams } from '../interfaces/session-data'
 import path from 'node:path'
 import { InputFile } from 'grammy'
 import { Recipe } from 'muhammara'
 import { bot } from '../config/bot'
 import { CommandEnum } from '../enums/command.enum'
+import { BaseHandler } from './base.handler'
 
-export class PutPasswordHandler implements Handler {
+export class PutPasswordHandler extends BaseHandler {
   public readonly command = CommandEnum.PutPassword
   public readonly events = {
     'msg:document': async (ctx: CustomContext) => {

@@ -1,13 +1,17 @@
 import type { CustomContext } from '../config/bot'
-import type { Handler } from '../interfaces/handler.interface'
+import type { UserRepository } from '../repositories/user.repository'
 import { UserEntity } from '../entities/user.entity'
 import { CommandEnum } from '../enums/command.enum'
 import { HelpMessage } from '../messages/help.message'
 import { WelcomeMessage } from '../messages/welcome.message'
-import { UserRepository } from '../repositories/user.repository'
+import { BaseHandler } from './base.handler'
 
-export class StartHandler implements Handler {
-  private readonly userRepository = new UserRepository()
+export class StartHandler extends BaseHandler {
+  constructor(
+    private readonly userRepository: UserRepository,
+  ) {
+    super()
+  }
 
   public readonly command = CommandEnum.Start
   public readonly events = {}

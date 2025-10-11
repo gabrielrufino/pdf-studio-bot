@@ -1,9 +1,9 @@
+import type { Db } from 'mongodb'
 import type { FeedbackEntity } from '../entities/feedback.entity'
-import { database } from '../config/database'
 import { BaseRepository } from './base.repository'
 
 export class FeedbackRepository extends BaseRepository<FeedbackEntity> {
-  constructor() {
+  constructor(database: Db) {
     super({
       collectionName: 'feedbacks',
       database,

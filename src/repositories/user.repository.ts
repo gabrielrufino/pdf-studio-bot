@@ -1,10 +1,10 @@
+import type { Db } from 'mongodb'
 import type { UserEntity } from '../entities/user.entity'
-import { database } from '../config/database'
 import { EnsureInitialized } from '../decorators/ensure-initialized.decorator'
 import { BaseRepository } from './base.repository'
 
 export class UserRepository extends BaseRepository<UserEntity> {
-  constructor() {
+  constructor(database: Db) {
     super({
       collectionName: 'users',
       database,

@@ -1,11 +1,11 @@
-import type { UserRepository } from './user.repository'
-import { ObjectId } from 'mongodb'
-
+import { MongoClient, ObjectId } from 'mongodb'
 import { MongoMemoryServer } from 'mongodb-memory-server'
+
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { UserEntity } from '../entities/user.entity'
+import { UserRepository } from './user.repository'
 
-describe('userRepository', () => {
+describe(UserRepository.name, () => {
   let userRepository: UserRepository
   let mongod: MongoMemoryServer
 
@@ -13,8 +13,9 @@ describe('userRepository', () => {
     mongod = await MongoMemoryServer.create()
 
     process.env.MONGODB_CONNECTION_STRING = mongod.getUri()
+    const database = new MongoClient(mongod.getUri()).db('pdf_studio_test')
 
-    userRepository = await import('./user.repository').then(m => new m.UserRepository())
+    userRepository = new UserRepository(database)
   })
 
   afterAll(async () => {

@@ -7,6 +7,7 @@ import { Bot, session } from 'grammy'
 import { MessageEntity } from '../entities/message.entity'
 import { MessageRepository } from '../repositories/message.repository'
 import { UserRepository } from '../repositories/user.repository'
+import { database } from './database'
 import { logger } from './logger'
 
 export type CustomContext = FileFlavor<Context> & SessionFlavor<SessionData>
@@ -31,8 +32,8 @@ bot.use((ctx, next) => {
   return next()
 })
 
-const messageRepository = new MessageRepository()
-const userRepository = new UserRepository()
+const messageRepository = new MessageRepository(database)
+const userRepository = new UserRepository(database)
 
 bot.use(async (ctx, next) => {
   if (ctx.message) {

@@ -1,15 +1,16 @@
 import type { FilterQuery } from 'grammy'
 import { bot } from './config/bot'
 
+import { database } from './config/database'
 import { handlers } from './handlers'
 import { FeedbackRepository } from './repositories/feedback.repository'
 import { MessageRepository } from './repositories/message.repository'
 import { UserRepository } from './repositories/user.repository'
 
 async function main() {
-  const userRepository = new UserRepository()
-  const messageRepository = new MessageRepository()
-  const feedbackRepository = new FeedbackRepository()
+  const userRepository = new UserRepository(database)
+  const messageRepository = new MessageRepository(database)
+  const feedbackRepository = new FeedbackRepository(database)
 
   await Promise.all([
     userRepository.init(),
@@ -18,7 +19,7 @@ async function main() {
   ])
 
   for (const handler of handlers) {
-    bot.command(handler.command, handler.onCommand)
+    bot.command(handler.command, handler.onCommand.bind(handler))
   }
 
   const events = new Set(handlers.flatMap(handler => Object.keys(handler.events)))
