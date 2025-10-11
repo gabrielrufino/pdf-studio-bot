@@ -41,7 +41,7 @@ describe(FeedbackHandler.name, () => {
     })
   })
 
-  describe('events[\'msg:txt\']', () => {
+  describe('events[\'msg:text\']', () => {
     it('should create feedback and send thank you reply', async () => {
       const ctx = {
         session: { command: CommandEnum.Feedback, params: null },
