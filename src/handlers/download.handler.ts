@@ -69,11 +69,13 @@ export class DownloadHandler extends BaseHandler {
         page.close(),
         ctx.replyWithDocument(document),
       ])
+
+      this.clearSession(ctx)
     },
   }
 
   async onCommand(ctx: CustomContext): Promise<void> {
-    ctx.session.command = CommandEnum.Download
+    this.setSessionCommand(ctx)
     ctx.session.params = { url: null }
 
     await ctx.reply(

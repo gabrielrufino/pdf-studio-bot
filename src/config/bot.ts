@@ -39,7 +39,7 @@ bot.use(async (ctx, next) => {
   if (ctx.message) {
     const message = new MessageEntity({
       text: ctx.message.text || '',
-      telegram_user: ctx.from,
+      telegram_user: ctx.from!,
     })
 
     await messageRepository.create(message)
@@ -49,7 +49,12 @@ bot.use(async (ctx, next) => {
 })
 
 bot.use(async (ctx, next) => {
-  const user = await userRepository.findByTelegramId(ctx.from?.id || -1)
+  if (!ctx.from?.id) {
+    ctx.reply('Unable to identify you. Access denied.')
+    return
+  }
+
+  const user = await userRepository.findByTelegramId(ctx.from.id)
 
   if (user?.is_blocked) {
     ctx.reply('You are blocked from using this bot.')

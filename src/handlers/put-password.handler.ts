@@ -35,14 +35,15 @@ export class PutPasswordHandler extends BaseHandler {
           userPassword: password,
           ownerPassword: 'umasenhasupersecreta',
         })
-        .endPDF(() => {
-          ctx.replyWithDocument(new InputFile(output))
+        .endPDF(async () => {
+          await ctx.replyWithDocument(new InputFile(output))
+          this.clearSession(ctx)
         })
     },
   }
 
   public async onCommand(ctx: CustomContext): Promise<void> {
-    ctx.session.command = CommandEnum.PutPassword
+    this.setSessionCommand(ctx)
     ctx.session.params = { path: null }
 
     ctx.reply('Send the file')
