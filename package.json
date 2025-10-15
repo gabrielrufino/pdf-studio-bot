@@ -37,6 +37,6 @@
     "mongodb": "^6.20.0",
     "muhammara": "^5.4.0",
     "pino": "^9.13.1",
-    "puppeteer": "^24.24.0"
+    "puppeteer": "^24.25.0"
   }
 }
