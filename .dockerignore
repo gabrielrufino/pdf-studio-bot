@@ -46,3 +46,6 @@ Dockerfile
 # Logs
 logs/
 *.log
+
+# Others
+assets
