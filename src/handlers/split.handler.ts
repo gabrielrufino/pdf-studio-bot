@@ -19,7 +19,7 @@ export class SplitHandler extends BaseHandler {
 
       const outputDir = await fs.mkdtemp(join(os.tmpdir(), 'pdf-studio-bot-split-'))
 
-      ctx.reply(`📄 Found ${pagesCount} pages. Splitting...`)
+      await ctx.reply(`📄 Found ${pagesCount} pages. Splitting...`)
 
       const outputFiles: string[] = []
 
