@@ -6,6 +6,7 @@ import { DownloadHandler } from './download.handler'
 import { FeedbackHandler } from './feedback.handler'
 import { HelpHandler } from './help.handler'
 import { PutPasswordHandler } from './put-password.handler'
+import { SplitHandler } from './split.handler'
 import { StartHandler } from './start.handler'
 import { VersionHandler } from './version.handler'
 
@@ -19,5 +20,6 @@ export const handlers: Array<BaseHandler> = [
     new UserRepository(database),
   ),
   new PutPasswordHandler(),
+  new SplitHandler(),
   new VersionHandler(),
 ]
