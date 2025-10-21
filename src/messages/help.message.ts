@@ -9,6 +9,7 @@ export class HelpMessage implements Message {
 
 /download - Download a PDF from a URL
 /putpassword - Protects the PDF with a password
+/split - Splits the PDF into individual pages
 `
   }
 }
