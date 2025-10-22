@@ -1,4 +1,4 @@
-import type { CustomContext } from '../config/bot'
+import type { CustomContext } from '../types/custom-context.type'
 import { InputFile } from 'grammy'
 import { describe, expect, it, vi } from 'vitest'
 import { PutPasswordHandler } from './put-password.handler'

@@ -1,5 +1,5 @@
-import type { CustomContext } from '../config/bot'
 import type { PutPasswordParams } from '../interfaces/session-data'
+import type { CustomContext } from '../types/custom-context.type'
 import path from 'node:path'
 import { InputFile } from 'grammy'
 import { Recipe } from 'muhammara'

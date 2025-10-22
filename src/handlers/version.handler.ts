@@ -1,4 +1,4 @@
-import type { CustomContext } from '../config/bot'
+import type { CustomContext } from '../types/custom-context.type'
 import { version } from '../../package.json'
 import { CommandEnum } from '../enums/command.enum'
 import { BaseHandler } from './base.handler'

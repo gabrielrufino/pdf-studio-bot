@@ -1,5 +1,5 @@
-import type { CustomContext } from '../config/bot'
 import type { CommandEnum } from '../enums/command.enum'
+import type { CustomContext } from '../types/custom-context.type'
 
 export abstract class BaseHandler {
   public abstract readonly command: CommandEnum

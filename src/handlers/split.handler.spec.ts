@@ -1,4 +1,4 @@
-import type { CustomContext } from '../config/bot'
+import type { CustomContext } from '../types/custom-context.type'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CommandEnum } from '../enums/command.enum'
 import { SplitHandler } from './split.handler'

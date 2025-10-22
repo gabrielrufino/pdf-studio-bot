@@ -1,5 +1,5 @@
-import type { CustomContext } from '../config/bot'
 import type { UserRepository } from '../repositories/user.repository'
+import type { CustomContext } from '../types/custom-context.type'
 import { UserEntity } from '../entities/user.entity'
 import { CommandEnum } from '../enums/command.enum'
 import { HelpMessage } from '../messages/help.message'

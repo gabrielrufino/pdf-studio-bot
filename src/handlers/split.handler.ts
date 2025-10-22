@@ -1,4 +1,4 @@
-import type { CustomContext } from '../config/bot'
+import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import { join } from 'node:path'
