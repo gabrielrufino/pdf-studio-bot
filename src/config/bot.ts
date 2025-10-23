@@ -1,6 +1,5 @@
-import type { FileFlavor } from '@grammyjs/files'
-import type { Context, SessionFlavor } from 'grammy'
 import type { SessionData } from '../interfaces/session-data'
+import type { CustomContext } from '../types/custom-context.type'
 import process from 'node:process'
 import { hydrateFiles } from '@grammyjs/files'
 import { Bot, session } from 'grammy'
@@ -9,8 +8,6 @@ import { MessageRepository } from '../repositories/message.repository'
 import { UserRepository } from '../repositories/user.repository'
 import { database } from './database'
 import { logger } from './logger'
-
-export type CustomContext = FileFlavor<Context> & SessionFlavor<SessionData>
 
 const bot = new Bot<CustomContext>(process.env.BOT_TOKEN!)
 

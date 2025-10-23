@@ -1,5 +1,5 @@
-import type { CustomContext } from '../config/bot'
 import type { FeedbackRepository } from '../repositories/feedback.repository'
+import type { CustomContext } from '../types/custom-context.type'
 import { FeedbackEntity } from '../entities/feedback.entity'
 import { CommandEnum } from '../enums/command.enum'
 import { BaseHandler } from './base.handler'

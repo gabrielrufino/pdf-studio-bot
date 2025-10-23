@@ -1,5 +1,5 @@
 import type { PDFOptions } from 'puppeteer'
-import type { CustomContext } from '../config/bot'
+import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'

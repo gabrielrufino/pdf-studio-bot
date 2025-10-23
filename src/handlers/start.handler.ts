@@ -1,5 +1,5 @@
-import type { CustomContext } from '../config/bot'
 import type { UserRepository } from '../repositories/user.repository'
+import type { CustomContext } from '../types/custom-context.type'
 import { UserEntity } from '../entities/user.entity'
 import { CommandEnum } from '../enums/command.enum'
 import { HelpMessage } from '../messages/help.message'
@@ -18,7 +18,7 @@ export class StartHandler extends BaseHandler {
 
   async onCommand(ctx: CustomContext) {
     const user = await this.userRepository.findByTelegramId(ctx.from!.id)
-    if (!user) {
+    if (user === null) {
       await this.userRepository.create(new UserEntity({
         telegram_user: ctx.from,
       }))
