@@ -18,7 +18,7 @@ export class StartHandler extends BaseHandler {
 
   async onCommand(ctx: CustomContext) {
     const user = await this.userRepository.findByTelegramId(ctx.from!.id)
-    if (!user) {
+    if (user === null) {
       await this.userRepository.create(new UserEntity({
         telegram_user: ctx.from,
       }))

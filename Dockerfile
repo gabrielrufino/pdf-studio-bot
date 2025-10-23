@@ -67,9 +67,6 @@ COPY --from=builder /app/dist ./dist
 RUN chown -R pdfbot:nodejs /app
 USER pdfbot
 
-# Expose port if needed (adjust based on your app)
-# EXPOSE 3000
-
 # Health check (optional - adjust based on your app)
 # HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 #   CMD node dist/health.js || exit 1
