@@ -5,6 +5,10 @@ on:
   - push
   - workflow_dispatch
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   node-ci:
     name: Node CI
