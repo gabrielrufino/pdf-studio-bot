@@ -3,9 +3,9 @@ import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CommandEnum } from '../enums/command.enum'
+import { HelpMessage } from '../messages/help.message'
 import { WelcomeMessage } from '../messages/welcome.message'
 import { StartHandler } from './start.handler'
-import { HelpMessage } from '../messages/help.message'
 
 describe(StartHandler.name, () => {
   let handler: StartHandler
