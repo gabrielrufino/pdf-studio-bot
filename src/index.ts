@@ -1,7 +1,9 @@
 import type { FilterQuery } from 'grammy'
-import { bot } from './config/bot'
+import { run } from '@grammyjs/runner'
 
+import { bot } from './config/bot'
 import { database } from './config/database'
+import { logger } from './config/logger'
 import { handlers } from './handlers'
 import { FeedbackRepository } from './repositories/feedback.repository'
 import { MessageRepository } from './repositories/message.repository'
@@ -37,7 +39,9 @@ async function main() {
     })
   }
 
-  bot.start()
+  run(bot)
+
+  logger.info('Bot is running...')
 }
 
 void main()
