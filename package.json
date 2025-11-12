@@ -5,6 +5,8 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
+    "build:check": "npm run build -- --noEmit",
+    "build:watch": "npm run build -- -w",
     "lint": "eslint ./src",
     "lint:fix": "npm run lint -- --fix",
     "start": "node .",
