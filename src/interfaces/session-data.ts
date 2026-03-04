@@ -9,7 +9,11 @@ export interface DownloadParams {
   url: Nullable<string>
 }
 
+export interface JoinParams {
+  paths: string[]
+}
+
 export interface SessionData {
   command: Nullable<CommandEnum>
-  params: Nullable<PutPasswordParams | DownloadParams>
+  params: Nullable<PutPasswordParams | DownloadParams | JoinParams>
 }
