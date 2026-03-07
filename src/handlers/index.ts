@@ -5,6 +5,7 @@ import { UserRepository } from '../repositories/user.repository'
 import { DownloadHandler } from './download.handler'
 import { FeedbackHandler } from './feedback.handler'
 import { HelpHandler } from './help.handler'
+import { JoinHandler } from './join.handler'
 import { PutPasswordHandler } from './put-password.handler'
 import { SplitHandler } from './split.handler'
 import { StartHandler } from './start.handler'
@@ -16,6 +17,7 @@ export const handlers: Array<BaseHandler> = [
     new FeedbackRepository(database),
   ),
   new HelpHandler(),
+  new JoinHandler(),
   new StartHandler(
     new UserRepository(database),
   ),
