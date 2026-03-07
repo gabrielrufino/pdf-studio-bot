@@ -4,20 +4,22 @@ on:
   - push
   - workflow_dispatch
 
-permissions:
-  contents: read
-  pull-requests: write
-
 jobs:
   node-ci:
     name: Node CI
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
       - uses: actalog/node-ci@v3
   dockerfile-ci:
     name: Dockerfile CI
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
       - uses: actalog/dockerfile-ci@v2
