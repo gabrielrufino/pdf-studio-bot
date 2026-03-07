@@ -18,10 +18,14 @@ describe(JoinHandler.name, () => {
     ctx = {
       session: {
         command: null,
-        params: { paths: [] } as any,
+        params: { paths: [] } as JoinParams,
       },
       message: {
         text: '',
+        document: {
+          mime_type: 'application/pdf',
+          file_name: 'test.pdf',
+        },
       },
       getFile: vi.fn(),
       reply: vi.fn(),
@@ -58,7 +62,36 @@ describe(JoinHandler.name, () => {
         expect(ctx.getFile).toHaveBeenCalled()
         expect((ctx.session.params as JoinParams).paths).toContain(filePath)
         expect(ctx.reply).toHaveBeenCalledWith(
-          expect.stringContaining(`📎 File received: ${filePath}`),
+          expect.stringContaining('📎 File "test.pdf" received.\n\n'
+            + `You have sent 1/${JoinHandler.MAX_PDF_FILES} file(s) so far.`),
+        )
+      })
+    })
+
+    describe('msg:document (limit reached)', () => {
+      it('should not add file path and notify user if limit reached', async () => {
+        ; (ctx.session.params as JoinParams).paths = Array.from({ length: JoinHandler.MAX_PDF_FILES }, (_, i) => `/tmp/file-${i}.pdf`)
+
+        await handler.events['msg:document'](ctx)
+
+        expect(ctx.getFile).not.toHaveBeenCalled()
+        expect((ctx.session.params as JoinParams).paths.length).toBe(JoinHandler.MAX_PDF_FILES)
+        expect(ctx.reply).toHaveBeenCalledWith(
+          expect.stringContaining(`⚠️ You have reached the limit of ${JoinHandler.MAX_PDF_FILES} PDF files.`),
+        )
+      })
+    })
+
+    describe('msg:document (invalid mime type)', () => {
+      it('should not add file path and notify user if mime type is invalid', async () => {
+        ctx.message!.document!.mime_type = 'image/png'
+
+        await handler.events['msg:document'](ctx)
+
+        expect(ctx.getFile).not.toHaveBeenCalled()
+        expect((ctx.session.params as JoinParams).paths.length).toBe(0)
+        expect(ctx.reply).toHaveBeenCalledWith(
+          expect.stringContaining('⚠️ Please send only PDF files.'),
         )
       })
     })

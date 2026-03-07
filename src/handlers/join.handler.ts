@@ -10,18 +10,30 @@ import { BaseHandler } from './base.handler'
 
 export class JoinHandler extends BaseHandler {
   readonly command = CommandEnum.Join
+  static readonly MAX_PDF_FILES = 10
   readonly events = {
     'msg:document': async (ctx: CustomContext) => {
+      const params = (ctx.session.params || { paths: [] }) as JoinParams
+
+      if (params.paths.length >= JoinHandler.MAX_PDF_FILES) {
+        await ctx.reply(`⚠️ You have reached the limit of ${JoinHandler.MAX_PDF_FILES} PDF files. Please type "done" to merge them or start over.`)
+        return
+      }
+
+      if (ctx.message?.document?.mime_type !== 'application/pdf') {
+        await ctx.reply('⚠️ Please send only PDF files.')
+        return
+      }
+
       const file = await ctx.getFile()
       const filePath = await file.download()
 
-      const params = (ctx.session.params || { paths: [] }) as JoinParams
       params.paths.push(filePath)
       ctx.session.params = params
 
       await ctx.reply(
-        `📎 File received: ${filePath}\n\n`
-        + `You have sent ${params.paths.length} file(s) so far.\n`
+        `📎 File "${ctx.message?.document?.file_name || 'file'}" received.\n\n`
+        + `You have sent ${params.paths.length}/${JoinHandler.MAX_PDF_FILES} file(s) so far.\n`
         + 'Send more files or type "done" to merge them.',
       )
     },
@@ -39,7 +51,7 @@ export class JoinHandler extends BaseHandler {
     ctx.session.params = { paths: [] }
     await ctx.reply(
       '📎 Send the PDF files you want to join.\n\n'
-      + 'Send multiple files one by one.\n'
+      + `Send up to ${JoinHandler.MAX_PDF_FILES} files one by one.\n`
       + 'When done, type "done" to merge them.',
     )
   }
@@ -76,8 +88,8 @@ export class JoinHandler extends BaseHandler {
       await ctx.reply('❌ An error occurred while joining your PDF files. Please try again later.')
     }
     finally {
-      const cleanup = [...paths, outputPath, outputDir]
-      await Promise.all(cleanup.map(p => fs.rm(p, { force: true, recursive: true }).catch(() => { })))
+      const cleanup = [...paths, outputDir]
+      await Promise.all(cleanup.map(p => fs.rm(p, { force: true, recursive: true }).catch(() => { /* ignore cleanup errors */ })))
 
       this.clearSession(ctx)
     }
