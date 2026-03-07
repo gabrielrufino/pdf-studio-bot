@@ -1,17 +1,8 @@
 import type { Nullable } from '@gabrielrufino/types'
 import type { CommandEnum } from '../enums/command.enum'
-
-export interface PutPasswordParams {
-  path: Nullable<string>
-}
-
-export interface DownloadParams {
-  url: Nullable<string>
-}
-
-export interface JoinParams {
-  paths: string[]
-}
+import type { DownloadParams } from '../schemas/download-params.schema'
+import type { JoinParams } from '../schemas/join-params.schema'
+import type { PutPasswordParams } from '../schemas/put-password-params.schema'
 
 export interface SessionData {
   command: Nullable<CommandEnum>

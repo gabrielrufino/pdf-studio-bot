@@ -7,6 +7,7 @@ import process from 'node:process'
 import { InputFile } from 'grammy'
 import puppeteer from 'puppeteer'
 import { CommandEnum } from '../enums/command.enum'
+import { DownloadParamsSchema } from '../schemas/download-params.schema'
 import { BaseHandler } from './base.handler'
 
 export class DownloadHandler extends BaseHandler {
@@ -46,6 +47,7 @@ export class DownloadHandler extends BaseHandler {
   readonly command = CommandEnum.Download
   readonly events = {
     'msg:text': async (ctx: CustomContext) => {
+      this.validateParams(DownloadParamsSchema, ctx.session.params)
       const url = ctx.message?.text
 
       const browser = await puppeteer.launch(DownloadHandler.getBrowserConfig())

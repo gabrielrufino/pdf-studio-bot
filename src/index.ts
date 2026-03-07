@@ -4,6 +4,7 @@ import { run } from '@grammyjs/runner'
 import { bot } from './config/bot'
 import { database } from './config/database'
 import { logger } from './config/logger'
+import { SessionValidationError } from './errors/session-validation.error'
 import { handlers } from './handlers'
 import { FeedbackRepository } from './repositories/feedback.repository'
 import { MessageRepository } from './repositories/message.repository'
@@ -33,7 +34,19 @@ async function main() {
       if (handler) {
         const eventHandler = handler.events[event as FilterQuery]
         if (eventHandler) {
-          await eventHandler(ctx)
+          try {
+            await eventHandler(ctx)
+          }
+          catch (error) {
+            if (error instanceof SessionValidationError) {
+              await ctx.reply(`⚠️ ${error.message}`)
+              ctx.session.command = null
+              ctx.session.params = null
+              return
+            }
+
+            throw error
+          }
         }
       }
     })

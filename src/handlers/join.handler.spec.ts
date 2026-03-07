@@ -1,10 +1,11 @@
-import type { JoinParams } from '../interfaces/session-data'
+import type { JoinParams } from '../schemas/join-params.schema'
 import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import { join } from 'node:path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CommandEnum } from '../enums/command.enum'
+import { SessionValidationError } from '../errors/session-validation.error'
 import { JoinHandler } from './join.handler'
 
 describe(JoinHandler.name, () => {
@@ -65,6 +66,12 @@ describe(JoinHandler.name, () => {
           expect.stringContaining('📎 File "test.pdf" received.\n\n'
             + `You have sent 1/${JoinHandler.MAX_PDF_FILES} file(s) so far.`),
         )
+      })
+
+      it('should throw SessionValidationError if session is invalid', async () => {
+        ctx.session.params = null
+
+        await expect(handler.events['msg:document'](ctx)).rejects.toThrow(SessionValidationError)
       })
     })
 

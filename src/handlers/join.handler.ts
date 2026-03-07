@@ -1,4 +1,3 @@
-import type { JoinParams } from '../interfaces/session-data'
 import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
 import os from 'node:os'
@@ -6,6 +5,7 @@ import { join } from 'node:path'
 import { InputFile } from 'grammy'
 import muhammara from 'muhammara'
 import { CommandEnum } from '../enums/command.enum'
+import { JoinParamsSchema } from '../schemas/join-params.schema'
 import { BaseHandler } from './base.handler'
 
 export class JoinHandler extends BaseHandler {
@@ -13,7 +13,7 @@ export class JoinHandler extends BaseHandler {
   static readonly MAX_PDF_FILES = 10
   readonly events = {
     'msg:document': async (ctx: CustomContext) => {
-      const params = (ctx.session.params || { paths: [] }) as JoinParams
+      const params = this.validateParams(JoinParamsSchema, ctx.session.params)
 
       if (params.paths.length >= JoinHandler.MAX_PDF_FILES) {
         await ctx.reply(`⚠️ You have reached the limit of ${JoinHandler.MAX_PDF_FILES} PDF files. Please type "done" to merge them or start over.`)
@@ -57,8 +57,7 @@ export class JoinHandler extends BaseHandler {
   }
 
   private async joinPDFs(ctx: CustomContext) {
-    const params = ctx.session.params as JoinParams
-    const paths = params?.paths || []
+    const { paths } = this.validateParams(JoinParamsSchema, ctx.session.params)
 
     if (paths.length < 2) {
       await ctx.reply('⚠️ You need to send at least two PDF files to join them. Please send more files.')
