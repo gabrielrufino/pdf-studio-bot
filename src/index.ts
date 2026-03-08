@@ -45,12 +45,17 @@ async function main() {
               return
             }
 
+            logger.error(error)
             throw error
           }
         }
       }
     })
   }
+
+  bot.catch((err) => {
+    logger.error(err)
+  })
 
   run(bot)
 

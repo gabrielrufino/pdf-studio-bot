@@ -1,7 +1,9 @@
+import type { ISession } from '@grammyjs/storage-mongodb'
 import type { SessionData } from '../interfaces/session-data'
 import type { CustomContext } from '../types/custom-context.type'
 import process from 'node:process'
 import { hydrateFiles } from '@grammyjs/files'
+import { MongoDBAdapter } from '@grammyjs/storage-mongodb'
 import { Bot, session } from 'grammy'
 import { MessageEntity } from '../entities/message.entity'
 import { MessageRepository } from '../repositories/message.repository'
@@ -17,6 +19,7 @@ bot.use(
       command: null,
       params: null,
     }),
+    storage: new MongoDBAdapter({ collection: database.collection<ISession>('sessions') }),
   }),
 )
 
@@ -58,7 +61,7 @@ bot.use(async (ctx, next) => {
     return
   }
 
-  next()
+  return next()
 })
 
 bot

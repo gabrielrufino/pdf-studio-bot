@@ -21,6 +21,7 @@
   "dependencies": {
     "@grammyjs/files": "^1.2.0",
     "@grammyjs/runner": "^2.0.3",
+    "@grammyjs/storage-mongodb": "^2.5.1",
     "grammy": "^1.41.1",
     "mongodb": "^6.21.0",
     "muhammara": "^5.4.0",
