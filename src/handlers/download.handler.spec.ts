@@ -81,6 +81,12 @@ describe(DownloadHandler.name, () => {
 
         await expect(handler.events['msg:text'](ctx)).rejects.toThrow(SessionValidationError)
       })
+
+      it('should throw SessionValidationError if URL is invalid (doesn\'t start with http)', async () => {
+        ctx.message!.text = 'file:///etc/passwd'
+
+        await expect(handler.events['msg:text'](ctx)).rejects.toThrow(SessionValidationError)
+      })
     })
   })
 })

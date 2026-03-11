@@ -13,33 +13,47 @@ export class SplitHandler extends BaseHandler {
     'msg:document': async (ctx: CustomContext) => {
       const file = await ctx.getFile()
       const inputPath = await file.download()
+      let outputDir: string | undefined
 
-      const pdfReader = muhammara.createReader(inputPath)
-      const pagesCount = pdfReader.getPagesCount()
+      try {
+        const pdfReader = muhammara.createReader(inputPath)
+        const pagesCount = pdfReader.getPagesCount()
 
-      const outputDir = await fs.mkdtemp(join(os.tmpdir(), 'pdf-studio-bot-split-'))
+        outputDir = await fs.mkdtemp(join(os.tmpdir(), 'pdf-studio-bot-split-'))
 
-      await ctx.reply(`📄 Found ${pagesCount} pages. Splitting...`)
+        await ctx.reply(`📄 Found ${pagesCount} pages. Splitting...`)
 
-      const outputFiles: string[] = []
+        const outputFiles: string[] = []
 
-      for (let i = 0; i < pagesCount; i++) {
-        const outPath = join(outputDir, `page-${String(i + 1).padStart(3, '0')}.pdf`)
+        for (let i = 0; i < pagesCount; i++) {
+          const outPath = join(outputDir, `page-${String(i + 1).padStart(3, '0')}.pdf`)
 
-        const pdfWriter = muhammara.createWriter(outPath)
-        const copyingContext = pdfWriter.createPDFCopyingContext(inputPath)
+          const pdfWriter = muhammara.createWriter(outPath)
+          const copyingContext = pdfWriter.createPDFCopyingContext(inputPath)
 
-        copyingContext.appendPDFPageFromPDF(i)
-        pdfWriter.end()
+          copyingContext.appendPDFPageFromPDF(i)
+          pdfWriter.end()
 
-        outputFiles.push(outPath)
+          outputFiles.push(outPath)
+        }
+
+        for (let i = 0; i < outputFiles.length; i++) {
+          const pageFile = new InputFile(outputFiles[i], `page-${i + 1}.pdf`)
+          await ctx.replyWithDocument(pageFile, {
+            caption: `📄 Page ${i + 1} of ${pagesCount}`,
+          })
+        }
       }
-
-      for (let i = 0; i < outputFiles.length; i++) {
-        const pageFile = new InputFile(outputFiles[i], `page-${i + 1}.pdf`)
-        await ctx.replyWithDocument(pageFile, {
-          caption: `📄 Page ${i + 1} of ${pagesCount}`,
-        })
+      catch (error) {
+        this.logger.error(error)
+        await ctx.reply('❌ An error occurred while splitting the PDF file.')
+      }
+      finally {
+        if (outputDir) {
+          await fs.rm(outputDir, { force: true, recursive: true }).catch(() => {})
+        }
+        await fs.rm(inputPath, { force: true }).catch(() => {})
+        this.clearSession(ctx)
       }
     },
   }

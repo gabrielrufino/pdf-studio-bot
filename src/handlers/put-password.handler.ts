@@ -1,4 +1,5 @@
 import type { CustomContext } from '../types/custom-context.type'
+import fs from 'node:fs/promises'
 import path from 'node:path'
 import { InputFile } from 'grammy'
 import { Recipe } from 'muhammara'
@@ -37,15 +38,29 @@ export class PutPasswordHandler extends BaseHandler {
       const password = ctx.message?.text
       bot.api.deleteMessage(ctx.chat!.id, ctx.message!.message_id)
 
-      new Recipe(params.path!, output)
-        .encrypt({
-          userPassword: password,
-          ownerPassword: 'umasenhasupersecreta',
+      try {
+        await new Promise<void>((resolve, reject) => {
+          new Recipe(params.path!, output)
+            .encrypt({
+              userPassword: password,
+              ownerPassword: 'umasenhasupersecreta',
+            })
+            .endPDF(() => {
+              ctx.replyWithDocument(new InputFile(output))
+                .then(() => resolve())
+                .catch(reject)
+            })
         })
-        .endPDF(async () => {
-          await ctx.replyWithDocument(new InputFile(output))
-          this.clearSession(ctx)
-        })
+      }
+      catch (error) {
+        this.logger.error(error)
+        await ctx.reply('❌ An error occurred while putting a password on the PDF file.')
+      }
+      finally {
+        const cleanup = [params.path!, output]
+        await Promise.all(cleanup.map(p => fs.rm(p, { force: true }).catch(() => {})))
+        this.clearSession(ctx)
+      }
     },
   }
 

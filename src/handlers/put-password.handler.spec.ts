@@ -1,4 +1,7 @@
 import type { CustomContext } from '../types/custom-context.type'
+import fs from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
 import { InputFile } from 'grammy'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CommandEnum } from '../enums/command.enum'
@@ -80,13 +83,22 @@ describe(PutPasswordHandler.name, () => {
       })
 
       it('should send document with password applied', async () => {
-        ctx.session.params = { path: `${process.cwd()}/assets/lorem-ipsum.pdf` }
+        const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-studio-bot-test-putpwd-'))
+        const targetPath = path.join(tempDir, 'test.pdf')
 
-        await handler.events['msg:text'](ctx)
+        try {
+          await fs.copyFile(`${process.cwd()}/assets/lorem-ipsum.pdf`, targetPath)
+          ctx.session.params = { path: targetPath }
 
-        expect(ctx.replyWithDocument).toHaveBeenCalledWith(expect.any(InputFile))
-        expect(ctx.session.command).toBeNull()
-        expect(ctx.session.params).toBeNull()
+          await handler.events['msg:text'](ctx)
+
+          expect(ctx.replyWithDocument).toHaveBeenCalledWith(expect.any(InputFile))
+          expect(ctx.session.command).toBeNull()
+          expect(ctx.session.params).toBeNull()
+        }
+        finally {
+          await fs.rm(tempDir, { recursive: true, force: true })
+        }
       })
     })
   })

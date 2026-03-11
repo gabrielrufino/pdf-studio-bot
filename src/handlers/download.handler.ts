@@ -7,6 +7,7 @@ import process from 'node:process'
 import { InputFile } from 'grammy'
 import puppeteer from 'puppeteer'
 import { CommandEnum } from '../enums/command.enum'
+import { SessionValidationError } from '../errors/session-validation.error'
 import { DownloadParamsSchema } from '../schemas/download-params.schema'
 import { BaseHandler } from './base.handler'
 
@@ -47,32 +48,46 @@ export class DownloadHandler extends BaseHandler {
   readonly command = CommandEnum.Download
   readonly events = {
     'msg:text': async (ctx: CustomContext) => {
+      if (!ctx.message?.text?.startsWith('http')) {
+        throw new SessionValidationError()
+      }
+
       this.validateParams(DownloadParamsSchema, ctx.session.params)
       const url = ctx.message?.text
 
       const browser = await puppeteer.launch(DownloadHandler.getBrowserConfig())
+      let folder: string | undefined
 
-      const page = await browser.newPage()
-      await page.goto(url!, {
-        waitUntil: 'networkidle0',
-      })
+      try {
+        const page = await browser.newPage()
+        await page.goto(url!, {
+          waitUntil: 'networkidle0',
+        })
 
-      const folder = await fs.mkdtemp(path.join(os.tmpdir(), 'pdffromlink-'))
-      const filePath = path.join(folder, 'file.pdf')
-      await page.pdf({
-        path: filePath,
-        ...DownloadHandler.PDF_CONFIG,
-      })
+        folder = await fs.mkdtemp(path.join(os.tmpdir(), 'pdffromlink-'))
+        const filePath = path.join(folder, 'file.pdf')
 
-      const title = await page.title()
-      const document = new InputFile(filePath, `${title}.pdf`)
+        await page.pdf({
+          path: filePath,
+          ...DownloadHandler.PDF_CONFIG,
+        })
 
-      await Promise.all([
-        page.close(),
-        ctx.replyWithDocument(document),
-      ])
+        const title = await page.title()
+        const document = new InputFile(filePath, `${title}.pdf`)
 
-      this.clearSession(ctx)
+        await ctx.replyWithDocument(document)
+      }
+      catch (error) {
+        this.logger.error(error)
+        await ctx.reply('❌ An error occurred while converting the URL to PDF.')
+      }
+      finally {
+        if (folder) {
+          await fs.rm(folder, { force: true, recursive: true }).catch(() => {})
+        }
+        await browser.close().catch(() => {})
+        this.clearSession(ctx)
+      }
     },
   }
 

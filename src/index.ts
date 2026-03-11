@@ -45,7 +45,6 @@ async function main() {
               return
             }
 
-            logger.error(error)
             throw error
           }
         }

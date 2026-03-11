@@ -15,6 +15,7 @@ export abstract class BaseHandler {
     const result = schema.safeParse(params)
 
     if (!result.success) {
+      this.logger.error({ error: result.error }, 'Session validation failed.')
       throw new SessionValidationError()
     }
 
