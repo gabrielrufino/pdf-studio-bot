@@ -1,4 +1,5 @@
 import type { CustomContext } from '../types/custom-context.type'
+import crypto from 'node:crypto'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { InputFile } from 'grammy'
@@ -43,9 +44,12 @@ export class PutPasswordHandler extends BaseHandler {
           new Recipe(params.path!, output)
             .encrypt({
               userPassword: password,
-              ownerPassword: 'umasenhasupersecreta',
+              ownerPassword: crypto.randomUUID(),
             })
-            .endPDF(() => {
+            .endPDF((err?: Error) => {
+              if (err) {
+                return reject(err)
+              }
               ctx.replyWithDocument(new InputFile(output))
                 .then(() => resolve())
                 .catch(reject)

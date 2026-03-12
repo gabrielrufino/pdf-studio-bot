@@ -6,6 +6,7 @@ import path from 'node:path'
 import process from 'node:process'
 import { InputFile } from 'grammy'
 import puppeteer from 'puppeteer'
+import { z } from 'zod'
 import { CommandEnum } from '../enums/command.enum'
 import { SessionValidationError } from '../errors/session-validation.error'
 import { DownloadParamsSchema } from '../schemas/download-params.schema'
@@ -48,7 +49,9 @@ export class DownloadHandler extends BaseHandler {
   readonly command = CommandEnum.Download
   readonly events = {
     'msg:text': async (ctx: CustomContext) => {
-      if (!ctx.message?.text?.startsWith('http')) {
+      const urlSchema = z.url()
+      const parseResult = urlSchema.safeParse(ctx.message?.text)
+      if (!parseResult.success || !['http:', 'https:'].includes(new URL(parseResult.data).protocol)) {
         throw new SessionValidationError()
       }
 
@@ -83,9 +86,9 @@ export class DownloadHandler extends BaseHandler {
       }
       finally {
         if (folder) {
-          await fs.rm(folder, { force: true, recursive: true }).catch(() => {})
+          await fs.rm(folder, { force: true, recursive: true }).catch(() => { })
         }
-        await browser.close().catch(() => {})
+        await browser.close().catch(() => { })
         this.clearSession(ctx)
       }
     },

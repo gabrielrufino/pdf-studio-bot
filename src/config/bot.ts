@@ -6,6 +6,7 @@ import { hydrateFiles } from '@grammyjs/files'
 import { MongoDBAdapter } from '@grammyjs/storage-mongodb'
 import { Bot, session } from 'grammy'
 import { MessageEntity } from '../entities/message.entity'
+import { CommandEnum } from '../enums/command.enum'
 import { MessageRepository } from '../repositories/message.repository'
 import { UserRepository } from '../repositories/user.repository'
 import { database } from './database'
@@ -37,8 +38,10 @@ const userRepository = new UserRepository(database)
 
 bot.use(async (ctx, next) => {
   if (ctx.message) {
+    const isPassword = ctx.session.command === CommandEnum.PutPassword
+
     const message = new MessageEntity({
-      text: ctx.message.text || '',
+      text: isPassword ? '***' : (ctx.message.text || ''),
       telegram_user: ctx.from!,
     })
 
