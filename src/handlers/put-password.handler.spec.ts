@@ -1,37 +1,104 @@
 import type { CustomContext } from '../types/custom-context.type'
+import fs from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
 import { InputFile } from 'grammy'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { CommandEnum } from '../enums/command.enum'
+import { SessionValidationError } from '../errors/session-validation.error'
 import { PutPasswordHandler } from './put-password.handler'
 
-vi.mock('../config/bot', () => {
-  return {
-    bot: {
-      api: {
-        deleteMessage: vi.fn(),
-      },
+vi.mock('../config/bot', () => ({
+  bot: {
+    api: {
+      deleteMessage: vi.fn(),
     },
-  }
-})
+  },
+}))
 
 describe(PutPasswordHandler.name, () => {
-  const handler = new PutPasswordHandler()
+  let handler: PutPasswordHandler
+  let ctx: CustomContext
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    handler = new PutPasswordHandler()
+    ctx = {
+      session: {
+        command: null,
+        params: { path: null },
+      },
+      message: {
+        text: 'password123',
+        message_id: 1,
+      },
+      chat: { id: 100 },
+      getFile: vi.fn(),
+      reply: vi.fn(),
+      replyWithDocument: vi.fn(),
+    } as unknown as CustomContext
+  })
+
+  it('should have correct command', () => {
+    expect(handler.command).toBe(CommandEnum.PutPassword)
+  })
+
+  describe(PutPasswordHandler.prototype.onCommand.name, () => {
+    it('should set session command and ask for file', async () => {
+      await handler.onCommand(ctx)
+
+      expect(ctx.reply).toHaveBeenCalledWith('Send the file')
+      expect(ctx.session.command).toBe(CommandEnum.PutPassword)
+      expect(ctx.session.params).toEqual({ path: null })
+    })
+  })
 
   describe('events', () => {
+    describe('msg:document', () => {
+      it('should download file and update session params', async () => {
+        const filePath = '/tmp/test.pdf'
+        vi.mocked(ctx.getFile).mockResolvedValueOnce({
+          download: vi.fn().mockResolvedValue(filePath),
+        } as any)
+
+        await handler.events['msg:document'](ctx)
+
+        expect(ctx.getFile).toHaveBeenCalled()
+        expect(ctx.session.params).toEqual({ path: filePath })
+        expect(ctx.reply).toHaveBeenCalledWith('Send the password')
+      })
+
+      it('should throw SessionValidationError if session is invalid', async () => {
+        ctx.session.params = null
+
+        await expect(handler.events['msg:document'](ctx)).rejects.toThrow(SessionValidationError)
+      })
+    })
+
     describe('msg:text', () => {
-      it('should send a document with the password applied', async () => {
-        const replyWithDocument = vi.fn()
+      it('should throw SessionValidationError if path is missing', async () => {
+        ctx.session.params = { path: null }
 
-        await handler.events['msg:text']({
-          reply: vi.fn(),
-          message: { text: 'mypassword', message_id: 123 } as any,
-          chat: { id: 12345 } as any,
-          session: {
-            params: { path: `${process.cwd()}/assets/lorem-ipsum.pdf` },
-          },
-          replyWithDocument,
-        } as unknown as CustomContext)
+        await expect(handler.events['msg:text'](ctx)).rejects.toThrow(SessionValidationError)
+      })
 
-        expect(replyWithDocument).toHaveBeenCalledWith(expect.any(InputFile))
+      it('should send document with password applied', async () => {
+        const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-studio-bot-test-putpwd-'))
+        const targetPath = path.join(tempDir, 'test.pdf')
+
+        try {
+          await fs.copyFile(`${process.cwd()}/assets/lorem-ipsum.pdf`, targetPath)
+          ctx.session.params = { path: targetPath }
+
+          await handler.events['msg:text'](ctx)
+
+          expect(ctx.replyWithDocument).toHaveBeenCalledWith(expect.any(InputFile))
+          expect(ctx.session.command).toBeNull()
+          expect(ctx.session.params).toBeNull()
+        }
+        finally {
+          await fs.rm(tempDir, { recursive: true, force: true })
+        }
       })
     })
   })

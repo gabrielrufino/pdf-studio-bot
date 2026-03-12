@@ -1,9 +1,12 @@
+import type { ISession } from '@grammyjs/storage-mongodb'
 import type { SessionData } from '../interfaces/session-data'
 import type { CustomContext } from '../types/custom-context.type'
 import process from 'node:process'
 import { hydrateFiles } from '@grammyjs/files'
+import { MongoDBAdapter } from '@grammyjs/storage-mongodb'
 import { Bot, session } from 'grammy'
 import { MessageEntity } from '../entities/message.entity'
+import { CommandEnum } from '../enums/command.enum'
 import { MessageRepository } from '../repositories/message.repository'
 import { UserRepository } from '../repositories/user.repository'
 import { database } from './database'
@@ -17,6 +20,7 @@ bot.use(
       command: null,
       params: null,
     }),
+    storage: new MongoDBAdapter({ collection: database.collection<ISession>('sessions') }),
   }),
 )
 
@@ -34,8 +38,10 @@ const userRepository = new UserRepository(database)
 
 bot.use(async (ctx, next) => {
   if (ctx.message) {
+    const isPassword = ctx.session.command === CommandEnum.PutPassword
+
     const message = new MessageEntity({
-      text: ctx.message.text || '',
+      text: isPassword ? '***' : (ctx.message.text || ''),
       telegram_user: ctx.from!,
     })
 
@@ -58,7 +64,7 @@ bot.use(async (ctx, next) => {
     return
   }
 
-  next()
+  return next()
 })
 
 bot

@@ -1,6 +1,6 @@
 {
   "name": "@gabrielrufino/pdf-studio-bot",
-  "version": "1.4.0",
+  "version": "1.4.2",
   "private": true,
   "author": "Gabriel Rufino <contato@gabrielrufino.com>",
   "license": "UNLICENSED",
@@ -21,12 +21,14 @@
   "dependencies": {
     "@grammyjs/files": "^1.2.0",
     "@grammyjs/runner": "^2.0.3",
+    "@grammyjs/storage-mongodb": "^2.5.1",
     "grammy": "^1.41.1",
     "mongodb": "^6.21.0",
     "muhammara": "^5.4.0",
     "pino": "^9.14.0",
     "pino-loki": "^3.0.0",
-    "puppeteer": "^24.37.5"
+    "puppeteer": "^24.37.5",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^3.16.0",
