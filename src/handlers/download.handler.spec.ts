@@ -1,25 +1,11 @@
 import type fs from 'node:fs/promises'
+import type { Browser } from '../config/browser'
 import type { CustomContext } from '../types/custom-context.type'
 import { Buffer } from 'node:buffer'
-import puppeteer from 'puppeteer'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CommandEnum } from '../enums/command.enum'
 import { SessionValidationError } from '../errors/session-validation.error'
 import { DownloadHandler } from './download.handler'
-
-vi.mock('puppeteer', () => ({
-  default: {
-    launch: vi.fn().mockResolvedValue({
-      newPage: vi.fn().mockResolvedValue({
-        goto: vi.fn().mockResolvedValue({}),
-        pdf: vi.fn().mockResolvedValue(Buffer.from('test pdf content')),
-        title: vi.fn().mockResolvedValue('test title'),
-        close: vi.fn().mockResolvedValue({}),
-      }),
-      close: vi.fn().mockResolvedValue({}),
-    }),
-  },
-}))
 
 vi.mock('node:fs/promises', async (importOriginal) => {
   const actual = await importOriginal<typeof fs>()
@@ -32,10 +18,24 @@ vi.mock('node:fs/promises', async (importOriginal) => {
 describe(DownloadHandler.name, () => {
   let handler: DownloadHandler
   let ctx: CustomContext
+  let mockBrowser: Browser
 
   beforeEach(() => {
     vi.clearAllMocks()
-    handler = new DownloadHandler()
+
+    mockBrowser = {
+      getInstance: vi.fn().mockResolvedValue({
+        newPage: vi.fn().mockResolvedValue({
+          goto: vi.fn().mockResolvedValue({}),
+          pdf: vi.fn().mockResolvedValue(Buffer.from('test pdf content')),
+          title: vi.fn().mockResolvedValue('test title'),
+          close: vi.fn().mockResolvedValue({}),
+        }),
+        close: vi.fn().mockResolvedValue({}),
+      }),
+    } as unknown as Browser
+
+    handler = new DownloadHandler(mockBrowser)
     ctx = {
       session: {
         command: null,
@@ -70,7 +70,7 @@ describe(DownloadHandler.name, () => {
       it('should convert URL to PDF and send it', async () => {
         await handler.events['msg:text'](ctx)
 
-        expect(puppeteer.launch).toHaveBeenCalled()
+        expect(mockBrowser.getInstance).toHaveBeenCalled()
         expect(ctx.replyWithDocument).toHaveBeenCalled()
         expect(ctx.session.command).toBeNull()
         expect(ctx.session.params).toBeNull()

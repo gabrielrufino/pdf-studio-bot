@@ -1,15 +1,12 @@
+import type { BaseHandler } from '../handlers/base.handler'
 import type { Message } from '../interfaces/message'
 
 export class HelpMessage implements Message {
-  public build() {
-    return `
-/help - Show this message
-/feedback - Send us your feedback
-/version - Show the bot version
+  constructor(private readonly handlers: BaseHandler[]) {}
 
-/download - Download a PDF from a URL
-/putpassword - Protects the PDF with a password
-/split - Splits the PDF into individual pages
-`
+  public build() {
+    return this.handlers
+      .map(h => `/${h.command} - ${h.description}`)
+      .join('\n')
   }
 }

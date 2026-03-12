@@ -10,6 +10,7 @@ import { BaseHandler } from './base.handler'
 
 export class JoinHandler extends BaseHandler {
   readonly command = CommandEnum.Join
+  readonly description = 'Join multiple PDF files into one'
   static readonly MAX_PDF_FILES = 10
   readonly events = {
     'msg:document': async (ctx: CustomContext) => {

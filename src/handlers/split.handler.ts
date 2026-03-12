@@ -9,6 +9,7 @@ import { BaseHandler } from './base.handler'
 
 export class SplitHandler extends BaseHandler {
   readonly command = CommandEnum.Split
+  readonly description = 'Split a PDF into individual pages'
   readonly events = {
     'msg:document': async (ctx: CustomContext) => {
       const file = await ctx.getFile()

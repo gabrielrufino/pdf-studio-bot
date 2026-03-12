@@ -6,6 +6,7 @@ import { BaseHandler } from './base.handler'
 describe(BaseHandler.name, () => {
   class TestHandler extends BaseHandler {
     readonly command = CommandEnum.Test
+    readonly description = 'Test command'
     readonly events = {}
     async onCommand() {}
 

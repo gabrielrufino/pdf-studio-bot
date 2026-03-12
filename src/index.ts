@@ -58,6 +58,10 @@ async function main() {
 
   run(bot)
 
+  await bot.api.setMyCommands(
+    handlers.map(h => ({ command: h.command, description: h.description })),
+  )
+
   logger.info('Bot is running...')
 }
 

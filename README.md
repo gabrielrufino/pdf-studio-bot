@@ -7,29 +7,20 @@ Try it now and experience the convenience: just click the button above 🚀
 
 ## ✨ Features
 
-- **� Download PDFs from URL**
+- **📥 Download PDFs from URL**
   Simply send a URL and get your PDF file instantly!
 
-- **�🔒 Add password to your PDF**
+- **🔒 Add password to your PDF**
   Protect your documents easily by adding a password to any PDF file — directly via Telegram, with just a few taps!
 
 - **📄 Split PDFs into individual pages**
   Break down multi-page PDFs into separate files, one page at a time!
 
+- **📎 Merge PDFs**
+  Send multiple PDF files and merge them into a single document!
+
 - **💬 Feedback system**
   Share your thoughts and suggestions to help us improve!
-
-- **Convert PDFs to other formats (TXT, DOCX, images, etc.)**
-  _Coming soon!_
-
-- **Extract text and images**
-  _Coming soon!_
-
-- **Merge PDFs**
-  _Coming soon!_
-
-- **Compress files and batch processing**
-  _Coming soon!_
 
 ## 📢 Why use PDF Studio Bot?
 
@@ -47,22 +38,23 @@ Try it now and experience the convenience: just click the button above 🚀
 
 ## 🤖 Available Commands
 
-- `/start` - Initialize the bot and register your user
-- `/help` - Show all available commands
+- `/start` - Start using the bot
+- `/help` - Show the list of available commands
 - `/download` - Download a PDF from a URL
-- `/putpassword` - Protect your PDF with a password
-- `/split` - Split PDF into individual pages
-- `/feedback` - Send us your feedback and suggestions
-- `/version` - Check the current bot version
+- `/join` - Join multiple PDF files into one
+- `/putpassword` - Protect a PDF with a password
+- `/split` - Split a PDF into individual pages
+- `/feedback` - Send us your feedback
+- `/version` - Show the bot version
 
 ## 🏗️ Tech Stack
 
 - **TypeScript** - Type-safe development
-- **Grammy** - Modern Telegram Bot framework
+- **grammY** - Modern Telegram Bot framework
 - **@grammyjs/runner** - Concurrent update processing
 - **MongoDB** - Database for users and feedback
 - **Muhammara** - PDF manipulation library
-- **Puppeteer** - Web scraping and PDF downloads
+- **Puppeteer** - Headless browser for URL-to-PDF conversion
 - **Pino** - High-performance logging
 - **Vitest** - Fast unit testing framework
 
@@ -70,14 +62,15 @@ Try it now and experience the convenience: just click the button above 🚀
 
 ```
 src/
-├── config/          # Configuration files (bot, database, logger)
-├── decorators/      # Custom decorators
+├── config/          # Configuration files (bot, browser, database, logger)
 ├── entities/        # Data models (User, Feedback, Message)
 ├── enums/           # Enumerations (Commands)
+├── errors/          # Custom error classes
 ├── handlers/        # Command handlers with business logic
 ├── interfaces/      # TypeScript interfaces
 ├── messages/        # Bot message templates
 ├── repositories/    # Data access layer
+├── schemas/         # Zod validation schemas
 └── types/           # Custom TypeScript types
 ```
 
