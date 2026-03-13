@@ -9,6 +9,7 @@ import { BaseHandler } from './base.handler'
 
 export class SplitHandler extends BaseHandler {
   readonly command = CommandEnum.Split
+  readonly description = 'Split a PDF into individual pages'
   readonly events = {
     'msg:document': async (ctx: CustomContext) => {
       const file = await ctx.getFile()
@@ -50,9 +51,11 @@ export class SplitHandler extends BaseHandler {
       }
       finally {
         if (outputDir) {
-          await fs.rm(outputDir, { force: true, recursive: true }).catch(() => {})
+          await fs.rm(outputDir, { force: true, recursive: true }).catch(error =>
+            this.logger.error({ error, path: outputDir }, 'Failed to remove temporary folder.'))
         }
-        await fs.rm(inputPath, { force: true }).catch(() => {})
+        await fs.rm(inputPath, { force: true }).catch(error =>
+          this.logger.error({ error, path: inputPath }, 'Failed to remove input file.'))
         this.clearSession(ctx)
       }
     },

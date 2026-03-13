@@ -10,6 +10,7 @@ import { BaseHandler } from './base.handler'
 
 export class JoinHandler extends BaseHandler {
   readonly command = CommandEnum.Join
+  readonly description = 'Join multiple PDF files into one'
   static readonly MAX_PDF_FILES = 10
   readonly events = {
     'msg:document': async (ctx: CustomContext) => {
@@ -88,7 +89,8 @@ export class JoinHandler extends BaseHandler {
     }
     finally {
       const cleanup = [...paths, outputDir]
-      await Promise.all(cleanup.map(p => fs.rm(p, { force: true, recursive: true }).catch(() => { /* ignore cleanup errors */ })))
+      await Promise.all(cleanup.map(p => fs.rm(p, { force: true, recursive: true }).catch(error =>
+        this.logger.error({ error, path: p }, 'Failed to remove temporary file/folder.'))))
 
       this.clearSession(ctx)
     }

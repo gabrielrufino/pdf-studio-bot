@@ -1,11 +1,10 @@
-import type { PDFOptions } from 'puppeteer'
+import type { Page, PDFOptions } from 'puppeteer'
+import type { Browser } from '../config/browser'
 import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
-import process from 'node:process'
 import { InputFile } from 'grammy'
-import puppeteer from 'puppeteer'
 import { z } from 'zod'
 import { CommandEnum } from '../enums/command.enum'
 import { SessionValidationError } from '../errors/session-validation.error'
@@ -13,40 +12,18 @@ import { DownloadParamsSchema } from '../schemas/download-params.schema'
 import { BaseHandler } from './base.handler'
 
 export class DownloadHandler extends BaseHandler {
+  constructor(private readonly browser: Browser) {
+    super()
+  }
+
   private static readonly PDF_CONFIG: Partial<PDFOptions> = {
     format: 'A4' as const,
     margin: { top: '1cm', right: '1cm', bottom: '1cm', left: '1cm' },
     printBackground: true,
   }
 
-  private static getBrowserConfig() {
-    const baseConfig = {
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-      ],
-      headless: true,
-      timeout: 30000,
-    }
-
-    if (process.env.NODE_ENV === 'production') {
-      return {
-        ...baseConfig,
-        executablePath: '/usr/bin/chromium-browser',
-        args: [
-          ...baseConfig.args,
-          '--no-zygote',
-          '--single-process',
-        ],
-      }
-    }
-
-    return baseConfig
-  }
-
   readonly command = CommandEnum.Download
+  readonly description = 'Download a PDF from a URL'
   readonly events = {
     'msg:text': async (ctx: CustomContext) => {
       const urlSchema = z.url()
@@ -58,11 +35,12 @@ export class DownloadHandler extends BaseHandler {
       this.validateParams(DownloadParamsSchema, ctx.session.params)
       const url = ctx.message?.text
 
-      const browser = await puppeteer.launch(DownloadHandler.getBrowserConfig())
+      const browserInstance = await this.browser.getInstance()
       let folder: string | undefined
+      let page: Page | undefined
 
       try {
-        const page = await browser.newPage()
+        page = await browserInstance.newPage()
         await page.goto(url!, {
           waitUntil: 'networkidle0',
         })
@@ -86,9 +64,12 @@ export class DownloadHandler extends BaseHandler {
       }
       finally {
         if (folder) {
-          await fs.rm(folder, { force: true, recursive: true }).catch(() => { })
+          await fs.rm(folder, { force: true, recursive: true }).catch(error =>
+            this.logger.error({ error }, 'Failed to remove temporary folder.'))
         }
-        await browser.close().catch(() => { })
+        if (page) {
+          await page.close().catch(error => this.logger.error({ error }, 'Failed to close page.'))
+        }
         this.clearSession(ctx)
       }
     },

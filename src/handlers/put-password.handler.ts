@@ -12,6 +12,7 @@ import { BaseHandler } from './base.handler'
 
 export class PutPasswordHandler extends BaseHandler {
   public readonly command = CommandEnum.PutPassword
+  public readonly description = 'Protect a PDF with a password'
   public readonly events = {
     'msg:document': async (ctx: CustomContext) => {
       const params = this.validateParams(PutPasswordParamsSchema, ctx.session.params)
@@ -62,7 +63,8 @@ export class PutPasswordHandler extends BaseHandler {
       }
       finally {
         const cleanup = [params.path!, output]
-        await Promise.all(cleanup.map(p => fs.rm(p, { force: true }).catch(() => {})))
+        await Promise.all(cleanup.map(p => fs.rm(p, { force: true }).catch(error =>
+          this.logger.error({ error, path: p }, 'Failed to remove temporary file.'))))
         this.clearSession(ctx)
       }
     },

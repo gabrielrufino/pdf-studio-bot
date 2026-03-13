@@ -1,7 +1,9 @@
 import type { FilterQuery } from 'grammy'
+import process from 'node:process'
 import { run } from '@grammyjs/runner'
 
 import { bot } from './config/bot'
+import { browser } from './config/browser'
 import { database } from './config/database'
 import { logger } from './config/logger'
 import { SessionValidationError } from './errors/session-validation.error'
@@ -56,7 +58,21 @@ async function main() {
     logger.error(err)
   })
 
-  run(bot)
+  const runner = run(bot)
+
+  await bot.api.setMyCommands(
+    handlers.map(h => ({ command: h.command, description: h.description })),
+  )
+
+  const stop = async () => {
+    logger.info('Shutting down gracefully...')
+    await runner.stop()
+    await browser.close()
+    process.exit(0)
+  }
+
+  process.once('SIGINT', stop)
+  process.once('SIGTERM', stop)
 
   logger.info('Bot is running...')
 }

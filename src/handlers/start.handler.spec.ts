@@ -3,7 +3,6 @@ import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CommandEnum } from '../enums/command.enum'
-import { HelpMessage } from '../messages/help.message'
 import { WelcomeMessage } from '../messages/welcome.message'
 import { StartHandler } from './start.handler'
 
@@ -82,7 +81,7 @@ describe(StartHandler.name, () => {
       expect(userRepository.updateById).toHaveBeenCalledWith('user-id', existingUser)
     })
 
-    it('should send welcome and help messages', async () => {
+    it('should send the welcome message', async () => {
       const ctx = {
         from: {
           id: 12345,
@@ -92,15 +91,11 @@ describe(StartHandler.name, () => {
 
       await handler.onCommand(ctx)
 
-      expect(ctx.reply).toHaveBeenCalledTimes(2)
+      expect(ctx.reply).toHaveBeenCalledTimes(1)
       expect(ctx.reply).toHaveBeenCalledWith(
         new WelcomeMessage()
           .build(),
         { parse_mode: 'HTML' },
-      )
-      expect(ctx.reply).toHaveBeenCalledWith(
-        new HelpMessage()
-          .build(),
       )
     })
   })

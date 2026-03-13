@@ -1,4 +1,5 @@
 import type { BaseHandler } from './base.handler'
+import { browser } from '../config/browser'
 import { database } from '../config/database'
 import { FeedbackRepository } from '../repositories/feedback.repository'
 import { UserRepository } from '../repositories/user.repository'
@@ -11,17 +12,23 @@ import { SplitHandler } from './split.handler'
 import { StartHandler } from './start.handler'
 import { VersionHandler } from './version.handler'
 
-export const handlers: Array<BaseHandler> = [
-  new DownloadHandler(),
+const coreHandlers: Array<BaseHandler> = [
+  new DownloadHandler(browser),
   new FeedbackHandler(
     new FeedbackRepository(database),
   ),
-  new HelpHandler(),
   new JoinHandler(),
+  new PutPasswordHandler(),
+  new SplitHandler(),
   new StartHandler(
     new UserRepository(database),
   ),
-  new PutPasswordHandler(),
-  new SplitHandler(),
   new VersionHandler(),
+]
+
+const helpHandler = new HelpHandler(coreHandlers)
+
+export const handlers: Array<BaseHandler> = [
+  helpHandler,
+  ...coreHandlers,
 ]

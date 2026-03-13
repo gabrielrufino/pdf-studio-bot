@@ -6,6 +6,7 @@ import { SessionValidationError } from '../errors/session-validation.error'
 
 export abstract class BaseHandler {
   public abstract readonly command: CommandEnum
+  public abstract readonly description: string
   public abstract readonly events: Record<string, (ctx: CustomContext) => Promise<void>>
   public abstract onCommand(ctx: CustomContext): Promise<void>
 

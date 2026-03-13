@@ -2,7 +2,6 @@ import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
 import { UserEntity } from '../entities/user.entity'
 import { CommandEnum } from '../enums/command.enum'
-import { HelpMessage } from '../messages/help.message'
 import { WelcomeMessage } from '../messages/welcome.message'
 import { BaseHandler } from './base.handler'
 
@@ -14,6 +13,7 @@ export class StartHandler extends BaseHandler {
   }
 
   public readonly command = CommandEnum.Start
+  public readonly description = 'Start using the bot'
   public readonly events = {}
 
   async onCommand(ctx: CustomContext) {
@@ -31,11 +31,6 @@ export class StartHandler extends BaseHandler {
       new WelcomeMessage()
         .build(),
       { parse_mode: 'HTML' },
-    )
-
-    await ctx.reply(
-      new HelpMessage()
-        .build(),
     )
   }
 }
