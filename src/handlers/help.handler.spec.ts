@@ -29,6 +29,9 @@ describe(HelpHandler.name, () => {
       await handler.onCommand(ctx)
 
       expect(ctx.reply).toHaveBeenCalledWith(
+        expect.stringContaining('/help - Show the list of available commands'),
+      )
+      expect(ctx.reply).toHaveBeenCalledWith(
         expect.stringContaining('/download - Download a PDF from a URL'),
       )
       expect(ctx.reply).toHaveBeenCalledWith(

@@ -64,10 +64,11 @@ export class DownloadHandler extends BaseHandler {
       }
       finally {
         if (folder) {
-          await fs.rm(folder, { force: true, recursive: true }).catch(() => { })
+          await fs.rm(folder, { force: true, recursive: true }).catch(error =>
+            this.logger.error({ error }, 'Failed to remove temporary folder.'))
         }
         if (page) {
-          await page.close().catch(() => { })
+          await page.close().catch(error => this.logger.error({ error }, 'Failed to close page.'))
         }
         this.clearSession(ctx)
       }

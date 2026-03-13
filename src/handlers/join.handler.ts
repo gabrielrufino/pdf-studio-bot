@@ -89,7 +89,8 @@ export class JoinHandler extends BaseHandler {
     }
     finally {
       const cleanup = [...paths, outputDir]
-      await Promise.all(cleanup.map(p => fs.rm(p, { force: true, recursive: true }).catch(() => { /* ignore cleanup errors */ })))
+      await Promise.all(cleanup.map(p => fs.rm(p, { force: true, recursive: true }).catch(error =>
+        this.logger.error({ error, path: p }, 'Failed to remove temporary file/folder.'))))
 
       this.clearSession(ctx)
     }
