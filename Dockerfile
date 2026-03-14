@@ -1,11 +1,9 @@
 FROM node:24-alpine AS builder
 
-# Install dependencies needed for native modules
+# Install dependencies needed for native modules and enable pnpm
 # hadolint ignore=DL3018
-RUN apk add --no-cache python3 make g++ chromium
-
-# Enable corepack for pnpm
-RUN corepack enable
+RUN apk add --no-cache python3 make g++ chromium && \
+    corepack enable
 
 WORKDIR /app
 
@@ -23,11 +21,10 @@ RUN pnpm run build
 # Production stage
 FROM node:24-alpine AS production
 
+# Install chromium and enable pnpm
 # hadolint ignore=DL3018
-RUN apk add --no-cache chromium
-
-# Enable corepack for pnpm
-RUN corepack enable
+RUN apk add --no-cache chromium && \
+    corepack enable
 
 # ✅ Configurar Puppeteer
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
