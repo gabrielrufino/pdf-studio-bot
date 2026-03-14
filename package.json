@@ -6,7 +6,7 @@
   "license": "UNLICENSED",
   "main": "dist/index.mjs",
   "scripts": {
-    "build": "tsdown src/index.ts",
+    "build": "tsdown src/index.ts --format cjs",
     "build:check": "tsc --noEmit",
     "build:watch": "tsdown src/index.ts --watch",
     "lint": "eslint ./src",
