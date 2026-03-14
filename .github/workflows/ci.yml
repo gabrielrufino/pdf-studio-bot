@@ -1,8 +1,9 @@
 name: CI
 
 on:
-  - push
-  - workflow_dispatch
+  push:
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   node-ci:
@@ -27,5 +28,5 @@ jobs:
           image-name: gabrielrufino/pdfstudio-bot
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.sha }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
