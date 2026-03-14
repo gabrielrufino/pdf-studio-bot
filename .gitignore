@@ -131,3 +131,4 @@ dist
 
 # Others
 assets/output.pdf
+package-lock.json

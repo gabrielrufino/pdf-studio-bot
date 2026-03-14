@@ -1,12 +1,35 @@
-FROM node:22-alpine AS base
+FROM node:24-alpine AS builder
 
-# Install dependencies needed for native modules
+# Install dependencies needed for native modules and enable pnpm
 # hadolint ignore=DL3018
-RUN apk add --no-cache python3 make g++ chromium
+RUN apk add --no-cache python3 make g++ chromium && \
+    corepack enable
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
+
+# Install all dependencies (needed for building)
+RUN pnpm install --frozen-lockfile
+
+# Copy source code and build
+COPY tsconfig.json ./
+COPY src/ ./src/
+RUN pnpm run build
+
+# Production stage
+FROM node:24-alpine AS production
+
+# Install chromium and enable pnpm
+# hadolint ignore=DL3018
+RUN apk add --no-cache chromium && \
+    corepack enable
 
 # ✅ Configurar Puppeteer
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
+    NODE_ENV=production
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
@@ -14,51 +37,12 @@ RUN addgroup -g 1001 -S nodejs && \
 
 WORKDIR /app
 
-# Copy package files for dependency installation
-COPY package.json package-lock.json ./
-
-# Development stage
-FROM base AS development
-
-# Install all dependencies (including devDependencies)
-RUN npm ci --frozen-lockfile
-
-# Copy source code and config files
-COPY tsconfig.json ./
-COPY src/ ./src/
-
-# Change ownership to non-root user
-RUN chown -R pdfbot:nodejs /app
-USER pdfbot
-
-# Set development environment
-ENV NODE_ENV=development
-
-# Use tsx for development with hot-reload
-CMD ["npm", "run", "start:dev"]
-
-# Builder stage
-FROM base AS builder
-
-# Install all dependencies (including devDependencies for build)
-RUN npm ci --frozen-lockfile
-
-# Copy source code and config files
-COPY tsconfig.json ./
-COPY src/ ./src/
-
-# Build the application
-RUN npx tsc
-
-# Production stage
-FROM base AS production
-
-# Set production environment
-ENV NODE_ENV=production
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
 
 # Install only production dependencies
-RUN npm ci --frozen-lockfile --omit=dev && \
-    npm cache clean --force
+RUN pnpm install --frozen-lockfile --prod && \
+    pnpm store prune
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
@@ -67,8 +51,4 @@ COPY --from=builder /app/dist ./dist
 RUN chown -R pdfbot:nodejs /app
 USER pdfbot
 
-# Health check (optional - adjust based on your app)
-# HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-#   CMD node dist/health.js || exit 1
-
-ENTRYPOINT ["npm", "start"]
+ENTRYPOINT ["pnpm", "start"]

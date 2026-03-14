@@ -1,6 +1,6 @@
 {
   "name": "@gabrielrufino/pdf-studio-bot",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "private": true,
   "author": "Gabriel Rufino <contato@gabrielrufino.com>",
   "license": "UNLICENSED",
@@ -36,6 +36,7 @@
     "@commitlint/config-conventional": "^19.8.1",
     "@faker-js/faker": "^8.4.1",
     "@gabrielrufino/types": "^1.2.1",
+    "@mapbox/node-pre-gyp": "^2.0.3",
     "@vitest/coverage-v8": "^4.1.0",
     "eslint": "^9.39.4",
     "husky": "^9.1.7",
@@ -45,5 +46,15 @@
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.8"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "esbuild",
+      "mongodb-memory-server",
+      "muhammara",
+      "puppeteer",
+      "unrs-resolver"
+    ]
   }
 }
