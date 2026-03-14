@@ -36,6 +36,7 @@
     "@commitlint/config-conventional": "^19.8.1",
     "@faker-js/faker": "^8.4.1",
     "@gabrielrufino/types": "^1.2.1",
+    "@mapbox/node-pre-gyp": "^2.0.3",
     "@vitest/coverage-v8": "^4.1.0",
     "eslint": "^9.39.4",
     "husky": "^9.1.7",
