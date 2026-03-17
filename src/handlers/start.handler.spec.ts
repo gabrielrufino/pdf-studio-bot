@@ -34,6 +34,10 @@ describe(StartHandler.name, () => {
         from: {
           id: 12345,
         },
+        session: {
+          command: null,
+          params: null,
+        },
         reply: vi.fn(),
       } as unknown as CustomContext
 
@@ -46,6 +50,10 @@ describe(StartHandler.name, () => {
       const ctx = {
         from: {
           id: 12345,
+        },
+        session: {
+          command: null,
+          params: null,
         },
         reply: vi.fn(),
       } as unknown as CustomContext
@@ -73,6 +81,10 @@ describe(StartHandler.name, () => {
         from: {
           id: 12345,
         },
+        session: {
+          command: null,
+          params: null,
+        },
         reply: vi.fn(),
       } as unknown as CustomContext
 
@@ -85,6 +97,10 @@ describe(StartHandler.name, () => {
       const ctx = {
         from: {
           id: 12345,
+        },
+        session: {
+          command: null,
+          params: null,
         },
         reply: vi.fn(),
       } as unknown as CustomContext

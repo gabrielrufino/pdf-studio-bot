@@ -1,6 +1,7 @@
 import type { z } from 'zod'
 import type { CommandEnum } from '../enums/command.enum'
 import type { CustomContext } from '../types/custom-context.type'
+import fs from 'node:fs/promises'
 import { logger } from '../config/logger'
 import { SessionValidationError } from '../errors/session-validation.error'
 
@@ -23,12 +24,40 @@ export abstract class BaseHandler {
     return result.data
   }
 
-  protected setSessionCommand(ctx: CustomContext) {
+  protected async setSessionCommand(ctx: CustomContext) {
+    await this.removeTemporaryFiles(ctx)
     ctx.session.command = this.command
   }
 
-  protected clearSession(ctx: CustomContext) {
+  protected async resetSession(ctx: CustomContext) {
+    await this.removeTemporaryFiles(ctx)
     ctx.session.command = null
     ctx.session.params = null
+  }
+
+  private async removeTemporaryFiles(ctx: CustomContext) {
+    const params = ctx.session.params as any
+
+    if (!params) {
+      return
+    }
+
+    const paths: string[] = []
+
+    if (params.path && typeof params.path === 'string') {
+      paths.push(params.path)
+    }
+
+    if (Array.isArray(params.paths)) {
+      paths.push(...params.paths)
+    }
+
+    await Promise.all(
+      paths.map(path =>
+        fs.rm(path, { force: true, recursive: true }).catch(error =>
+          this.logger.error({ error, path }, 'Failed to remove temporary file/folder.'),
+        ),
+      ),
+    )
   }
 }

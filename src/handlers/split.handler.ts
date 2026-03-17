@@ -21,6 +21,7 @@ export class SplitHandler extends BaseHandler {
         const pagesCount = pdfReader.getPagesCount()
 
         outputDir = await fs.mkdtemp(join(os.tmpdir(), 'pdf-studio-bot-split-'))
+        await fs.chmod(outputDir, 0o700)
 
         await ctx.reply(`📄 Found ${pagesCount} pages. Splitting...`)
 
@@ -56,13 +57,13 @@ export class SplitHandler extends BaseHandler {
         }
         await fs.rm(inputPath, { force: true }).catch(error =>
           this.logger.error({ error, path: inputPath }, 'Failed to remove input file.'))
-        this.clearSession(ctx)
+        await this.resetSession(ctx)
       }
     },
   }
 
   async onCommand(ctx: CustomContext): Promise<void> {
-    this.setSessionCommand(ctx)
+    await this.setSessionCommand(ctx)
     await ctx.reply('Please send the PDF file you want to split.')
   }
 }

@@ -1,5 +1,4 @@
 import type { CustomContext } from '../types/custom-context.type'
-import crypto from 'node:crypto'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { InputFile } from 'grammy'
@@ -45,7 +44,6 @@ export class PutPasswordHandler extends BaseHandler {
           new Recipe(params.path!, output)
             .encrypt({
               userPassword: password,
-              ownerPassword: crypto.randomUUID(),
             })
             .endPDF((err?: Error) => {
               if (err) {
@@ -65,13 +63,13 @@ export class PutPasswordHandler extends BaseHandler {
         const cleanup = [params.path!, output]
         await Promise.all(cleanup.map(p => fs.rm(p, { force: true }).catch(error =>
           this.logger.error({ error, path: p }, 'Failed to remove temporary file.'))))
-        this.clearSession(ctx)
+        await this.resetSession(ctx)
       }
     },
   }
 
   public async onCommand(ctx: CustomContext): Promise<void> {
-    this.setSessionCommand(ctx)
+    await this.setSessionCommand(ctx)
     ctx.session.params = { path: null }
 
     ctx.reply('Send the file')

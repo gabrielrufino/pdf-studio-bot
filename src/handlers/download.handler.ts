@@ -46,6 +46,7 @@ export class DownloadHandler extends BaseHandler {
         })
 
         folder = await fs.mkdtemp(path.join(os.tmpdir(), 'pdffromlink-'))
+        await fs.chmod(folder, 0o700)
         const filePath = path.join(folder, 'file.pdf')
 
         await page.pdf({
@@ -70,13 +71,13 @@ export class DownloadHandler extends BaseHandler {
         if (page) {
           await page.close().catch(error => this.logger.error({ error }, 'Failed to close page.'))
         }
-        this.clearSession(ctx)
+        await this.resetSession(ctx)
       }
     },
   }
 
   async onCommand(ctx: CustomContext): Promise<void> {
-    this.setSessionCommand(ctx)
+    await this.setSessionCommand(ctx)
     ctx.session.params = { url: null }
 
     await ctx.reply(
