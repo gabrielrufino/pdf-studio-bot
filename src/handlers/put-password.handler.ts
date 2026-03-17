@@ -23,7 +23,7 @@ export class PutPasswordHandler extends BaseHandler {
         path: filePath,
       }
 
-      await ctx.reply('Send the password')
+      await ctx.reply('🔑 File received! Now, please send the password you\'d like to use to protect it.')
     },
     'msg:text': async (ctx: CustomContext) => {
       const params = this.validateParams(PutPasswordParamsSchema, ctx.session.params)
@@ -32,7 +32,7 @@ export class PutPasswordHandler extends BaseHandler {
         throw new SessionValidationError()
       }
 
-      await ctx.reply('Putting a password on the PDF file')
+      await ctx.reply('🔒 Protecting your PDF file with the password...')
 
       const output = path.join(path.dirname(params.path!), 'output.pdf')
 
@@ -49,7 +49,9 @@ export class PutPasswordHandler extends BaseHandler {
               if (err) {
                 return reject(err)
               }
-              ctx.replyWithDocument(new InputFile(output))
+              ctx.replyWithDocument(new InputFile(output), {
+                caption: '✅ Here is your password-protected PDF!',
+              })
                 .then(() => resolve())
                 .catch(reject)
             })
@@ -72,6 +74,6 @@ export class PutPasswordHandler extends BaseHandler {
     await this.setSessionCommand(ctx)
     ctx.session.params = { path: null }
 
-    ctx.reply('Send the file')
+    await ctx.reply('📄 Please send the PDF file you want to protect with a password.')
   }
 }
