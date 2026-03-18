@@ -32,7 +32,7 @@ export class DownloadHandler extends BaseHandler {
         throw new SessionValidationError()
       }
 
-      this.validateParams(DownloadParamsSchema, ctx.session.params)
+      const params = this.validateParams(DownloadParamsSchema, ctx.session.params)
       const url = ctx.message?.text
 
       const browserInstance = await this.browser.getInstance()
@@ -49,6 +49,11 @@ export class DownloadHandler extends BaseHandler {
         await fs.chmod(folder, 0o700)
         const filePath = path.join(folder, 'file.pdf')
 
+        ctx.session.params = {
+          ...params,
+          path: folder,
+        }
+
         await page.pdf({
           path: filePath,
           ...DownloadHandler.PDF_CONFIG,
@@ -64,10 +69,6 @@ export class DownloadHandler extends BaseHandler {
         await ctx.reply('❌ An error occurred while converting the URL to PDF.')
       }
       finally {
-        if (folder) {
-          await fs.rm(folder, { force: true, recursive: true }).catch(error =>
-            this.logger.error({ error }, 'Failed to remove temporary folder.'))
-        }
         if (page) {
           await page.close().catch(error => this.logger.error({ error }, 'Failed to close page.'))
         }

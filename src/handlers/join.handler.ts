@@ -89,9 +89,8 @@ export class JoinHandler extends BaseHandler {
       await ctx.reply('❌ An error occurred while joining your PDF files. Please try again later.')
     }
     finally {
-      const cleanup = [...paths, outputDir]
-      await Promise.all(cleanup.map(p => fs.rm(p, { force: true, recursive: true }).catch(error =>
-        this.logger.error({ error, path: p }, 'Failed to remove temporary file/folder.'))))
+      await fs.rm(outputDir, { force: true, recursive: true }).catch(error =>
+        this.logger.error({ error, path: outputDir }, 'Failed to remove temporary folder.'))
 
       await this.resetSession(ctx)
     }

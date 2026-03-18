@@ -62,10 +62,11 @@ export class PutPasswordHandler extends BaseHandler {
         await ctx.reply('❌ An error occurred while putting a password on the PDF file.')
       }
       finally {
-        const cleanup = [params.path!, output]
-        await Promise.all(cleanup.map(p => fs.rm(p, { force: true, recursive: true }).catch(error =>
-          this.logger.error({ error, path: p }, 'Failed to remove temporary file.'))))
-        await this.resetSession(ctx)
+        await Promise.all([
+          fs.rm(output, { force: true, recursive: true }).catch(error =>
+            this.logger.error({ error, path: output }, 'Failed to remove temporary file.')),
+          this.resetSession(ctx),
+        ])
       }
     },
   }
