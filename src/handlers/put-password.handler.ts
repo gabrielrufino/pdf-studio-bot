@@ -1,5 +1,6 @@
 import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
+import os from 'node:os'
 import path from 'node:path'
 import { InputFile } from 'grammy'
 import { Recipe } from 'muhammara'
@@ -34,7 +35,9 @@ export class PutPasswordHandler extends BaseHandler {
 
       await ctx.reply('🔒 Protecting your PDF file with the password...')
 
-      const output = path.join(path.dirname(params.path!), 'output.pdf')
+      const outputDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-studio-bot-putpwd-'))
+      await fs.chmod(outputDir, 0o700)
+      const output = path.join(outputDir, 'output.pdf')
 
       const password = ctx.message?.text
       bot.api.deleteMessage(ctx.chat!.id, ctx.message!.message_id)
@@ -63,8 +66,8 @@ export class PutPasswordHandler extends BaseHandler {
       }
       finally {
         await Promise.all([
-          fs.rm(output, { force: true, recursive: true }).catch(error =>
-            this.logger.error({ error, path: output }, 'Failed to remove temporary file.')),
+          fs.rm(outputDir, { force: true, recursive: true }).catch(error =>
+            this.logger.error({ error, path: outputDir }, 'Failed to remove temporary directory.')),
           this.resetSession(ctx),
         ])
       }
