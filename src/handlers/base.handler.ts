@@ -36,7 +36,7 @@ export abstract class BaseHandler {
   }
 
   private async removeTemporaryFiles(ctx: CustomContext) {
-    const params = ctx.session.params as any
+    const params = ctx.session.params
 
     if (!params) {
       return
@@ -44,12 +44,12 @@ export abstract class BaseHandler {
 
     const paths: string[] = []
 
-    if (params.path && typeof params.path === 'string') {
+    if ('path' in params && typeof params.path === 'string') {
       paths.push(params.path)
     }
 
-    if (Array.isArray(params.paths)) {
-      paths.push(...params.paths)
+    if ('paths' in params && Array.isArray(params.paths)) {
+      paths.push(...params.paths.filter((p): p is string => typeof p === 'string'))
     }
 
     await Promise.all(

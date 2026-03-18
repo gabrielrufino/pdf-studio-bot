@@ -17,7 +17,7 @@ export class StartHandler extends BaseHandler {
   public readonly events = {}
 
   async onCommand(ctx: CustomContext) {
-    await this.setSessionCommand(ctx)
+    await this.resetSession(ctx)
     const user = await this.userRepository.findByTelegramId(ctx.from!.id)
     if (user === null) {
       await this.userRepository.create(new UserEntity({

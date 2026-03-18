@@ -63,7 +63,7 @@ export class PutPasswordHandler extends BaseHandler {
       }
       finally {
         const cleanup = [params.path!, output]
-        await Promise.all(cleanup.map(p => fs.rm(p, { force: true }).catch(error =>
+        await Promise.all(cleanup.map(p => fs.rm(p, { force: true, recursive: true }).catch(error =>
           this.logger.error({ error, path: p }, 'Failed to remove temporary file.'))))
         await this.resetSession(ctx)
       }

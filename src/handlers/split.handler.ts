@@ -55,7 +55,7 @@ export class SplitHandler extends BaseHandler {
           await fs.rm(outputDir, { force: true, recursive: true }).catch(error =>
             this.logger.error({ error, path: outputDir }, 'Failed to remove temporary folder.'))
         }
-        await fs.rm(inputPath, { force: true }).catch(error =>
+        await fs.rm(inputPath, { force: true, recursive: true }).catch(error =>
           this.logger.error({ error, path: inputPath }, 'Failed to remove input file.'))
         await this.resetSession(ctx)
       }

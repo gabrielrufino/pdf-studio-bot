@@ -114,5 +114,23 @@ describe(StartHandler.name, () => {
         { parse_mode: 'HTML' },
       )
     })
+
+    it('should reset the session', async () => {
+      const ctx = {
+        from: {
+          id: 12345,
+        },
+        session: {
+          command: CommandEnum.Start,
+          params: { foo: 'bar' },
+        },
+        reply: vi.fn(),
+      } as unknown as CustomContext
+
+      await handler.onCommand(ctx)
+
+      expect(ctx.session.command).toBeNull()
+      expect(ctx.session.params).toBeNull()
+    })
   })
 })
