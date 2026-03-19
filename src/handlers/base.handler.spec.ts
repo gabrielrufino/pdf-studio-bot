@@ -11,16 +11,16 @@ describe(BaseHandler.name, () => {
     async onCommand() {}
 
     // Expose protected methods for testing
-    public setSessionCommand(ctx: CustomContext) {
-      super.setSessionCommand(ctx)
+    public async setSessionCommand(ctx: CustomContext) {
+      await super.setSessionCommand(ctx)
     }
 
-    public clearSession(ctx: CustomContext) {
-      super.clearSession(ctx)
+    public async resetSession(ctx: CustomContext) {
+      await super.resetSession(ctx)
     }
   }
 
-  it('should set session command correctly', () => {
+  it('should set session command correctly', async () => {
     const handler = new TestHandler()
     const ctx = {
       session: {
@@ -29,12 +29,12 @@ describe(BaseHandler.name, () => {
       },
     } as CustomContext
 
-    handler.setSessionCommand(ctx)
+    await handler.setSessionCommand(ctx)
 
     expect(ctx.session.command).toBe(CommandEnum.Test)
   })
 
-  it('should clear session correctly', () => {
+  it('should reset session correctly', async () => {
     const handler = new TestHandler()
     const ctx = {
       session: {
@@ -43,7 +43,7 @@ describe(BaseHandler.name, () => {
       },
     } as unknown as CustomContext
 
-    handler.clearSession(ctx)
+    await handler.resetSession(ctx)
 
     expect(ctx.session.command).toBeNull()
     expect(ctx.session.params).toBeNull()

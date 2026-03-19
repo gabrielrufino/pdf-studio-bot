@@ -48,7 +48,7 @@ export class JoinHandler extends BaseHandler {
   }
 
   async onCommand(ctx: CustomContext) {
-    this.setSessionCommand(ctx)
+    await this.setSessionCommand(ctx)
     ctx.session.params = { paths: [] }
     await ctx.reply(
       '📎 Send the PDF files you want to join.\n\n'
@@ -66,6 +66,7 @@ export class JoinHandler extends BaseHandler {
     }
 
     const outputDir = await fs.mkdtemp(join(os.tmpdir(), 'pdf-studio-bot-join-'))
+    await fs.chmod(outputDir, 0o700)
     const outputPath = join(outputDir, 'merged.pdf')
 
     try {
@@ -88,11 +89,10 @@ export class JoinHandler extends BaseHandler {
       await ctx.reply('❌ An error occurred while joining your PDF files. Please try again later.')
     }
     finally {
-      const cleanup = [...paths, outputDir]
-      await Promise.all(cleanup.map(p => fs.rm(p, { force: true, recursive: true }).catch(error =>
-        this.logger.error({ error, path: p }, 'Failed to remove temporary file/folder.'))))
+      await fs.rm(outputDir, { force: true, recursive: true }).catch(error =>
+        this.logger.error({ error, path: outputDir }, 'Failed to remove temporary folder.'))
 
-      this.clearSession(ctx)
+      await this.resetSession(ctx)
     }
   }
 }

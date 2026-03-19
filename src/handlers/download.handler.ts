@@ -32,7 +32,7 @@ export class DownloadHandler extends BaseHandler {
         throw new SessionValidationError()
       }
 
-      this.validateParams(DownloadParamsSchema, ctx.session.params)
+      const params = this.validateParams(DownloadParamsSchema, ctx.session.params)
       const url = ctx.message?.text
 
       const browserInstance = await this.browser.getInstance()
@@ -46,7 +46,13 @@ export class DownloadHandler extends BaseHandler {
         })
 
         folder = await fs.mkdtemp(path.join(os.tmpdir(), 'pdffromlink-'))
+        await fs.chmod(folder, 0o700)
         const filePath = path.join(folder, 'file.pdf')
+
+        ctx.session.params = {
+          ...params,
+          path: folder,
+        }
 
         await page.pdf({
           path: filePath,
@@ -63,20 +69,16 @@ export class DownloadHandler extends BaseHandler {
         await ctx.reply('❌ An error occurred while converting the URL to PDF.')
       }
       finally {
-        if (folder) {
-          await fs.rm(folder, { force: true, recursive: true }).catch(error =>
-            this.logger.error({ error }, 'Failed to remove temporary folder.'))
-        }
         if (page) {
           await page.close().catch(error => this.logger.error({ error }, 'Failed to close page.'))
         }
-        this.clearSession(ctx)
+        await this.resetSession(ctx)
       }
     },
   }
 
   async onCommand(ctx: CustomContext): Promise<void> {
-    this.setSessionCommand(ctx)
+    await this.setSessionCommand(ctx)
     ctx.session.params = { url: null }
 
     await ctx.reply(

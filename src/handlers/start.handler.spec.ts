@@ -34,6 +34,10 @@ describe(StartHandler.name, () => {
         from: {
           id: 12345,
         },
+        session: {
+          command: null,
+          params: null,
+        },
         reply: vi.fn(),
       } as unknown as CustomContext
 
@@ -46,6 +50,10 @@ describe(StartHandler.name, () => {
       const ctx = {
         from: {
           id: 12345,
+        },
+        session: {
+          command: null,
+          params: null,
         },
         reply: vi.fn(),
       } as unknown as CustomContext
@@ -73,6 +81,10 @@ describe(StartHandler.name, () => {
         from: {
           id: 12345,
         },
+        session: {
+          command: null,
+          params: null,
+        },
         reply: vi.fn(),
       } as unknown as CustomContext
 
@@ -86,6 +98,10 @@ describe(StartHandler.name, () => {
         from: {
           id: 12345,
         },
+        session: {
+          command: null,
+          params: null,
+        },
         reply: vi.fn(),
       } as unknown as CustomContext
 
@@ -97,6 +113,24 @@ describe(StartHandler.name, () => {
           .build(),
         { parse_mode: 'HTML' },
       )
+    })
+
+    it('should reset the session', async () => {
+      const ctx = {
+        from: {
+          id: 12345,
+        },
+        session: {
+          command: CommandEnum.Start,
+          params: { foo: 'bar' },
+        },
+        reply: vi.fn(),
+      } as unknown as CustomContext
+
+      await handler.onCommand(ctx)
+
+      expect(ctx.session.command).toBeNull()
+      expect(ctx.session.params).toBeNull()
     })
   })
 })

@@ -1,6 +1,6 @@
 import type { CustomContext } from '../types/custom-context.type'
-import crypto from 'node:crypto'
 import fs from 'node:fs/promises'
+import os from 'node:os'
 import path from 'node:path'
 import { InputFile } from 'grammy'
 import { Recipe } from 'muhammara'
@@ -24,7 +24,7 @@ export class PutPasswordHandler extends BaseHandler {
         path: filePath,
       }
 
-      await ctx.reply('Send the password')
+      await ctx.reply('🔑 File received! Now, please send the password you\'d like to use to protect it.')
     },
     'msg:text': async (ctx: CustomContext) => {
       const params = this.validateParams(PutPasswordParamsSchema, ctx.session.params)
@@ -33,9 +33,11 @@ export class PutPasswordHandler extends BaseHandler {
         throw new SessionValidationError()
       }
 
-      await ctx.reply('Putting a password on the PDF file')
+      await ctx.reply('🔒 Protecting your PDF file with the password...')
 
-      const output = path.join(path.dirname(params.path!), 'output.pdf')
+      const outputDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-studio-bot-putpwd-'))
+      await fs.chmod(outputDir, 0o700)
+      const output = path.join(outputDir, 'output.pdf')
 
       const password = ctx.message?.text
       bot.api.deleteMessage(ctx.chat!.id, ctx.message!.message_id)
@@ -45,13 +47,14 @@ export class PutPasswordHandler extends BaseHandler {
           new Recipe(params.path!, output)
             .encrypt({
               userPassword: password,
-              ownerPassword: crypto.randomUUID(),
             })
             .endPDF((err?: Error) => {
               if (err) {
                 return reject(err)
               }
-              ctx.replyWithDocument(new InputFile(output))
+              ctx.replyWithDocument(new InputFile(output), {
+                caption: '✅ Here is your password-protected PDF!',
+              })
                 .then(() => resolve())
                 .catch(reject)
             })
@@ -62,18 +65,19 @@ export class PutPasswordHandler extends BaseHandler {
         await ctx.reply('❌ An error occurred while putting a password on the PDF file.')
       }
       finally {
-        const cleanup = [params.path!, output]
-        await Promise.all(cleanup.map(p => fs.rm(p, { force: true }).catch(error =>
-          this.logger.error({ error, path: p }, 'Failed to remove temporary file.'))))
-        this.clearSession(ctx)
+        await Promise.all([
+          fs.rm(outputDir, { force: true, recursive: true }).catch(error =>
+            this.logger.error({ error, path: outputDir }, 'Failed to remove temporary directory.')),
+          this.resetSession(ctx),
+        ])
       }
     },
   }
 
   public async onCommand(ctx: CustomContext): Promise<void> {
-    this.setSessionCommand(ctx)
+    await this.setSessionCommand(ctx)
     ctx.session.params = { path: null }
 
-    ctx.reply('Send the file')
+    await ctx.reply('📄 Please send the PDF file you want to protect with a password.')
   }
 }

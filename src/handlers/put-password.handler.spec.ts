@@ -47,7 +47,7 @@ describe(PutPasswordHandler.name, () => {
     it('should set session command and ask for file', async () => {
       await handler.onCommand(ctx)
 
-      expect(ctx.reply).toHaveBeenCalledWith('Send the file')
+      expect(ctx.reply).toHaveBeenCalledWith('📄 Please send the PDF file you want to protect with a password.')
       expect(ctx.session.command).toBe(CommandEnum.PutPassword)
       expect(ctx.session.params).toEqual({ path: null })
     })
@@ -65,7 +65,7 @@ describe(PutPasswordHandler.name, () => {
 
         expect(ctx.getFile).toHaveBeenCalled()
         expect(ctx.session.params).toEqual({ path: filePath })
-        expect(ctx.reply).toHaveBeenCalledWith('Send the password')
+        expect(ctx.reply).toHaveBeenCalledWith('🔑 File received! Now, please send the password you\'d like to use to protect it.')
       })
 
       it('should throw SessionValidationError if session is invalid', async () => {
@@ -92,7 +92,10 @@ describe(PutPasswordHandler.name, () => {
 
           await handler.events['msg:text'](ctx)
 
-          expect(ctx.replyWithDocument).toHaveBeenCalledWith(expect.any(InputFile))
+          expect(ctx.reply).toHaveBeenCalledWith('🔒 Protecting your PDF file with the password...')
+          expect(ctx.replyWithDocument).toHaveBeenCalledWith(expect.any(InputFile), {
+            caption: '✅ Here is your password-protected PDF!',
+          })
           expect(ctx.session.command).toBeNull()
           expect(ctx.session.params).toBeNull()
         }
