@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@grammyjs/files": "^1.2.0",
+    "@grammyjs/ratelimiter": "^1.2.1",
     "@grammyjs/runner": "^2.0.3",
     "@grammyjs/storage-mongodb": "^2.5.1",
     "grammy": "^1.41.1",

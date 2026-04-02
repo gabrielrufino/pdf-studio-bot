@@ -3,6 +3,7 @@ import type { SessionData } from '../interfaces/session-data'
 import type { CustomContext } from '../types/custom-context.type'
 import process from 'node:process'
 import { hydrateFiles } from '@grammyjs/files'
+import { limit } from '@grammyjs/ratelimiter'
 import { MongoDBAdapter } from '@grammyjs/storage-mongodb'
 import { Bot, session } from 'grammy'
 import { MessageEntity } from '../entities/message.entity'
@@ -13,6 +14,8 @@ import { database } from './database'
 import { logger } from './logger'
 
 const bot = new Bot<CustomContext>(process.env.BOT_TOKEN!)
+
+bot.use(limit())
 
 bot.use(
   session({
