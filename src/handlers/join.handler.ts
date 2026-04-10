@@ -21,10 +21,7 @@ export class JoinHandler extends BaseHandler {
         return
       }
 
-      if (ctx.message?.document?.mime_type !== 'application/pdf') {
-        await ctx.reply('⚠️ Please send only PDF files.')
-        return
-      }
+      await this.validatePDF(ctx)
 
       const file = await ctx.getFile()
       const filePath = await file.download()

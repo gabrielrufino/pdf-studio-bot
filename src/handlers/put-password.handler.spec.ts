@@ -31,6 +31,9 @@ describe(PutPasswordHandler.name, () => {
       message: {
         text: 'password123',
         message_id: 1,
+        document: {
+          mime_type: 'application/pdf',
+        },
       },
       chat: { id: 100 },
       getFile: vi.fn(),

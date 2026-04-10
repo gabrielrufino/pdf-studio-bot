@@ -3,6 +3,7 @@ import type { CommandEnum } from '../enums/command.enum'
 import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
 import { logger } from '../config/logger'
+import { InvalidFileError } from '../errors/invalid-file.error'
 import { SessionValidationError } from '../errors/session-validation.error'
 
 export abstract class BaseHandler {
@@ -22,6 +23,13 @@ export abstract class BaseHandler {
     }
 
     return result.data
+  }
+
+  protected async validatePDF(ctx: CustomContext): Promise<void> {
+    if (ctx.message?.document?.mime_type !== 'application/pdf') {
+      await ctx.reply('⚠️ Please send only PDF files.')
+      throw new InvalidFileError()
+    }
   }
 
   protected async setSessionCommand(ctx: CustomContext) {
