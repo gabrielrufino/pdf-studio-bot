@@ -12,6 +12,8 @@ export class SplitHandler extends BaseHandler {
   readonly description = 'Split a PDF into individual pages'
   readonly events = {
     'msg:document': async (ctx: CustomContext) => {
+      await this.validatePDF(ctx)
+
       const file = await ctx.getFile()
       const inputPath = await file.download()
       let outputDir: string | undefined

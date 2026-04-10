@@ -6,6 +6,7 @@ import { bot } from './config/bot'
 import { browser } from './config/browser'
 import { database } from './config/database'
 import { logger } from './config/logger'
+import { InvalidFileError } from './errors/invalid-file.error'
 import { SessionValidationError } from './errors/session-validation.error'
 import { handlers } from './handlers'
 import { FeedbackRepository } from './repositories/feedback.repository'
@@ -44,6 +45,10 @@ async function main() {
               await ctx.reply(`⚠️ ${error.message}`)
               ctx.session.command = null
               ctx.session.params = null
+              return
+            }
+
+            if (error instanceof InvalidFileError) {
               return
             }
 

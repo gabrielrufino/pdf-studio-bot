@@ -17,6 +17,11 @@ describe(SplitHandler.name, () => {
         command: null,
         params: {} as any,
       },
+      message: {
+        document: {
+          mime_type: 'application/pdf',
+        },
+      },
       getFile: vi.fn().mockResolvedValue({
         download: vi.fn().mockResolvedValue(`${process.cwd()}/assets/lorem-ipsum.pdf`),
       }),

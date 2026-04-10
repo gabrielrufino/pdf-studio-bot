@@ -5,6 +5,7 @@ import os from 'node:os'
 import { join } from 'node:path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CommandEnum } from '../enums/command.enum'
+import { InvalidFileError } from '../errors/invalid-file.error'
 import { SessionValidationError } from '../errors/session-validation.error'
 import { JoinHandler } from './join.handler'
 
@@ -93,7 +94,7 @@ describe(JoinHandler.name, () => {
       it('should not add file path and notify user if mime type is invalid', async () => {
         ctx.message!.document!.mime_type = 'image/png'
 
-        await handler.events['msg:document'](ctx)
+        await expect(handler.events['msg:document'](ctx)).rejects.toThrow(InvalidFileError)
 
         expect(ctx.getFile).not.toHaveBeenCalled()
         expect((ctx.session.params as JoinParams).paths.length).toBe(0)

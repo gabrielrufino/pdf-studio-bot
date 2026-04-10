@@ -16,6 +16,9 @@ export class PutPasswordHandler extends BaseHandler {
   public readonly events = {
     'msg:document': async (ctx: CustomContext) => {
       const params = this.validateParams(PutPasswordParamsSchema, ctx.session.params)
+
+      await this.validatePDF(ctx)
+
       const file = await ctx.getFile()
       const filePath = await file.download()
 
