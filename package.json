@@ -19,6 +19,7 @@
     "prepare": "if [[ $NODE_ENV != \"production\" ]]; then husky; fi"
   },
   "dependencies": {
+    "@google/genai": "^1.49.0",
     "@grammyjs/files": "^1.2.0",
     "@grammyjs/ratelimiter": "^1.2.1",
     "@grammyjs/runner": "^2.0.3",
