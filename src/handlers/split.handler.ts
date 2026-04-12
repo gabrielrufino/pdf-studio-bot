@@ -9,7 +9,7 @@ import { BaseHandler } from './base.handler'
 
 export class SplitHandler extends BaseHandler {
   readonly command = CommandEnum.Split
-  readonly description = 'Split a PDF into individual pages'
+  readonly description = '✂️ Split a PDF into individual pages'
   readonly events = {
     'msg:document': async (ctx: CustomContext) => {
       await this.validatePDF(ctx)

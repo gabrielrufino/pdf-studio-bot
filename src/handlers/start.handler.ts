@@ -13,7 +13,7 @@ export class StartHandler extends BaseHandler {
   }
 
   public readonly command = CommandEnum.Start
-  public readonly description = 'Start using the bot'
+  public readonly description = '🚀 Start using the bot'
   public readonly events = {}
 
   async onCommand(ctx: CustomContext) {
