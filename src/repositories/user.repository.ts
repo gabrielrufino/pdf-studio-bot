@@ -1,6 +1,7 @@
 import type { Db } from 'mongodb'
 import type { UserEntity } from '../entities/user.entity'
 import { EnsureInitialized } from '../decorators/ensure-initialized.decorator'
+import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { BaseRepository } from './base.repository'
 
 export class UserRepository extends BaseRepository<UserEntity> {
@@ -18,6 +19,13 @@ export class UserRepository extends BaseRepository<UserEntity> {
             },
             is_blocked: {
               bsonType: 'bool',
+            },
+            plan_type: {
+              bsonType: 'string',
+              enum: Object.values(PlanTypeEnum),
+            },
+            plan_started_at: {
+              bsonType: 'date',
             },
             created_at: {
               bsonType: 'date',
