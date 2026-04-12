@@ -56,6 +56,23 @@ describe(SummaryHandler.name, () => {
       },
     } as unknown as CustomContext
   })
+  
+  const setupTestFile = async (prefix: string) => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), prefix))
+    const targetPath = path.join(tempDir, 'test.pdf')
+    await fs.copyFile(`${process.cwd()}/assets/lorem-ipsum.pdf`, targetPath)
+    vi.mocked(ctx.getFile).mockResolvedValue({
+      download: vi.fn().mockResolvedValue(targetPath),
+    } as any)
+    return { tempDir, targetPath }
+  }
+
+  const mockUserWithPlan = (plan: PlanTypeEnum) => {
+    vi.mocked(mockUserRepository.findByTelegramId).mockResolvedValue({
+      telegram_user: { id: 123 },
+      plan_type: plan,
+    } as any)
+  }
 
   it('should have correct command', () => {
     expect(handler.command).toBe(CommandEnum.Summary)
@@ -81,19 +98,10 @@ describe(SummaryHandler.name, () => {
       })
 
       it('should summarize PDF if constraints are respected and user is free', async () => {
-        const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-studio-bot-test-summary-'))
-        const targetPath = path.join(tempDir, 'test.pdf')
+        const { tempDir, targetPath } = await setupTestFile('pdf-studio-bot-test-summary-')
 
         try {
-          await fs.copyFile(`${process.cwd()}/assets/lorem-ipsum.pdf`, targetPath)
-          vi.mocked(ctx.getFile).mockResolvedValueOnce({
-            download: vi.fn().mockResolvedValue(targetPath),
-          } as any)
-
-          vi.mocked(mockUserRepository.findByTelegramId).mockResolvedValueOnce({
-            telegram_user: { id: 123 },
-            plan_type: PlanTypeEnum.Free,
-          } as any)
+          mockUserWithPlan(PlanTypeEnum.Free)
 
           mockGenerateContent.mockResolvedValueOnce({
             text: 'This is a mock summary of the PDF.',
@@ -135,19 +143,10 @@ describe(SummaryHandler.name, () => {
       })
 
       it('should summarize PDF for pro user ignoring limits', async () => {
-        const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-studio-bot-test-summary-pro-'))
-        const targetPath = path.join(tempDir, 'test.pdf')
+        const { tempDir } = await setupTestFile('pdf-studio-bot-test-summary-pro-')
 
         try {
-          await fs.copyFile(`${process.cwd()}/assets/lorem-ipsum.pdf`, targetPath)
-          vi.mocked(ctx.getFile).mockResolvedValueOnce({
-            download: vi.fn().mockResolvedValue(targetPath),
-          } as any)
-
-          vi.mocked(mockUserRepository.findByTelegramId).mockResolvedValueOnce({
-            telegram_user: { id: 123 },
-            plan_type: PlanTypeEnum.Pro,
-          } as any)
+          mockUserWithPlan(PlanTypeEnum.Pro)
 
           mockGenerateContent.mockResolvedValueOnce({
             text: 'This is a mock summary of the PDF.',
@@ -166,21 +165,12 @@ describe(SummaryHandler.name, () => {
       })
 
       it('should enforce size limit for free users', async () => {
-        const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-studio-bot-test-summary-size-'))
-        const targetPath = path.join(tempDir, 'test.pdf')
+        const { tempDir } = await setupTestFile('pdf-studio-bot-test-summary-size-')
 
         const statSpy = vi.spyOn(fs, 'stat')
 
         try {
-          await fs.copyFile(`${process.cwd()}/assets/lorem-ipsum.pdf`, targetPath)
-          vi.mocked(ctx.getFile).mockResolvedValueOnce({
-            download: vi.fn().mockResolvedValue(targetPath),
-          } as any)
-
-          vi.mocked(mockUserRepository.findByTelegramId).mockResolvedValueOnce({
-            telegram_user: { id: 123 },
-            plan_type: PlanTypeEnum.Free,
-          } as any)
+          mockUserWithPlan(PlanTypeEnum.Free)
 
           statSpy.mockResolvedValueOnce({ size: 15 * 1024 * 1024 } as any) // 15MB
 
@@ -196,19 +186,10 @@ describe(SummaryHandler.name, () => {
       })
 
       it('should split long summaries into multiple messages', async () => {
-        const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-studio-bot-test-summary-long-'))
-        const targetPath = path.join(tempDir, 'test.pdf')
+        const { tempDir } = await setupTestFile('pdf-studio-bot-test-summary-long-')
 
         try {
-          await fs.copyFile(`${process.cwd()}/assets/lorem-ipsum.pdf`, targetPath)
-          vi.mocked(ctx.getFile).mockResolvedValueOnce({
-            download: vi.fn().mockResolvedValue(targetPath),
-          } as any)
-
-          vi.mocked(mockUserRepository.findByTelegramId).mockResolvedValueOnce({
-            telegram_user: { id: 123 },
-            plan_type: PlanTypeEnum.Pro,
-          } as any)
+          mockUserWithPlan(PlanTypeEnum.Pro)
 
           const longSummary = 'A'.repeat(5000)
           mockGenerateContent.mockResolvedValueOnce({
