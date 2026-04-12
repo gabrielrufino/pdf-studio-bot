@@ -56,7 +56,7 @@ describe(SummaryHandler.name, () => {
       },
     } as unknown as CustomContext
   })
-  
+
   const setupTestFile = async (prefix: string) => {
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), prefix))
     const targetPath = path.join(tempDir, 'test.pdf')
