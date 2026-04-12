@@ -5,14 +5,16 @@ import fs from 'node:fs/promises'
 import muhammara from 'muhammara'
 import { CommandEnum } from '../enums/command.enum'
 import { PlanTypeEnum } from '../enums/plan-type.enum'
+import { LimitExceededError } from '../errors/limit-exceeded.error'
+import { UserNotFoundError } from '../errors/user-not-found.error'
 import { BaseHandler } from './base.handler'
 
 export class SummaryHandler extends BaseHandler {
   public readonly command = CommandEnum.Summary
-  public readonly description = 'Create a summary of a PDF'
+  public readonly description = '⚡ Create a summary of a PDF'
 
-  public static MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
-  public static MAX_PAGES = 50
+  private static readonly MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+  private static readonly MAX_PAGES = 50
 
   constructor(
     private readonly userRepository: UserRepository,
@@ -30,82 +32,19 @@ export class SummaryHandler extends BaseHandler {
       let uploadedFileName: string | undefined
 
       try {
-        const user = await this.userRepository.findByTelegramId(ctx.from!.id)
-        if (!user) {
-          throw new Error('User not found.')
-        }
-
-        const isPro = user.plan_type === PlanTypeEnum.Pro
-
-        if (!isPro) {
-          const stats = await fs.stat(inputPath)
-          let limitExceeded = stats.size > SummaryHandler.MAX_FILE_SIZE
-
-          if (!limitExceeded) {
-            const pdfReader = muhammara.createReader(inputPath)
-            const pagesCount = pdfReader.getPagesCount()
-            if (pagesCount > SummaryHandler.MAX_PAGES) {
-              limitExceeded = true
-            }
-          }
-
-          if (limitExceeded) {
-            await ctx.reply('⚠️ You have exceeded the limits of the free plan. You need to become pro and it costs 10 $ / month. Talk to @gabrielrufino to buy the pro plan.')
-            return
-          }
-        }
+        await this.verifyLimits(ctx, inputPath)
 
         const processingMessage = await ctx.reply('⏳ Summarizing your PDF. This might take a moment...')
 
-        const uploadedFile = await this.ai.files.upload({
-          file: inputPath,
-          config: {
-            mimeType: 'application/pdf',
-          },
-        })
-        uploadedFileName = uploadedFile.name
+        const { text, fileName } = await this.performSummarization(inputPath)
+        uploadedFileName = fileName
 
-        const response = await this.ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: [
-            {
-              role: 'user',
-              parts: [
-                { fileData: { fileUri: uploadedFile.uri!, mimeType: uploadedFile.mimeType! } },
-                { text: 'Create a concise yet informative summary of this PDF, structured with bullet points. Target length: ~2000 characters.' },
-              ],
-            },
-          ],
-        })
-
-        const summaryText = response.text
-        if (!summaryText) {
-          throw new Error('Summary text is empty.')
-        }
-        const fullMessage = `📝 **Summary:**\n\n${summaryText}`
-
-        if (fullMessage.length <= 4096) {
-          await ctx.api.editMessageText(
-            ctx.chat!.id,
-            processingMessage.message_id,
-            fullMessage,
-            { parse_mode: 'Markdown' },
-          )
-        }
-        else {
-          await ctx.api.editMessageText(
-            ctx.chat!.id,
-            processingMessage.message_id,
-            '✅ Summary complete! It is quite long, sending it in parts below:',
-          )
-
-          const chunks = this.splitMessage(summaryText)
-          for (const chunk of chunks) {
-            await ctx.reply(chunk, { parse_mode: 'Markdown' })
-          }
-        }
+        await this.sendSummaryResponse(ctx, processingMessage.message_id, text)
       }
       catch (error) {
+        if (error instanceof LimitExceededError)
+          return
+
         this.logger.error(error)
         await ctx.reply('❌ An error occurred while summarizing the PDF file.')
       }
@@ -126,6 +65,73 @@ export class SummaryHandler extends BaseHandler {
   public async onCommand(ctx: CustomContext): Promise<void> {
     await this.setSessionCommand(ctx)
     await ctx.reply('Please send the PDF file you want to summarize.')
+  }
+
+  private async verifyLimits(ctx: CustomContext, path: string): Promise<void> {
+    const user = await this.userRepository.findByTelegramId(ctx.from!.id)
+    if (!user)
+      throw new UserNotFoundError()
+    if (user.plan_type === PlanTypeEnum.Pro)
+      return
+
+    const stats = await fs.stat(path)
+    if (stats.size > SummaryHandler.MAX_FILE_SIZE) {
+      await this.notifyLimitExceeded(ctx)
+      throw new LimitExceededError()
+    }
+
+    const pdfReader = muhammara.createReader(path)
+    if (pdfReader.getPagesCount() > SummaryHandler.MAX_PAGES) {
+      await this.notifyLimitExceeded(ctx)
+      throw new LimitExceededError()
+    }
+  }
+
+  private async notifyLimitExceeded(ctx: CustomContext): Promise<void> {
+    await ctx.reply('⚠️ You have exceeded the limits of the free plan. You need to become pro and it costs 10 $ / month. Talk to @gabrielrufino to buy the pro plan.')
+  }
+
+  private async performSummarization(path: string): Promise<{ text: string, fileName: string }> {
+    const uploadedFile = await this.ai.files.upload({
+      file: path,
+      config: { mimeType: 'application/pdf' },
+    })
+
+    const response = await this.ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            { fileData: { fileUri: uploadedFile.uri!, mimeType: uploadedFile.mimeType! } },
+            { text: 'Create a concise yet informative summary of this PDF, structured with bullet points. Target length: ~2000 characters.' },
+          ],
+        },
+      ],
+    })
+
+    if (!response.text)
+      throw new Error('Summary text is empty.')
+
+    if (!uploadedFile.name)
+      throw new Error('Uploaded file name is missing.')
+
+    return { text: response.text, fileName: uploadedFile.name }
+  }
+
+  private async sendSummaryResponse(ctx: CustomContext, messageId: number, text: string): Promise<void> {
+    const fullMessage = `📝 **Summary:**\n\n${text}`
+
+    if (fullMessage.length <= 4096) {
+      await ctx.api.editMessageText(ctx.chat!.id, messageId, fullMessage, { parse_mode: 'Markdown' })
+      return
+    }
+
+    await ctx.api.editMessageText(ctx.chat!.id, messageId, '✅ Summary complete! It is quite long, sending it in parts below:')
+    const chunks = this.splitMessage(text)
+    for (const chunk of chunks) {
+      await ctx.reply(chunk, { parse_mode: 'Markdown' })
+    }
   }
 
   private splitMessage(text: string, maxLength = 4000): string[] {
