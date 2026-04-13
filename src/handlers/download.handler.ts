@@ -23,7 +23,7 @@ export class DownloadHandler extends BaseHandler {
   }
 
   readonly command = CommandEnum.Download
-  readonly description = 'Download a PDF from a URL'
+  readonly description = '🌐 Download a PDF from a URL'
   readonly events = {
     'msg:text': async (ctx: CustomContext) => {
       const urlSchema = z.url()

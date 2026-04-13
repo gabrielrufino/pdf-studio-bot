@@ -9,7 +9,7 @@ export class HelpHandler extends BaseHandler {
   }
 
   readonly command = CommandEnum.Help
-  readonly description = 'Show the list of available commands'
+  readonly description = '❓ Show the list of available commands'
   readonly events = {}
 
   async onCommand(ctx: CustomContext) {
