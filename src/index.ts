@@ -28,14 +28,14 @@ async function main() {
     bot.command(handler.command, handler.onCommand.bind(handler))
   }
 
-  const events = new Set(handlers.flatMap(handler => Object.keys(handler.events)))
+  const events = new Set(handlers.flatMap(handler => Object.keys(handler.events) as FilterQuery[]))
   for (const event of events) {
-    bot.on(event as FilterQuery, async (ctx) => {
+    bot.on(event, async (ctx) => {
       const command = ctx.session.command
       const handler = handlers.find(h => h.command === command)
 
       if (handler) {
-        const eventHandler = handler.events[event as FilterQuery]
+        const eventHandler = handler.events[event]
         if (eventHandler) {
           try {
             await eventHandler(ctx)

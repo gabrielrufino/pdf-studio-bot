@@ -1,3 +1,4 @@
+import type { FilterQuery } from 'grammy'
 import type { z } from 'zod'
 import type { CommandEnum } from '../enums/command.enum'
 import type { CustomContext } from '../types/custom-context.type'
@@ -9,7 +10,7 @@ import { SessionValidationError } from '../errors/session-validation.error'
 export abstract class BaseHandler {
   public abstract readonly command: CommandEnum
   public abstract readonly description: string
-  public abstract readonly events: Record<string, (ctx: CustomContext) => Promise<void>>
+  public abstract readonly events: Partial<Record<FilterQuery, (ctx: CustomContext) => Promise<void>>>
   public abstract onCommand(ctx: CustomContext): Promise<void>
 
   protected readonly logger = logger
