@@ -9,20 +9,12 @@ import { logger } from './config/logger'
 import { InvalidFileError } from './errors/invalid-file.error'
 import { SessionValidationError } from './errors/session-validation.error'
 import { handlers } from './handlers'
-import { FeedbackRepository } from './repositories/feedback.repository'
-import { MessageRepository } from './repositories/message.repository'
-import { UserRepository } from './repositories/user.repository'
+import { repositories } from './repositories'
 
 async function main() {
-  const userRepository = new UserRepository(database)
-  const messageRepository = new MessageRepository(database)
-  const feedbackRepository = new FeedbackRepository(database)
-
-  await Promise.all([
-    userRepository.init(),
-    messageRepository.init(),
-    feedbackRepository.init(),
-  ])
+  await Promise.all(
+    repositories.map(Repo => new Repo(database).init()),
+  )
 
   for (const handler of handlers) {
     bot.command(handler.command, handler.onCommand.bind(handler))
@@ -59,10 +51,6 @@ async function main() {
     })
   }
 
-  bot.catch((err) => {
-    logger.error(err)
-  })
-
   const runner = run(bot)
 
   await bot.api.setMyCommands(
@@ -76,8 +64,9 @@ async function main() {
     process.exit(0)
   }
 
-  process.once('SIGINT', stop)
-  process.once('SIGTERM', stop)
+  process
+    .once('SIGINT', stop)
+    .once('SIGTERM', stop)
 
   logger.info('Bot is running...')
 }

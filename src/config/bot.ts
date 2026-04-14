@@ -83,4 +83,8 @@ bot
   .config
   .use(hydrateFiles(bot.token))
 
+bot.catch((err) => {
+  logger.error(err)
+})
+
 export { bot }
