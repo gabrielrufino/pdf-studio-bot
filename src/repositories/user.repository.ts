@@ -1,6 +1,6 @@
 import type { Db } from 'mongodb'
-import type { UserEntity } from '../entities/user.entity'
 import { EnsureInitialized } from '../decorators/ensure-initialized.decorator'
+import { UserEntity } from '../entities/user.entity'
 import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { BaseRepository } from './base.repository'
 
@@ -42,6 +42,7 @@ export class UserRepository extends BaseRepository<UserEntity> {
 
   @EnsureInitialized
   public async findByTelegramId(telegramId: number): Promise<UserEntity | null> {
-    return this.collection.findOne({ 'telegram_user.id': telegramId })
+    const result = await this.collection.findOne({ 'telegram_user.id': telegramId })
+    return result ? new UserEntity(result as any) : null
   }
 }

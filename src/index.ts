@@ -4,7 +4,6 @@ import { run } from '@grammyjs/runner'
 
 import { bot } from './config/bot'
 import { browser } from './config/browser'
-import { database } from './config/database'
 import { logger } from './config/logger'
 import { InvalidFileError } from './errors/invalid-file.error'
 import { SessionValidationError } from './errors/session-validation.error'
@@ -13,7 +12,7 @@ import { repositories } from './repositories'
 
 async function main() {
   await Promise.all(
-    repositories.map(Repo => new Repo(database).init()),
+    repositories.map(repo => repo.init()),
   )
 
   for (const handler of handlers) {
