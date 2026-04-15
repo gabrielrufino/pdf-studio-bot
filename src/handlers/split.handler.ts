@@ -27,24 +27,26 @@ export class SplitHandler extends BaseHandler {
 
         await ctx.reply(`📄 Found ${pagesCount} pages. Splitting...`)
 
-        const outputFiles: string[] = []
-
-        for (let i = 0; i < pagesCount; i++) {
-          const outPath = join(outputDir, `page-${String(i + 1).padStart(3, '0')}.pdf`)
+        const outputFiles = Array.from({ length: pagesCount }, (_, i) => {
+          const outPath = join(outputDir!, `page-${String(i + 1).padStart(3, '0')}.pdf`)
 
           const pdfWriter = muhammara.createWriter(outPath)
-          const copyingContext = pdfWriter.createPDFCopyingContext(inputPath)
 
-          copyingContext.appendPDFPageFromPDF(i)
+          pdfWriter
+            .createPDFCopyingContext(inputPath)
+            .appendPDFPageFromPDF(i)
+
           pdfWriter.end()
 
-          outputFiles.push(outPath)
-        }
+          return outPath
+        })
 
-        for (let i = 0; i < outputFiles.length; i++) {
-          const pageFile = new InputFile(outputFiles[i], `page-${i + 1}.pdf`)
+        for (const [index, outputPath] of outputFiles.entries()) {
+          const pageNumber = index + 1
+          const pageFile = new InputFile(outputPath, `page-${pageNumber}.pdf`)
+
           await ctx.replyWithDocument(pageFile, {
-            caption: `📄 Page ${i + 1} of ${pagesCount}`,
+            caption: `📄 Page ${pageNumber} of ${pagesCount}`,
           })
         }
       }
