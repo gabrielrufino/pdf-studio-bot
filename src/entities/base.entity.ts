@@ -7,7 +7,7 @@ export abstract class BaseEntity {
 
   updated_at: Date = new Date()
 
-  protected assign(input?: Partial<any>) {
+  protected assign(input?: Partial<this>) {
     Object.assign(this, input)
   }
 }
