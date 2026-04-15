@@ -4,6 +4,7 @@ import { run } from '@grammyjs/runner'
 
 import { bot } from './config/bot'
 import { browser } from './config/browser'
+import { mongoClient } from './config/database'
 import { logger } from './config/logger'
 import { InvalidFileError } from './errors/invalid-file.error'
 import { SessionValidationError } from './errors/session-validation.error'
@@ -59,6 +60,7 @@ async function main() {
   const stop = async () => {
     logger.info('Shutting down gracefully...')
     await runner.stop()
+    await mongoClient.close()
     await browser.close()
     process.exit(0)
   }
