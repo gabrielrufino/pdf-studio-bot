@@ -4,38 +4,30 @@ import { run } from '@grammyjs/runner'
 
 import { bot } from './config/bot'
 import { browser } from './config/browser'
-import { database } from './config/database'
+import { mongoClient } from './config/database'
 import { logger } from './config/logger'
 import { InvalidFileError } from './errors/invalid-file.error'
 import { SessionValidationError } from './errors/session-validation.error'
 import { handlers } from './handlers'
-import { FeedbackRepository } from './repositories/feedback.repository'
-import { MessageRepository } from './repositories/message.repository'
-import { UserRepository } from './repositories/user.repository'
+import { repositories } from './repositories'
 
 async function main() {
-  const userRepository = new UserRepository(database)
-  const messageRepository = new MessageRepository(database)
-  const feedbackRepository = new FeedbackRepository(database)
-
-  await Promise.all([
-    userRepository.init(),
-    messageRepository.init(),
-    feedbackRepository.init(),
-  ])
+  await Promise.all(
+    repositories.map(repo => repo.init()),
+  )
 
   for (const handler of handlers) {
     bot.command(handler.command, handler.onCommand.bind(handler))
   }
 
-  const events = new Set(handlers.flatMap(handler => Object.keys(handler.events)))
+  const events = new Set(handlers.flatMap(handler => Object.keys(handler.events) as FilterQuery[]))
   for (const event of events) {
-    bot.on(event as FilterQuery, async (ctx) => {
+    bot.on(event, async (ctx) => {
       const command = ctx.session.command
       const handler = handlers.find(h => h.command === command)
 
       if (handler) {
-        const eventHandler = handler.events[event as FilterQuery]
+        const eventHandler = handler.events[event]
         if (eventHandler) {
           try {
             await eventHandler(ctx)
@@ -59,10 +51,6 @@ async function main() {
     })
   }
 
-  bot.catch((err) => {
-    logger.error(err)
-  })
-
   const runner = run(bot)
 
   await bot.api.setMyCommands(
@@ -71,13 +59,24 @@ async function main() {
 
   const stop = async () => {
     logger.info('Shutting down gracefully...')
-    await runner.stop()
-    await browser.close()
-    process.exit(0)
+    try {
+      await runner.stop()
+      await Promise.allSettled([
+        mongoClient.close(),
+        browser.close(),
+      ])
+    }
+    catch (error) {
+      logger.error({ error }, 'Error during graceful shutdown.')
+    }
+    finally {
+      process.exit(0)
+    }
   }
 
-  process.once('SIGINT', stop)
-  process.once('SIGTERM', stop)
+  process
+    .once('SIGINT', stop)
+    .once('SIGTERM', stop)
 
   logger.info('Bot is running...')
 }

@@ -8,8 +8,7 @@ import { MongoDBAdapter } from '@grammyjs/storage-mongodb'
 import { Bot, session } from 'grammy'
 import { MessageEntity } from '../entities/message.entity'
 import { CommandEnum } from '../enums/command.enum'
-import { MessageRepository } from '../repositories/message.repository'
-import { UserRepository } from '../repositories/user.repository'
+import { messageRepository, userRepository } from '../repositories'
 import { database } from './database'
 import { logger } from './logger'
 
@@ -43,9 +42,6 @@ bot.use((ctx, next) => {
 
   return next()
 })
-
-const messageRepository = new MessageRepository(database)
-const userRepository = new UserRepository(database)
 
 bot.use(async (ctx, next) => {
   if (ctx.message) {
@@ -82,5 +78,9 @@ bot
   .api
   .config
   .use(hydrateFiles(bot.token))
+
+bot.catch((err) => {
+  logger.error(err)
+})
 
 export { bot }

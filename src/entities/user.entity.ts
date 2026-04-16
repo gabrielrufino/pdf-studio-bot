@@ -1,18 +1,18 @@
 import type { User as TelegramUser } from 'grammy/types'
-import type { ObjectId } from 'mongodb'
+import { PlanTypeEnum } from '../enums/plan-type.enum'
+import { BaseEntity } from './base.entity'
 
-export class UserEntity {
-  constructor(input: Partial<UserEntity>) {
-    Object.assign(this, input)
+export class UserEntity extends BaseEntity {
+  constructor(input?: Partial<UserEntity>) {
+    super()
+    this.assign(input)
   }
-
-  _id!: ObjectId
 
   telegram_user: TelegramUser | null = null
 
   is_blocked: boolean = false
 
-  created_at: Date = new Date()
+  plan_type?: PlanTypeEnum = PlanTypeEnum.Free
 
-  updated_at: Date = new Date()
+  plan_started_at?: Date = new Date()
 }

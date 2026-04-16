@@ -3,6 +3,7 @@ import { MongoMemoryServer } from 'mongodb-memory-server'
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { UserEntity } from '../entities/user.entity'
+import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { UserRepository } from './user.repository'
 
 describe(UserRepository.name, () => {
@@ -31,6 +32,8 @@ describe(UserRepository.name, () => {
       _id: expect.any(ObjectId),
       telegram_user: { id: 1, is_bot: false, first_name: 'Test' },
       is_blocked: false,
+      plan_type: PlanTypeEnum.Free,
+      plan_started_at: expect.any(Date),
       created_at: expect.any(Date),
       updated_at: expect.any(Date),
     })

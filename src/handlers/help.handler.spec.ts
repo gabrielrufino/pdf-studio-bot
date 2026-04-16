@@ -6,8 +6,8 @@ import { HelpHandler } from './help.handler'
 
 describe(HelpHandler.name, () => {
   const mockHandlers = [
-    { command: 'download', description: 'Download a PDF from a URL' },
-    { command: 'split', description: 'Split a PDF into individual pages' },
+    { command: 'download', description: '🌐 Download a PDF from a URL' },
+    { command: 'split', description: '✂️ Split a PDF into individual pages' },
   ] as BaseHandler[]
 
   let handler: HelpHandler
@@ -29,13 +29,13 @@ describe(HelpHandler.name, () => {
       await handler.onCommand(ctx)
 
       expect(ctx.reply).toHaveBeenCalledWith(
-        expect.stringContaining('/help - Show the list of available commands'),
+        expect.stringContaining('/help - ❓ Show the list of available commands'),
       )
       expect(ctx.reply).toHaveBeenCalledWith(
-        expect.stringContaining('/download - Download a PDF from a URL'),
+        expect.stringContaining('/download - 🌐 Download a PDF from a URL'),
       )
       expect(ctx.reply).toHaveBeenCalledWith(
-        expect.stringContaining('/split - Split a PDF into individual pages'),
+        expect.stringContaining('/split - ✂️ Split a PDF into individual pages'),
       )
     })
   })
