@@ -59,10 +59,19 @@ async function main() {
 
   const stop = async () => {
     logger.info('Shutting down gracefully...')
-    await runner.stop()
-    await mongoClient.close()
-    await browser.close()
-    process.exit(0)
+    try {
+      await runner.stop()
+      await Promise.allSettled([
+        mongoClient.close(),
+        browser.close(),
+      ])
+    }
+    catch (error) {
+      logger.error({ error }, 'Error during graceful shutdown.')
+    }
+    finally {
+      process.exit(0)
+    }
   }
 
   process
