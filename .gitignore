@@ -132,3 +132,8 @@ dist
 # Others
 assets/output.pdf
 package-lock.json
+
+# Stryker
+.stryker-tmp
+reports
+
