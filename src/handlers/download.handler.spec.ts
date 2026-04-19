@@ -4,7 +4,6 @@ import type { CustomContext } from '../types/custom-context.type'
 import { Buffer } from 'node:buffer'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CommandEnum } from '../enums/command.enum'
-import { SessionValidationError } from '../errors/session-validation.error'
 import { DownloadHandler } from './download.handler'
 
 vi.mock('node:fs/promises', async (importOriginal) => {
