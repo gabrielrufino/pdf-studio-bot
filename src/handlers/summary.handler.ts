@@ -27,11 +27,17 @@ export class SummaryHandler extends BaseHandler {
     'msg:document': async (ctx: CustomContext) => {
       await this.validatePDF(ctx)
 
-      const file = await ctx.getFile()
-      const inputPath = await file.download()
       let uploadedFileName: string | undefined
+      let inputPath: string | undefined
 
       try {
+        const file = await ctx.getFile()
+        inputPath = await file.download()
+
+        if (!inputPath) {
+          throw new Error('Failed to download file')
+        }
+
         await this.verifyLimits(ctx, inputPath)
 
         const processingMessage = await ctx.reply('⏳ Summarizing your PDF. This might take a moment...')
@@ -54,9 +60,11 @@ export class SummaryHandler extends BaseHandler {
             this.logger.error({ error, name: uploadedFileName }, 'Failed to remove remote file.'),
           )
         }
-        await fs.rm(inputPath, { force: true }).catch(error =>
-          this.logger.error({ error, path: inputPath }, 'Failed to remove input file.'),
-        )
+        if (inputPath) {
+          await fs.rm(inputPath, { force: true }).catch(error =>
+            this.logger.error({ error, path: inputPath }, 'Failed to remove input file.'),
+          )
+        }
         await this.resetSession(ctx)
       }
     },

@@ -214,6 +214,98 @@ describe(SummaryHandler.name, () => {
           await fs.rm(tempDir, { recursive: true, force: true })
         }
       })
+
+      it('should handle AI returning empty text', async () => {
+        const { tempDir } = await setupTestFile('pdf-studio-bot-test-summary-empty-')
+        try {
+          mockUserWithPlan(PlanTypeEnum.Pro)
+          mockGenerateContent.mockResolvedValueOnce({ text: '' })
+          const loggerSpy = vi.spyOn((handler as any).logger, 'error')
+
+          await handler.events['msg:document'](ctx)
+
+          expect(loggerSpy).toHaveBeenCalled()
+          expect(ctx.reply).toHaveBeenCalledWith('❌ An error occurred while summarizing the PDF file.')
+        }
+        finally {
+          await fs.rm(tempDir, { recursive: true, force: true })
+        }
+      })
+
+      it('should handle upload returning no name', async () => {
+        const { tempDir } = await setupTestFile('pdf-studio-bot-test-summary-noname-')
+        try {
+          mockUserWithPlan(PlanTypeEnum.Pro)
+          mockUpload.mockResolvedValueOnce({ name: '', uri: 'mock-uri', mimeType: 'application/pdf' })
+          mockGenerateContent.mockResolvedValueOnce({ text: 'Summary' })
+          const loggerSpy = vi.spyOn((handler as any).logger, 'error')
+
+          await handler.events['msg:document'](ctx)
+
+          expect(loggerSpy).toHaveBeenCalled()
+        }
+        finally {
+          await fs.rm(tempDir, { recursive: true, force: true })
+        }
+      })
+
+      it('should log error if remote file deletion fails', async () => {
+        const { tempDir } = await setupTestFile('pdf-studio-bot-test-summary-remotedel-')
+        try {
+          mockUserWithPlan(PlanTypeEnum.Pro)
+          mockGenerateContent.mockResolvedValueOnce({ text: 'Summary' })
+          const error = new Error('Remote delete failed')
+          mockDelete.mockRejectedValueOnce(error)
+          const loggerSpy = vi.spyOn((handler as any).logger, 'error')
+
+          await handler.events['msg:document'](ctx)
+
+          expect(loggerSpy).toHaveBeenCalledWith({ error, name: 'mock-file-name' }, 'Failed to remove remote file.')
+        }
+        finally {
+          await fs.rm(tempDir, { recursive: true, force: true })
+        }
+      })
+
+      it('should log error if local file removal fails', async () => {
+        const { tempDir, targetPath } = await setupTestFile('pdf-studio-bot-test-summary-localdel-')
+        const rmSpy = vi.spyOn(fs, 'rm').mockRejectedValueOnce(new Error('Local delete failed'))
+        const loggerSpy = vi.spyOn((handler as any).logger, 'error')
+
+        try {
+          mockUserWithPlan(PlanTypeEnum.Pro)
+          mockGenerateContent.mockResolvedValueOnce({ text: 'Summary' })
+
+          await handler.events['msg:document'](ctx)
+
+          expect(loggerSpy).toHaveBeenCalledWith(expect.objectContaining({ path: targetPath }), 'Failed to remove input file.')
+        }
+        finally {
+          rmSpy.mockRestore()
+          await fs.rm(tempDir, { recursive: true, force: true })
+        }
+      })
+    })
+
+    describe('splitMessage', () => {
+      it('should split a line that is longer than maxLength', () => {
+        const longLine = 'B'.repeat(4500)
+        const chunks = (handler as any).splitMessage(longLine, 4000)
+
+        expect(chunks).toHaveLength(2)
+        expect(chunks[0]).toBe('B'.repeat(4000))
+        expect(chunks[1]).toBe('B'.repeat(500))
+      })
+
+      it('should handle very long lines with multiple splits', () => {
+        const veryLongLine = 'C'.repeat(10000)
+        const chunks = (handler as any).splitMessage(veryLongLine, 4000)
+
+        expect(chunks).toHaveLength(3)
+        expect(chunks[0]).toBe('C'.repeat(4000))
+        expect(chunks[1]).toBe('C'.repeat(4000))
+        expect(chunks[2]).toBe('C'.repeat(2000))
+      })
     })
   })
 })
