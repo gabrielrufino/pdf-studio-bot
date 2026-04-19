@@ -38,4 +38,27 @@ describe(UserRepository.name, () => {
       updated_at: expect.any(Date),
     })
   })
+
+  describe(UserRepository.prototype.findByTelegramId.name, () => {
+    it('should find a user by telegram id', async () => {
+      await userRepository.create(new UserEntity({
+        telegram_user: { id: 2, is_bot: false, first_name: 'Second' },
+      }))
+      await userRepository.create(new UserEntity({
+        telegram_user: { id: 3, is_bot: false, first_name: 'Third' },
+      }))
+
+      const user = await userRepository.findByTelegramId(2)
+
+      expect(user).toBeDefined()
+      expect(user?.telegram_user?.id).toBe(2)
+      expect(user?.telegram_user?.first_name).toBe('Second')
+    })
+
+    it('should return null if user is not found', async () => {
+      const user = await userRepository.findByTelegramId(999)
+
+      expect(user).toBeNull()
+    })
+  })
 })

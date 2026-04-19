@@ -76,16 +76,51 @@ describe(DownloadHandler.name, () => {
         expect(ctx.session.params).toBeNull()
       })
 
-      it('should throw SessionValidationError if session is invalid', async () => {
+      it('should reply with error if session is invalid', async () => {
         ctx.session.params = null
 
-        await expect(handler.events['msg:text'](ctx)).rejects.toThrow(SessionValidationError)
+        await handler.events['msg:text'](ctx)
+
+        expect(ctx.reply).toHaveBeenCalledWith('❌ An error occurred while converting the URL to PDF.')
       })
 
-      it('should throw SessionValidationError if URL is invalid (doesn\'t start with http)', async () => {
+      it('should reply with error if URL is invalid (doesn\'t start with http)', async () => {
         ctx.message!.text = 'file:///etc/passwd'
 
-        await expect(handler.events['msg:text'](ctx)).rejects.toThrow(SessionValidationError)
+        await handler.events['msg:text'](ctx)
+
+        expect(ctx.reply).toHaveBeenCalledWith('❌ An error occurred while converting the URL to PDF.')
+      })
+
+      it('should work with http protocol', async () => {
+        ctx.message!.text = 'http://example.com'
+        await handler.events['msg:text'](ctx)
+
+        expect(ctx.replyWithDocument).toHaveBeenCalled()
+      })
+
+      it('should handle errors during conversion', async () => {
+        const error = new Error('Navigation failed')
+        const mockPage = await (await mockBrowser.getInstance()).newPage()
+        vi.spyOn(mockPage, 'goto').mockRejectedValue(error)
+        const loggerSpy = vi.spyOn((handler as any).logger, 'error')
+
+        await handler.events['msg:text'](ctx)
+
+        expect(loggerSpy).toHaveBeenCalledWith(error)
+        expect(ctx.reply).toHaveBeenCalledWith('❌ An error occurred while converting the URL to PDF.')
+        expect(mockPage.close).toHaveBeenCalled()
+      })
+
+      it('should log error if page.close fails', async () => {
+        const error = new Error('Close failed')
+        const mockPage = await (await mockBrowser.getInstance()).newPage()
+        vi.spyOn(mockPage, 'close').mockRejectedValue(error)
+        const loggerSpy = vi.spyOn((handler as any).logger, 'error')
+
+        await handler.events['msg:text'](ctx)
+
+        expect(loggerSpy).toHaveBeenCalledWith({ error }, 'Failed to close page.')
       })
     })
   })

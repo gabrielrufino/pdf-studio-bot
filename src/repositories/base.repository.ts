@@ -57,6 +57,6 @@ export abstract class BaseRepository<T extends Document & { updated_at: Date }> 
       { returnDocument: 'after' },
     )
 
-    return result?.value
+    return result as T | null
   }
 }

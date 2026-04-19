@@ -1,5 +1,6 @@
 import type { CustomContext } from '../types/custom-context.type'
-import { describe, expect, it, vi } from 'vitest'
+import fs from 'node:fs/promises'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CommandEnum } from '../enums/command.enum'
 import { InvalidFileError } from '../errors/invalid-file.error'
 import { BaseHandler } from './base.handler'
@@ -24,6 +25,10 @@ describe(BaseHandler.name, () => {
       await super.validatePDF(ctx)
     }
   }
+
+  beforeEach(() => {
+    vi.restoreAllMocks()
+  })
 
   it('should set session command correctly', async () => {
     const handler = new TestHandler()
@@ -94,6 +99,77 @@ describe(BaseHandler.name, () => {
 
       await expect(handler.validatePDF(ctx)).rejects.toThrow(InvalidFileError)
       expect(ctx.reply).toHaveBeenCalledWith('⚠️ Please send only PDF files.')
+    })
+  })
+
+  describe('removeTemporaryFiles', () => {
+    it('should remove temporary file if path exists in params', async () => {
+      const handler = new TestHandler()
+      const ctx = {
+        session: {
+          command: CommandEnum.Test,
+          params: { path: '/tmp/test-file' },
+        },
+      } as unknown as CustomContext
+
+      const rmSpy = vi.spyOn(fs, 'rm').mockResolvedValue(undefined)
+
+      await handler.resetSession(ctx)
+
+      expect(rmSpy).toHaveBeenCalledWith('/tmp/test-file', { force: true, recursive: true })
+    })
+
+    it('should remove temporary files if paths exist in params', async () => {
+      const handler = new TestHandler()
+      const ctx = {
+        session: {
+          command: CommandEnum.Test,
+          params: { paths: ['/tmp/file1', '/tmp/file2'] },
+        },
+      } as unknown as CustomContext
+
+      const rmSpy = vi.spyOn(fs, 'rm').mockResolvedValue(undefined)
+
+      await handler.resetSession(ctx)
+
+      expect(rmSpy).toHaveBeenCalledWith('/tmp/file1', { force: true, recursive: true })
+      expect(rmSpy).toHaveBeenCalledWith('/tmp/file2', { force: true, recursive: true })
+    })
+
+    it('should ignore non-string paths in paths array', async () => {
+      const handler = new TestHandler()
+      const ctx = {
+        session: {
+          command: CommandEnum.Test,
+          params: { paths: ['/tmp/file1', 123, null] },
+        },
+      } as unknown as CustomContext
+
+      const rmSpy = vi.spyOn(fs, 'rm').mockResolvedValue(undefined)
+
+      await handler.resetSession(ctx)
+
+      expect(rmSpy).toHaveBeenCalledTimes(1)
+      expect(rmSpy).toHaveBeenCalledWith('/tmp/file1', { force: true, recursive: true })
+    })
+
+    it('should catch and log error if fs.rm fails', async () => {
+      const handler = new TestHandler()
+      const ctx = {
+        session: {
+          command: CommandEnum.Test,
+          params: { path: '/tmp/test-file' },
+        },
+      } as unknown as CustomContext
+
+      const error = new Error('Permission denied')
+      const rmSpy = vi.spyOn(fs, 'rm').mockRejectedValue(error)
+      const loggerSpy = vi.spyOn((handler as any).logger, 'error')
+
+      await handler.resetSession(ctx)
+
+      expect(rmSpy).toHaveBeenCalled()
+      expect(loggerSpy).toHaveBeenCalledWith({ error, path: '/tmp/test-file' }, 'Failed to remove temporary file/folder.')
     })
   })
 })
