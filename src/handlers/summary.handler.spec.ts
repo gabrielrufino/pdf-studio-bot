@@ -4,6 +4,7 @@ import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
+import muhammara from 'muhammara'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CommandEnum } from '../enums/command.enum'
 import { PlanTypeEnum } from '../enums/plan-type.enum'
@@ -97,6 +98,14 @@ describe(SummaryHandler.name, () => {
         expect(ctx.reply).toHaveBeenCalledWith('❌ An error occurred while summarizing the PDF file.')
       })
 
+      it('should handle missing inputPath', async () => {
+        vi.mocked(ctx.getFile).mockResolvedValueOnce({ download: vi.fn().mockResolvedValue(undefined) } as any)
+
+        await handler.events['msg:document'](ctx)
+
+        expect(ctx.reply).toHaveBeenCalledWith('❌ An error occurred while summarizing the PDF file.')
+      })
+
       it('should summarize PDF if constraints are respected and user is free', async () => {
         const { tempDir, targetPath } = await setupTestFile('pdf-studio-bot-test-summary-')
 
@@ -181,6 +190,29 @@ describe(SummaryHandler.name, () => {
         }
         finally {
           statSpy.mockRestore()
+          await fs.rm(tempDir, { recursive: true, force: true })
+        }
+      })
+
+      it('should enforce page limit for free users', async () => {
+        const { tempDir } = await setupTestFile('pdf-studio-bot-test-summary-pages-')
+
+        const createReaderSpy = vi.spyOn(muhammara, 'createReader')
+
+        try {
+          mockUserWithPlan(PlanTypeEnum.Free)
+
+          createReaderSpy.mockReturnValueOnce({
+            getPagesCount: () => 51,
+          } as any)
+
+          await handler.events['msg:document'](ctx)
+
+          expect(ctx.reply).toHaveBeenCalledWith('⚠️ You have exceeded the limits of the free plan. You need to become pro and it costs 10 $ / month. Talk to @gabrielrufino to buy the pro plan.')
+          expect(mockGenerateContent).not.toHaveBeenCalled()
+        }
+        finally {
+          createReaderSpy.mockRestore()
           await fs.rm(tempDir, { recursive: true, force: true })
         }
       })
