@@ -23,6 +23,10 @@ async function main() {
   const events = new Set(handlers.flatMap(handler => Object.keys(handler.events) as FilterQuery[]))
   for (const event of events) {
     bot.on(event, async (ctx) => {
+      if (!ctx.from?.id && !ctx.chat?.id) {
+        return
+      }
+
       const command = ctx.session.command
       const handler = handlers.find(h => h.command === command)
 

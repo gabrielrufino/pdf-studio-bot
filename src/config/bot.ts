@@ -13,16 +13,6 @@ import { database } from './database'
 import { logger } from './logger'
 
 const bot = new Bot<CustomContext>(process.env.BOT_TOKEN!)
-bot.use(
-  limit({
-    timeFrame: 2000,
-    limit: 3,
-    onLimitExceeded: async (ctx) => {
-      await ctx.reply('Too many requests. Please try again in a few seconds.')
-    },
-    keyGenerator: ctx => ctx.from?.id?.toString(),
-  }),
-)
 
 bot.use(
   session({
@@ -31,6 +21,14 @@ bot.use(
       params: null,
     }),
     storage: new MongoDBAdapter({ collection: database.collection<ISession>('sessions') }),
+    getSessionKey: (ctx) => {
+      const id = ctx.from?.id || ctx.chat?.id
+      if (!id) {
+        logger.warn({ update: ctx.update }, 'Session key could not be determined for update')
+        return undefined
+      }
+      return id.toString()
+    },
   }),
 )
 
@@ -42,6 +40,17 @@ bot.use((ctx, next) => {
 
   return next()
 })
+
+bot.use(
+  limit({
+    timeFrame: 2000,
+    limit: 3,
+    onLimitExceeded: async (ctx) => {
+      await ctx.reply('Too many requests. Please try again in a few seconds.')
+    },
+    keyGenerator: ctx => ctx.from?.id?.toString(),
+  }),
+)
 
 bot.use(async (ctx, next) => {
   if (ctx.message) {

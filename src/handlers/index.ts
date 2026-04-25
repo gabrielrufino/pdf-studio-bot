@@ -6,6 +6,7 @@ import { DownloadHandler } from './download.handler'
 import { FeedbackHandler } from './feedback.handler'
 import { HelpHandler } from './help.handler'
 import { JoinHandler } from './join.handler'
+import { ProHandler } from './pro.handler'
 import { PutPasswordHandler } from './put-password.handler'
 import { SplitHandler } from './split.handler'
 import { StartHandler } from './start.handler'
@@ -16,6 +17,7 @@ const coreHandlers: Array<BaseHandler> = [
   new DownloadHandler(browser),
   new FeedbackHandler(feedbackRepository),
   new JoinHandler(),
+  new ProHandler(userRepository),
   new PutPasswordHandler(),
   new SplitHandler(),
   new StartHandler(userRepository),
