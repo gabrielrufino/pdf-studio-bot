@@ -16,6 +16,7 @@
     "test": "vitest run",
     "test:cov": "npm test -- --coverage",
     "test:watch": "vitest",
+    "test:mutate": "stryker run",
     "prepare": "if [[ $NODE_ENV != \"production\" ]]; then husky; fi"
   },
   "dependencies": {
@@ -39,6 +40,9 @@
     "@faker-js/faker": "^8.4.1",
     "@gabrielrufino/types": "^1.2.1",
     "@mapbox/node-pre-gyp": "^2.0.3",
+    "@stryker-mutator/core": "^9.6.1",
+    "@stryker-mutator/typescript-checker": "^9.6.1",
+    "@stryker-mutator/vitest-runner": "^9.6.1",
     "@vitest/coverage-v8": "^4.1.4",
     "eslint": "^9.39.4",
     "husky": "^9.1.7",

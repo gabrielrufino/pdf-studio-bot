@@ -19,6 +19,14 @@ jobs:
       - uses: actalog/node-ci@v3
         with:
           package-manager: pnpm
+      - name: Mutation Testing
+        run: pnpm test:mutate
+      - name: Upload Mutation Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mutation-report
+          path: reports/mutation
   dockerfile-ci:
     name: Dockerfile CI
     runs-on: ubuntu-latest

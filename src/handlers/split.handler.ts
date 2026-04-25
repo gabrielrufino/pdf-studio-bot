@@ -14,11 +14,17 @@ export class SplitHandler extends BaseHandler {
     'msg:document': async (ctx: CustomContext) => {
       await this.validatePDF(ctx)
 
-      const file = await ctx.getFile()
-      const inputPath = await file.download()
       let outputDir: string | undefined
+      let inputPath: string | undefined
 
       try {
+        const file = await ctx.getFile()
+        inputPath = await file.download()
+
+        if (!inputPath) {
+          throw new Error('Failed to download file')
+        }
+
         const pdfReader = muhammara.createReader(inputPath)
         const pagesCount = pdfReader.getPagesCount()
 
@@ -33,7 +39,7 @@ export class SplitHandler extends BaseHandler {
           const pdfWriter = muhammara.createWriter(outPath)
 
           pdfWriter
-            .createPDFCopyingContext(inputPath)
+            .createPDFCopyingContext(inputPath!)
             .appendPDFPageFromPDF(i)
 
           pdfWriter.end()
@@ -59,8 +65,10 @@ export class SplitHandler extends BaseHandler {
           await fs.rm(outputDir, { force: true, recursive: true }).catch(error =>
             this.logger.error({ error, path: outputDir }, 'Failed to remove temporary folder.'))
         }
-        await fs.rm(inputPath, { force: true, recursive: true }).catch(error =>
-          this.logger.error({ error, path: inputPath }, 'Failed to remove input file.'))
+        if (inputPath) {
+          await fs.rm(inputPath, { force: true, recursive: true }).catch(error =>
+            this.logger.error({ error, path: inputPath }, 'Failed to remove input file.'))
+        }
         await this.resetSession(ctx)
       }
     },

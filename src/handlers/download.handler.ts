@@ -26,20 +26,20 @@ export class DownloadHandler extends BaseHandler {
   readonly description = '🌐 Download a PDF from a URL'
   readonly events = {
     'msg:text': async (ctx: CustomContext) => {
-      const urlSchema = z.url()
-      const parseResult = urlSchema.safeParse(ctx.message?.text)
-      if (!parseResult.success || !['http:', 'https:'].includes(new URL(parseResult.data).protocol)) {
-        throw new SessionValidationError()
-      }
-
-      const params = this.validateParams(DownloadParamsSchema, ctx.session.params)
-      const url = ctx.message?.text
-
-      const browserInstance = await this.browser.getInstance()
       let folder: string | undefined
       let page: Page | undefined
 
       try {
+        const urlSchema = z.url()
+        const parseResult = urlSchema.safeParse(ctx.message?.text)
+        if (!parseResult.success || !['http:', 'https:'].includes(new URL(parseResult.data).protocol)) {
+          throw new SessionValidationError()
+        }
+
+        const params = this.validateParams(DownloadParamsSchema, ctx.session.params)
+        const url = ctx.message?.text
+
+        const browserInstance = await this.browser.getInstance()
         page = await browserInstance.newPage()
         await page.goto(url!, {
           waitUntil: 'networkidle0',

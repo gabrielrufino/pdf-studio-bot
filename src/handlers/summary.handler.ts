@@ -27,17 +27,24 @@ export class SummaryHandler extends BaseHandler {
     'msg:document': async (ctx: CustomContext) => {
       await this.validatePDF(ctx)
 
-      const file = await ctx.getFile()
-      const inputPath = await file.download()
       let uploadedFileName: string | undefined
+      let inputPath: string | undefined
 
       try {
+        const file = await ctx.getFile()
+        inputPath = await file.download()
+
+        if (!inputPath) {
+          throw new Error('Failed to download file')
+        }
+
         await this.verifyLimits(ctx, inputPath)
 
         const processingMessage = await ctx.reply('⏳ Summarizing your PDF. This might take a moment...')
 
-        const { text, fileName } = await this.performSummarization(inputPath)
-        uploadedFileName = fileName
+        const text = await this.performSummarization(inputPath, (fileName) => {
+          uploadedFileName = fileName
+        })
 
         await this.sendSummaryResponse(ctx, processingMessage.message_id, text)
       }
@@ -54,9 +61,11 @@ export class SummaryHandler extends BaseHandler {
             this.logger.error({ error, name: uploadedFileName }, 'Failed to remove remote file.'),
           )
         }
-        await fs.rm(inputPath, { force: true }).catch(error =>
-          this.logger.error({ error, path: inputPath }, 'Failed to remove input file.'),
-        )
+        if (inputPath) {
+          await fs.rm(inputPath, { force: true }).catch(error =>
+            this.logger.error({ error, path: inputPath }, 'Failed to remove input file.'),
+          )
+        }
         await this.resetSession(ctx)
       }
     },
@@ -91,11 +100,16 @@ export class SummaryHandler extends BaseHandler {
     await ctx.reply('⚠️ You have exceeded the limits of the free plan. You need to become pro and it costs 10 $ / month. Talk to @gabrielrufino to buy the pro plan.')
   }
 
-  private async performSummarization(path: string): Promise<{ text: string, fileName: string }> {
+  private async performSummarization(path: string, onUploadComplete: (fileName: string) => void): Promise<string> {
     const uploadedFile = await this.ai.files.upload({
       file: path,
       config: { mimeType: 'application/pdf' },
     })
+
+    if (!uploadedFile.name)
+      throw new Error('Uploaded file name is missing.')
+
+    onUploadComplete(uploadedFile.name)
 
     const response = await this.ai.models.generateContent({
       model: 'gemini-2.5-flash',
@@ -113,10 +127,7 @@ export class SummaryHandler extends BaseHandler {
     if (!response.text)
       throw new Error('Summary text is empty.')
 
-    if (!uploadedFile.name)
-      throw new Error('Uploaded file name is missing.')
-
-    return { text: response.text, fileName: uploadedFile.name }
+    return response.text
   }
 
   private async sendSummaryResponse(ctx: CustomContext, messageId: number, text: string): Promise<void> {
