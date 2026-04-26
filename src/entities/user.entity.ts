@@ -15,4 +15,8 @@ export class UserEntity extends BaseEntity {
   plan_type?: PlanTypeEnum = PlanTypeEnum.Free
 
   plan_started_at?: Date = new Date()
+
+  daily_usage_count: number = 0
+
+  last_usage_date?: string = undefined
 }
