@@ -11,7 +11,12 @@ export function usageLimitMiddleware(handler: BaseHandler) {
       return next()
     }
 
-    let user = await userRepository.findByTelegramId(ctx.from!.id)
+    const userId = ctx.from?.id
+    if (!userId) {
+      return next()
+    }
+
+    let user = await userRepository.findByTelegramId(userId)
     if (!user) {
       user = await userRepository.create(new UserEntity({
         telegram_user: ctx.from!,
@@ -25,13 +30,9 @@ export function usageLimitMiddleware(handler: BaseHandler) {
 
     const limit = limits[user.plan_type || PlanTypeEnum.Free]
 
-    const today = new Date().toISOString().split('T')[0]
-    if (user.last_usage_date !== today) {
-      user.daily_usage_count = 0
-      user.last_usage_date = today
-    }
+    const updatedUser = await userRepository.incrementUsage(ctx.from!.id, limit)
 
-    if (user.daily_usage_count >= limit) {
+    if (!updatedUser) {
       if (user.plan_type === PlanTypeEnum.Pro) {
         await ctx.reply('⚠️ You have reached your daily limit of 50 operations. As a PRO user, this is our safety limit. Please try again tomorrow.')
       }
@@ -40,9 +41,6 @@ export function usageLimitMiddleware(handler: BaseHandler) {
       }
       return
     }
-
-    user.daily_usage_count++
-    await userRepository.updateById(user._id, user)
 
     return next()
   }

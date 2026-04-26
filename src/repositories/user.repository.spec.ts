@@ -90,4 +90,50 @@ describe(UserRepository.name, () => {
       expect(indexes.some(idx => idx.key['telegram_user.id'] === 1)).toBe(true)
     })
   })
+
+  describe(UserRepository.prototype.incrementUsage.name, () => {
+    it('should increment usage for an existing user', async () => {
+      await userRepository.create(new UserEntity({
+        telegram_user: { id: 20, is_bot: false, first_name: 'Test' },
+      }))
+
+      const user = await userRepository.incrementUsage(20, 3)
+
+      expect(user).toBeDefined()
+      expect(user?.daily_usage_count).toBe(1)
+      expect(user?.last_usage_date).toBe(new Date().toISOString().split('T')[0])
+    })
+
+    it('should reset usage if it is a new day', async () => {
+      await userRepository.create(new UserEntity({
+        telegram_user: { id: 21, is_bot: false, first_name: 'Test' },
+        daily_usage_count: 3,
+        last_usage_date: '2000-01-01',
+      }))
+
+      const user = await userRepository.incrementUsage(21, 3)
+
+      expect(user).toBeDefined()
+      expect(user?.daily_usage_count).toBe(1)
+      expect(user?.last_usage_date).toBe(new Date().toISOString().split('T')[0])
+    })
+
+    it('should return null if limit is reached', async () => {
+      await userRepository.create(new UserEntity({
+        telegram_user: { id: 22, is_bot: false, first_name: 'Test' },
+        daily_usage_count: 3,
+        last_usage_date: new Date().toISOString().split('T')[0],
+      }))
+
+      const user = await userRepository.incrementUsage(22, 3)
+
+      expect(user).toBeNull()
+    })
+
+    it('should return null if user does not exist', async () => {
+      const user = await userRepository.incrementUsage(9999, 3)
+
+      expect(user).toBeNull()
+    })
+  })
 })
