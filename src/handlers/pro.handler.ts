@@ -7,6 +7,9 @@ import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { BaseHandler } from './base.handler'
 
 export class ProHandler extends BaseHandler {
+  private static readonly STARS_AMOUNT_PROD = 350
+  private static readonly STARS_AMOUNT_DEV = 1
+
   constructor(
     private readonly userRepository: UserRepository,
   ) {
@@ -21,18 +24,29 @@ export class ProHandler extends BaseHandler {
       await ctx.answerPreCheckoutQuery(true)
     },
     'message:successful_payment': async (ctx: CustomContext) => {
-      const user = await this.userRepository.findByTelegramId(ctx.from!.id)
+      const userId = ctx.from?.id
+      if (!userId) {
+        return
+      }
+
+      const user = await this.userRepository.findByTelegramId(userId)
       if (user) {
         user.plan_type = PlanTypeEnum.Pro
         await this.userRepository.updateById(user._id, user)
         await ctx.reply('🎉 Thank you for subscribing to PRO! You now have full access to all features.')
-        await this.resetSession(ctx)
       }
+
+      await this.resetSession(ctx)
     },
   }
 
   async onCommand(ctx: CustomContext) {
-    const user = await this.userRepository.findByTelegramId(ctx.from!.id)
+    const userId = ctx.from?.id
+    if (!userId) {
+      return
+    }
+
+    const user = await this.userRepository.findByTelegramId(userId)
 
     if (user?.plan_type === PlanTypeEnum.Pro) {
       await ctx.reply('You are already a PRO user! Enjoy all the benefits! 💎')
@@ -42,7 +56,9 @@ export class ProHandler extends BaseHandler {
 
     await this.setSessionCommand(ctx)
 
-    const amount = process.env.NODE_ENV === 'production' ? 350 : 1
+    const amount = process.env.NODE_ENV === 'production'
+      ? ProHandler.STARS_AMOUNT_PROD
+      : ProHandler.STARS_AMOUNT_DEV
 
     await ctx.replyWithInvoice(
       'PDF Studio PRO',

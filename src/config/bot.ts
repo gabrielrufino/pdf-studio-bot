@@ -15,6 +15,17 @@ import { logger } from './logger'
 const bot = new Bot<CustomContext>(process.env.BOT_TOKEN!)
 
 bot.use(
+  limit({
+    timeFrame: 2000,
+    limit: 3,
+    onLimitExceeded: async (ctx) => {
+      await ctx.reply('Too many requests. Please try again in a few seconds.')
+    },
+    keyGenerator: ctx => ctx.from?.id?.toString(),
+  }),
+)
+
+bot.use(
   session({
     initial: (): SessionData => ({
       command: null,
@@ -33,17 +44,6 @@ bot.use(
 )
 
 bot.use(loggerMiddleware)
-
-bot.use(
-  limit({
-    timeFrame: 2000,
-    limit: 3,
-    onLimitExceeded: async (ctx) => {
-      await ctx.reply('Too many requests. Please try again in a few seconds.')
-    },
-    keyGenerator: ctx => ctx.from?.id?.toString(),
-  }),
-)
 
 bot.use(messageRecorderMiddleware)
 bot.use(authMiddleware)

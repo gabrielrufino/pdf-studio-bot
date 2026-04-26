@@ -110,7 +110,7 @@ describe(ProHandler.name, () => {
       it('should answer the pre_checkout_query with true', async () => {
         const ctx = createMockContext()
 
-        await handler.events.pre_checkout_query!(ctx)
+        await handler.events.pre_checkout_query(ctx)
 
         expect(ctx.answerPreCheckoutQuery).toHaveBeenCalledWith(true)
       })
@@ -125,7 +125,7 @@ describe(ProHandler.name, () => {
           session: { command: CommandEnum.Pro, params: null },
         })
 
-        await handler.events['message:successful_payment']!(ctx)
+        await handler.events['message:successful_payment'](ctx)
 
         expect(userRepository.updateById).toHaveBeenCalledWith('user-id', {
           ...existingUser,
@@ -142,7 +142,7 @@ describe(ProHandler.name, () => {
           session: { command: CommandEnum.Pro, params: null },
         })
 
-        await handler.events['message:successful_payment']!(ctx)
+        await handler.events['message:successful_payment'](ctx)
 
         expect(userRepository.updateById).not.toHaveBeenCalled()
         expect(ctx.reply).not.toHaveBeenCalled()
