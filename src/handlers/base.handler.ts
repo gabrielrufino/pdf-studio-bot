@@ -12,6 +12,7 @@ export abstract class BaseHandler {
   public abstract readonly description: string
   public abstract readonly events: Partial<Record<FilterQuery, (ctx: CustomContext) => Promise<void>>>
   public abstract onCommand(ctx: CustomContext): Promise<void>
+  public readonly hasUsageLimits: boolean = true
 
   protected readonly logger = logger
 

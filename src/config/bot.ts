@@ -6,9 +6,9 @@ import { hydrateFiles } from '@grammyjs/files'
 import { limit } from '@grammyjs/ratelimiter'
 import { MongoDBAdapter } from '@grammyjs/storage-mongodb'
 import { Bot, session } from 'grammy'
-import { MessageEntity } from '../entities/message.entity'
-import { CommandEnum } from '../enums/command.enum'
-import { messageRepository, userRepository } from '../repositories'
+import { authMiddleware } from '../middlewares/auth.middleware'
+import { loggerMiddleware } from '../middlewares/logger.middleware'
+import { messageRecorderMiddleware } from '../middlewares/message-recorder.middleware'
 import { database } from './database'
 import { logger } from './logger'
 
@@ -32,14 +32,7 @@ bot.use(
   }),
 )
 
-bot.use((ctx, next) => {
-  const { from } = ctx
-  logger.info({
-    from,
-  })
-
-  return next()
-})
+bot.use(loggerMiddleware)
 
 bot.use(
   limit({
@@ -52,36 +45,8 @@ bot.use(
   }),
 )
 
-bot.use(async (ctx, next) => {
-  if (ctx.message) {
-    const isPassword = ctx.session.command === CommandEnum.PutPassword
-
-    const message = new MessageEntity({
-      text: isPassword ? '***' : (ctx.message.text || ''),
-      telegram_user: ctx.from!,
-    })
-
-    await messageRepository.create(message)
-  }
-
-  return next()
-})
-
-bot.use(async (ctx, next) => {
-  if (!ctx.from?.id) {
-    ctx.reply('Unable to identify you. Access denied.')
-    return
-  }
-
-  const user = await userRepository.findByTelegramId(ctx.from.id)
-
-  if (user?.is_blocked) {
-    ctx.reply('You are blocked from using this bot.')
-    return
-  }
-
-  return next()
-})
+bot.use(messageRecorderMiddleware)
+bot.use(authMiddleware)
 
 bot
   .api

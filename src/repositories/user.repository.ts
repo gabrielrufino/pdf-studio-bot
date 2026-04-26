@@ -27,6 +27,12 @@ export class UserRepository extends BaseRepository<UserEntity> {
             plan_started_at: {
               bsonType: 'date',
             },
+            daily_usage_count: {
+              bsonType: 'number',
+            },
+            last_usage_date: {
+              bsonType: ['string', 'null'],
+            },
             created_at: {
               bsonType: 'date',
             },

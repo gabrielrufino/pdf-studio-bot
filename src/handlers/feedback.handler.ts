@@ -13,6 +13,7 @@ export class FeedbackHandler extends BaseHandler {
 
   public readonly command = CommandEnum.Feedback
   public readonly description = '💬 Send us your feedback'
+  public readonly hasUsageLimits = false
   public readonly events = {
     'msg:text': async (ctx: CustomContext) => {
       const feedback = ctx.message?.text

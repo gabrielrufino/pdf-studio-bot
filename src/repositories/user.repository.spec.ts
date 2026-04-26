@@ -34,6 +34,8 @@ describe(UserRepository.name, () => {
       is_blocked: false,
       plan_type: PlanTypeEnum.Free,
       plan_started_at: expect.any(Date),
+      daily_usage_count: 0,
+      last_usage_date: undefined,
       created_at: expect.any(Date),
       updated_at: expect.any(Date),
     })

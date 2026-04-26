@@ -9,6 +9,7 @@ import { logger } from './config/logger'
 import { InvalidFileError } from './errors/invalid-file.error'
 import { SessionValidationError } from './errors/session-validation.error'
 import { handlers } from './handlers'
+import { usageLimitMiddleware } from './middlewares/usage-limit.middleware'
 import { repositories } from './repositories'
 
 async function main() {
@@ -17,7 +18,11 @@ async function main() {
   )
 
   for (const handler of handlers) {
-    bot.command(handler.command, handler.onCommand.bind(handler))
+    bot.command(
+      handler.command,
+      usageLimitMiddleware(handler),
+      handler.onCommand.bind(handler),
+    )
   }
 
   const events = new Set(handlers.flatMap(handler => Object.keys(handler.events) as FilterQuery[]))

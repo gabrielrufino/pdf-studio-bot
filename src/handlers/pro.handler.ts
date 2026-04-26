@@ -15,6 +15,7 @@ export class ProHandler extends BaseHandler {
 
   public readonly command = CommandEnum.Pro
   public readonly description = '💎 Get PRO access'
+  public readonly hasUsageLimits = false
   public readonly events = {
     'pre_checkout_query': async (ctx: CustomContext) => {
       await ctx.answerPreCheckoutQuery(true)
