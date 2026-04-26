@@ -19,6 +19,7 @@ export class SummaryHandler extends BaseHandler {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly ai: GoogleGenAI,
+    private readonly retryOptions = { maxRetries: 3, delay: 2000 },
   ) {
     super()
   }
@@ -77,7 +78,7 @@ export class SummaryHandler extends BaseHandler {
   }
 
   private async verifyLimits(ctx: CustomContext, path: string): Promise<void> {
-    const user = await this.userRepository.findByTelegramId(ctx.from!.id)
+    const user = await this.userRepository.findByTelegramId(ctx.from?.id ?? 0)
     if (!user)
       throw new UserNotFoundError()
     if (user.plan_type === PlanTypeEnum.Pro)
@@ -111,20 +112,38 @@ export class SummaryHandler extends BaseHandler {
 
     onUploadComplete(uploadedFile.name)
 
-    const response = await this.ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: [
-        {
-          role: 'user',
-          parts: [
-            { fileData: { fileUri: uploadedFile.uri!, mimeType: uploadedFile.mimeType! } },
-            { text: 'Create a concise yet informative summary of this PDF, structured with bullet points. Target length: ~2000 characters.' },
-          ],
-        },
-      ],
-    })
+    let response
+    const { maxRetries, delay: initialDelay } = this.retryOptions
+    let delay = initialDelay
 
-    if (!response.text)
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        response = await this.ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: [
+            {
+              role: 'user',
+              parts: [
+                { fileData: { fileUri: uploadedFile.uri!, mimeType: uploadedFile.mimeType! } },
+                { text: 'Create a concise yet informative summary of this PDF, structured with bullet points. Target length: ~2000 characters.' },
+              ],
+            },
+          ],
+        })
+        break
+      }
+      catch (error: any) {
+        if (error.status === 503 && i < maxRetries - 1) {
+          this.logger.warn({ error, attempt: i + 1 }, 'Gemini API 503 error, retrying...')
+          await new Promise(resolve => setTimeout(resolve, delay))
+          delay *= 2
+          continue
+        }
+        throw error
+      }
+    }
+
+    if (!response?.text)
       throw new Error('Summary text is empty.')
 
     return response.text
@@ -151,20 +170,25 @@ export class SummaryHandler extends BaseHandler {
 
     const lines = text.split('\n')
     for (const line of lines) {
+      if (line.length > maxLength) {
+        if (currentChunk) {
+          chunks.push(currentChunk)
+          currentChunk = ''
+        }
+        let remainingLine = line
+        while (remainingLine.length > maxLength) {
+          chunks.push(remainingLine.slice(0, maxLength))
+          remainingLine = remainingLine.slice(maxLength)
+        }
+        currentChunk = remainingLine
+        continue
+      }
+
       if (currentChunk.length + line.length + 1 > maxLength) {
         if (currentChunk) {
           chunks.push(currentChunk)
-          currentChunk = line
         }
-        else {
-          // Line itself is too long, must truncate/split line
-          let remainingLine = line
-          while (remainingLine.length > maxLength) {
-            chunks.push(remainingLine.slice(0, maxLength))
-            remainingLine = remainingLine.slice(maxLength)
-          }
-          currentChunk = remainingLine
-        }
+        currentChunk = line
       }
       else {
         currentChunk += (currentChunk ? '\n' : '') + line
