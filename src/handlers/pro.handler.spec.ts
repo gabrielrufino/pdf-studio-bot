@@ -12,6 +12,22 @@ describe(ProHandler.name, () => {
   let handler: ProHandler
   let userRepository: UserRepository
 
+  const createMockUser = (overrides?: Partial<UserEntity>): UserEntity => ({
+    _id: 'user-id',
+    telegram_user: { id: 12345 },
+    plan_type: PlanTypeEnum.Free,
+    ...overrides,
+  } as unknown as UserEntity)
+
+  const createMockContext = (overrides?: any): CustomContext => ({
+    from: { id: 12345 },
+    session: { command: null, params: null },
+    reply: vi.fn(),
+    replyWithInvoice: vi.fn(),
+    answerPreCheckoutQuery: vi.fn(),
+    ...overrides,
+  } as unknown as CustomContext)
+
   beforeEach(() => {
     userRepository = {
       findByTelegramId: vi.fn().mockResolvedValue(null),
@@ -36,19 +52,10 @@ describe(ProHandler.name, () => {
 
   describe(ProHandler.prototype.onCommand.name, () => {
     it('should tell the user if they are already PRO', async () => {
-      const existingUser = {
-        _id: 'user-id',
-        telegram_user: { id: 12345 },
-        plan_type: PlanTypeEnum.Pro,
-      } as unknown as UserEntity
-
+      const existingUser = createMockUser({ plan_type: PlanTypeEnum.Pro })
       vi.spyOn(userRepository, 'findByTelegramId').mockResolvedValueOnce(existingUser)
 
-      const ctx = {
-        from: { id: 12345 },
-        session: { command: null, params: null },
-        reply: vi.fn(),
-      } as unknown as CustomContext
+      const ctx = createMockContext()
 
       await handler.onCommand(ctx)
 
@@ -58,19 +65,10 @@ describe(ProHandler.name, () => {
 
     it('should set session command and send invoice if user is not PRO using Stars (development)', async () => {
       process.env.NODE_ENV = 'development'
-      const existingUser = {
-        _id: 'user-id',
-        telegram_user: { id: 12345 },
-        plan_type: PlanTypeEnum.Free,
-      } as unknown as UserEntity
-
+      const existingUser = createMockUser()
       vi.spyOn(userRepository, 'findByTelegramId').mockResolvedValueOnce(existingUser)
 
-      const ctx = {
-        from: { id: 12345 },
-        session: { command: null, params: null },
-        replyWithInvoice: vi.fn(),
-      } as unknown as CustomContext
+      const ctx = createMockContext()
 
       await handler.onCommand(ctx)
 
@@ -89,19 +87,10 @@ describe(ProHandler.name, () => {
 
     it('should use 350 stars in production', async () => {
       process.env.NODE_ENV = 'production'
-      const existingUser = {
-        _id: 'user-id',
-        telegram_user: { id: 12345 },
-        plan_type: PlanTypeEnum.Free,
-      } as unknown as UserEntity
-
+      const existingUser = createMockUser()
       vi.spyOn(userRepository, 'findByTelegramId').mockResolvedValueOnce(existingUser)
 
-      const ctx = {
-        from: { id: 12345 },
-        session: { command: null, params: null },
-        replyWithInvoice: vi.fn(),
-      } as unknown as CustomContext
+      const ctx = createMockContext()
 
       await handler.onCommand(ctx)
 
@@ -119,9 +108,7 @@ describe(ProHandler.name, () => {
   describe('events', () => {
     describe('pre_checkout_query', () => {
       it('should answer the pre_checkout_query with true', async () => {
-        const ctx = {
-          answerPreCheckoutQuery: vi.fn(),
-        } as unknown as CustomContext
+        const ctx = createMockContext()
 
         await handler.events.pre_checkout_query!(ctx)
 
@@ -131,19 +118,12 @@ describe(ProHandler.name, () => {
 
     describe('message:successful_payment', () => {
       it('should update user plan to Pro and reply', async () => {
-        const existingUser = {
-          _id: 'user-id',
-          telegram_user: { id: 12345 },
-          plan_type: PlanTypeEnum.Free,
-        } as unknown as UserEntity
-
+        const existingUser = createMockUser()
         vi.spyOn(userRepository, 'findByTelegramId').mockResolvedValueOnce(existingUser)
 
-        const ctx = {
-          from: { id: 12345 },
+        const ctx = createMockContext({
           session: { command: CommandEnum.Pro, params: null },
-          reply: vi.fn(),
-        } as unknown as CustomContext
+        })
 
         await handler.events['message:successful_payment']!(ctx)
 
@@ -158,11 +138,9 @@ describe(ProHandler.name, () => {
       it('should do nothing if user is not found', async () => {
         vi.spyOn(userRepository, 'findByTelegramId').mockResolvedValueOnce(null)
 
-        const ctx = {
-          from: { id: 12345 },
+        const ctx = createMockContext({
           session: { command: CommandEnum.Pro, params: null },
-          reply: vi.fn(),
-        } as unknown as CustomContext
+        })
 
         await handler.events['message:successful_payment']!(ctx)
 
