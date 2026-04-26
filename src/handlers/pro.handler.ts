@@ -31,8 +31,7 @@ export class ProHandler extends BaseHandler {
 
       const user = await this.userRepository.findByTelegramId(userId)
       if (user) {
-        user.plan_type = PlanTypeEnum.Pro
-        await this.userRepository.updateById(user._id, user)
+        await this.userRepository.updateById(user._id, { plan_type: PlanTypeEnum.Pro })
         await ctx.reply('🎉 Thank you for subscribing to PRO! You now have full access to all features.')
       }
 

@@ -28,7 +28,7 @@ export class UserRepository extends BaseRepository<UserEntity> {
               bsonType: 'date',
             },
             daily_usage_count: {
-              bsonType: 'number',
+              bsonType: 'int',
             },
             last_usage_date: {
               bsonType: ['string', 'null'],
