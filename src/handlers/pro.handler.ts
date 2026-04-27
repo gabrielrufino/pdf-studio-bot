@@ -1,6 +1,8 @@
+import type { PaymentRepository } from '../repositories/payment.repository'
 import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
 import process from 'node:process'
+import { PaymentEntity } from '../entities/payment.entity'
 import { CommandEnum } from '../enums/command.enum'
 import { CurrencyEnum } from '../enums/currency.enum'
 import { PlanTypeEnum } from '../enums/plan-type.enum'
@@ -12,6 +14,7 @@ export class ProHandler extends BaseHandler {
 
   constructor(
     private readonly userRepository: UserRepository,
+    private readonly paymentRepository: PaymentRepository,
   ) {
     super()
   }
@@ -31,7 +34,18 @@ export class ProHandler extends BaseHandler {
 
       const user = await this.userRepository.findByTelegramId(userId)
       if (user) {
-        await this.userRepository.updateById(user._id, { plan_type: PlanTypeEnum.Pro })
+        await Promise.all([
+          this.userRepository.updateById(user._id, {
+            plan_type: PlanTypeEnum.Pro,
+            plan_started_at: new Date(),
+          }),
+          this.paymentRepository.create(new PaymentEntity({
+            user_id: user._id,
+            amount: ctx.message?.successful_payment?.total_amount,
+            currency: ctx.message?.successful_payment?.currency as any,
+          })),
+        ])
+
         await ctx.reply('🎉 Thank you for subscribing to PRO! You now have full access to all features.')
       }
 

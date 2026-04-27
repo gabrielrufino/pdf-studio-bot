@@ -1,4 +1,5 @@
 import type { UserEntity } from '../entities/user.entity'
+import type { PaymentRepository } from '../repositories/payment.repository'
 import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
 import process from 'node:process'
@@ -11,6 +12,7 @@ import { ProHandler } from './pro.handler'
 describe(ProHandler.name, () => {
   let handler: ProHandler
   let userRepository: UserRepository
+  let paymentRepository: PaymentRepository
 
   const createMockUser = (overrides?: Partial<UserEntity>): UserEntity => ({
     _id: 'user-id',
@@ -34,7 +36,11 @@ describe(ProHandler.name, () => {
       updateById: vi.fn(),
     } as unknown as UserRepository
 
-    handler = new ProHandler(userRepository)
+    paymentRepository = {
+      create: vi.fn(),
+    } as unknown as PaymentRepository
+
+    handler = new ProHandler(userRepository, paymentRepository)
     process.env.PROVIDER_TOKEN = 'test-token'
   })
 
@@ -128,9 +134,10 @@ describe(ProHandler.name, () => {
         await handler.events['message:successful_payment'](ctx)
 
         expect(userRepository.updateById).toHaveBeenCalledWith('user-id', {
-          ...existingUser,
           plan_type: PlanTypeEnum.Pro,
+          plan_started_at: expect.any(Date),
         })
+        expect(paymentRepository.create).toHaveBeenCalled()
         expect(ctx.reply).toHaveBeenCalledWith('🎉 Thank you for subscribing to PRO! You now have full access to all features.')
         expect(ctx.session.command).toBeNull()
       })

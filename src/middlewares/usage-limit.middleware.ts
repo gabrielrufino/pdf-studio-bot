@@ -22,6 +22,15 @@ export function usageLimitMiddleware(handler: BaseHandler) {
         telegram_user: ctx.from!,
       }))
     }
+    else if (user.plan_type === PlanTypeEnum.Pro && user.plan_started_at) {
+      const oneMonthAgo = new Date()
+      oneMonthAgo.setDate(oneMonthAgo.getDate() - 30) // 30 days expiration
+
+      if (user.plan_started_at < oneMonthAgo) {
+        await userRepository.updateById(user._id, { plan_type: PlanTypeEnum.Free })
+        user.plan_type = PlanTypeEnum.Free
+      }
+    }
 
     const limits = {
       [PlanTypeEnum.Free]: 3,
