@@ -1,28 +1,27 @@
 import type { BaseHandler } from './base.handler'
+import { ai } from '../config/ai'
 import { browser } from '../config/browser'
-import { database } from '../config/database'
-import { FeedbackRepository } from '../repositories/feedback.repository'
-import { UserRepository } from '../repositories/user.repository'
+import { feedbackRepository, paymentRepository, userRepository } from '../repositories'
 import { DownloadHandler } from './download.handler'
 import { FeedbackHandler } from './feedback.handler'
 import { HelpHandler } from './help.handler'
 import { JoinHandler } from './join.handler'
+import { ProHandler } from './pro.handler'
 import { PutPasswordHandler } from './put-password.handler'
 import { SplitHandler } from './split.handler'
 import { StartHandler } from './start.handler'
+import { SummaryHandler } from './summary.handler'
 import { VersionHandler } from './version.handler'
 
 const coreHandlers: Array<BaseHandler> = [
   new DownloadHandler(browser),
-  new FeedbackHandler(
-    new FeedbackRepository(database),
-  ),
+  new FeedbackHandler(feedbackRepository),
   new JoinHandler(),
+  new ProHandler(userRepository, paymentRepository),
   new PutPasswordHandler(),
   new SplitHandler(),
-  new StartHandler(
-    new UserRepository(database),
-  ),
+  new StartHandler(userRepository),
+  new SummaryHandler(userRepository, ai),
   new VersionHandler(),
 ]
 

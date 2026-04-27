@@ -1,7 +1,9 @@
 import type { Page, PDFOptions } from 'puppeteer'
 import type { Browser } from '../config/browser'
 import type { CustomContext } from '../types/custom-context.type'
+import dns from 'node:dns/promises'
 import fs from 'node:fs/promises'
+import { isIP } from 'node:net'
 import os from 'node:os'
 import path from 'node:path'
 import { InputFile } from 'grammy'
@@ -23,23 +25,25 @@ export class DownloadHandler extends BaseHandler {
   }
 
   readonly command = CommandEnum.Download
-  readonly description = 'Download a PDF from a URL'
+  readonly description = '🌐 Download a PDF from a URL'
   readonly events = {
     'msg:text': async (ctx: CustomContext) => {
-      const urlSchema = z.url()
-      const parseResult = urlSchema.safeParse(ctx.message?.text)
-      if (!parseResult.success || !['http:', 'https:'].includes(new URL(parseResult.data).protocol)) {
-        throw new SessionValidationError()
-      }
-
-      const params = this.validateParams(DownloadParamsSchema, ctx.session.params)
-      const url = ctx.message?.text
-
-      const browserInstance = await this.browser.getInstance()
       let folder: string | undefined
       let page: Page | undefined
 
       try {
+        const urlSchema = z.url()
+        const parseResult = urlSchema.safeParse(ctx.message?.text)
+        if (!parseResult.success || !['http:', 'https:'].includes(new URL(parseResult.data).protocol)) {
+          throw new SessionValidationError()
+        }
+
+        const params = this.validateParams(DownloadParamsSchema, ctx.session.params)
+        const url = ctx.message?.text
+
+        await this.validateUrl(url!)
+
+        const browserInstance = await this.browser.getInstance()
         page = await browserInstance.newPage()
         await page.goto(url!, {
           waitUntil: 'networkidle0',
@@ -86,5 +90,35 @@ export class DownloadHandler extends BaseHandler {
       + '📝 Supported: websites, articles, documentation\n'
       + '⚠️ Note: Some sites may block automated access',
     )
+  }
+
+  private async validateUrl(url: string): Promise<void> {
+    const parsedUrl = new URL(url)
+    const hostname = parsedUrl.hostname
+
+    if (this.isPrivateIP(hostname)) {
+      throw new Error('Private IP addresses are not allowed')
+    }
+
+    try {
+      const addresses = await dns.lookup(hostname, { all: true })
+      for (const { address } of addresses) {
+        if (this.isPrivateIP(address)) {
+          throw new Error('URL resolves to a private IP address')
+        }
+      }
+    }
+    catch {
+      // Ignore resolution errors, as they'll be handled by Puppeteer
+    }
+  }
+
+  private isPrivateIP(ip: string): boolean {
+    if (!isIP(ip)) {
+      return false
+    }
+
+    const ipv4PrivateRegex = /^(?:10\.|127\.|169\.254\.|172\.(?:1[6-9]|2\d|3[01])\.|192\.168\.)/
+    return ipv4PrivateRegex.test(ip) || ip === '::1' || ip === '0.0.0.0'
   }
 }

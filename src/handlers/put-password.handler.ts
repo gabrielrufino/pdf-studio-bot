@@ -12,7 +12,7 @@ import { BaseHandler } from './base.handler'
 
 export class PutPasswordHandler extends BaseHandler {
   public readonly command = CommandEnum.PutPassword
-  public readonly description = 'Protect a PDF with a password'
+  public readonly description = '🔐 Protect a PDF with a password'
   public readonly events = {
     'msg:document': async (ctx: CustomContext) => {
       const params = this.validateParams(PutPasswordParamsSchema, ctx.session.params)

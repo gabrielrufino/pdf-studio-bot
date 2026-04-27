@@ -9,42 +9,50 @@ import { BaseHandler } from './base.handler'
 
 export class SplitHandler extends BaseHandler {
   readonly command = CommandEnum.Split
-  readonly description = 'Split a PDF into individual pages'
+  readonly description = '✂️ Split a PDF into individual pages'
   readonly events = {
     'msg:document': async (ctx: CustomContext) => {
       await this.validatePDF(ctx)
 
-      const file = await ctx.getFile()
-      const inputPath = await file.download()
       let outputDir: string | undefined
+      let inputPath: string | undefined
 
       try {
-        const pdfReader = muhammara.createReader(inputPath)
-        const pagesCount = pdfReader.getPagesCount()
-
         outputDir = await fs.mkdtemp(join(os.tmpdir(), 'pdf-studio-bot-split-'))
         await fs.chmod(outputDir, 0o700)
 
-        await ctx.reply(`📄 Found ${pagesCount} pages. Splitting...`)
+        const file = await ctx.getFile()
+        inputPath = await file.download()
 
-        const outputFiles: string[] = []
-
-        for (let i = 0; i < pagesCount; i++) {
-          const outPath = join(outputDir, `page-${String(i + 1).padStart(3, '0')}.pdf`)
-
-          const pdfWriter = muhammara.createWriter(outPath)
-          const copyingContext = pdfWriter.createPDFCopyingContext(inputPath)
-
-          copyingContext.appendPDFPageFromPDF(i)
-          pdfWriter.end()
-
-          outputFiles.push(outPath)
+        if (!inputPath) {
+          throw new Error('Failed to download file')
         }
 
-        for (let i = 0; i < outputFiles.length; i++) {
-          const pageFile = new InputFile(outputFiles[i], `page-${i + 1}.pdf`)
+        const pdfReader = muhammara.createReader(inputPath)
+        const pagesCount = pdfReader.getPagesCount()
+
+        await ctx.reply(`📄 Found ${pagesCount} pages. Splitting...`)
+
+        const outputFiles = Array.from({ length: pagesCount }, (_, i) => {
+          const outPath = join(outputDir!, `page-${String(i + 1).padStart(3, '0')}.pdf`)
+
+          const pdfWriter = muhammara.createWriter(outPath)
+
+          pdfWriter
+            .createPDFCopyingContext(inputPath!)
+            .appendPDFPageFromPDF(i)
+
+          pdfWriter.end()
+
+          return outPath
+        })
+
+        for (const [index, outputPath] of outputFiles.entries()) {
+          const pageNumber = index + 1
+          const pageFile = new InputFile(outputPath, `page-${pageNumber}.pdf`)
+
           await ctx.replyWithDocument(pageFile, {
-            caption: `📄 Page ${i + 1} of ${pagesCount}`,
+            caption: `📄 Page ${pageNumber} of ${pagesCount}`,
           })
         }
       }
@@ -57,8 +65,10 @@ export class SplitHandler extends BaseHandler {
           await fs.rm(outputDir, { force: true, recursive: true }).catch(error =>
             this.logger.error({ error, path: outputDir }, 'Failed to remove temporary folder.'))
         }
-        await fs.rm(inputPath, { force: true, recursive: true }).catch(error =>
-          this.logger.error({ error, path: inputPath }, 'Failed to remove input file.'))
+        if (inputPath) {
+          await fs.rm(inputPath, { force: true, recursive: true }).catch(error =>
+            this.logger.error({ error, path: inputPath }, 'Failed to remove input file.'))
+        }
         await this.resetSession(ctx)
       }
     },

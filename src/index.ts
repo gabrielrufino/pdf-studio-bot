@@ -1,67 +1,56 @@
 import type { FilterQuery } from 'grammy'
+import type { CustomContext } from './types/custom-context.type'
 import process from 'node:process'
 import { run } from '@grammyjs/runner'
 
 import { bot } from './config/bot'
 import { browser } from './config/browser'
-import { database } from './config/database'
+import { mongoClient } from './config/database'
 import { logger } from './config/logger'
 import { InvalidFileError } from './errors/invalid-file.error'
 import { SessionValidationError } from './errors/session-validation.error'
 import { handlers } from './handlers'
-import { FeedbackRepository } from './repositories/feedback.repository'
-import { MessageRepository } from './repositories/message.repository'
-import { UserRepository } from './repositories/user.repository'
+import { usageLimitMiddleware } from './middlewares/usage-limit.middleware'
+import { repositories } from './repositories'
 
 async function main() {
-  const userRepository = new UserRepository(database)
-  const messageRepository = new MessageRepository(database)
-  const feedbackRepository = new FeedbackRepository(database)
-
-  await Promise.all([
-    userRepository.init(),
-    messageRepository.init(),
-    feedbackRepository.init(),
-  ])
+  await Promise.all(
+    repositories.map(repo => repo.init()),
+  )
 
   for (const handler of handlers) {
-    bot.command(handler.command, handler.onCommand.bind(handler))
+    bot.command(
+      handler.command,
+      usageLimitMiddleware(handler),
+      handler.onCommand.bind(handler),
+    )
   }
 
-  const events = new Set(handlers.flatMap(handler => Object.keys(handler.events)))
+  const events = new Set(handlers.flatMap(handler => Object.keys(handler.events) as FilterQuery[]))
   for (const event of events) {
-    bot.on(event as FilterQuery, async (ctx) => {
+    bot.on(event, async (ctx) => {
+      const userId = ctx.from?.id || ctx.chat?.id
+      if (!userId) {
+        return
+      }
+
       const command = ctx.session.command
       const handler = handlers.find(h => h.command === command)
+      const eventHandler = handler?.events[event]
 
-      if (handler) {
-        const eventHandler = handler.events[event as FilterQuery]
-        if (eventHandler) {
-          try {
-            await eventHandler(ctx)
-          }
-          catch (error) {
-            if (error instanceof SessionValidationError) {
-              await ctx.reply(`⚠️ ${error.message}`)
-              ctx.session.command = null
-              ctx.session.params = null
-              return
-            }
+      if (!handler || !eventHandler) {
+        return
+      }
 
-            if (error instanceof InvalidFileError) {
-              return
-            }
-
-            throw error
-          }
-        }
+      try {
+        const runWithLimit = usageLimitMiddleware(handler)
+        await runWithLimit(ctx, () => eventHandler(ctx))
+      }
+      catch (error) {
+        await handleHandlerError(ctx, error)
       }
     })
   }
-
-  bot.catch((err) => {
-    logger.error(err)
-  })
 
   const runner = run(bot)
 
@@ -71,15 +60,41 @@ async function main() {
 
   const stop = async () => {
     logger.info('Shutting down gracefully...')
-    await runner.stop()
-    await browser.close()
-    process.exit(0)
+    try {
+      await runner.stop()
+      await Promise.allSettled([
+        mongoClient.close(),
+        browser.close(),
+      ])
+    }
+    catch (error) {
+      logger.error({ error }, 'Error during graceful shutdown.')
+    }
+    finally {
+      process.exit(0)
+    }
   }
 
-  process.once('SIGINT', stop)
-  process.once('SIGTERM', stop)
+  process
+    .once('SIGINT', stop)
+    .once('SIGTERM', stop)
 
   logger.info('Bot is running...')
 }
 
 void main()
+
+async function handleHandlerError(ctx: CustomContext, error: unknown) {
+  if (error instanceof SessionValidationError) {
+    await ctx.reply(`⚠️ ${error.message}`)
+    ctx.session.command = null
+    ctx.session.params = null
+    return
+  }
+
+  if (error instanceof InvalidFileError) {
+    return
+  }
+
+  throw error
+}
