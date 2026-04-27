@@ -18,9 +18,11 @@
     "!src/index.ts",
     "!src/**/index.ts"
   ],
-  "checkers": ["typescript"],
+  "checkers": [
+    "typescript"
+  ],
   "tsconfigFile": "tsconfig.json",
-  "incremental": true,
+  "incremental": false,
   "incrementalFile": "reports/stryker-incremental.json",
   "thresholds": {
     "high": 80,

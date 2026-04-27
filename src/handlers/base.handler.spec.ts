@@ -172,4 +172,24 @@ describe(BaseHandler.name, () => {
       expect(loggerSpy).toHaveBeenCalledWith({ error, path: '/tmp/test-file' }, 'Failed to remove temporary file/folder.')
     })
   })
+
+  describe('validateParams', () => {
+    it('should return data if validation succeeds', () => {
+      const handler = new TestHandler()
+      const schema = { safeParse: vi.fn().mockReturnValue({ success: true, data: { foo: 'bar' } }) } as any
+      const result = (handler as any).validateParams(schema, { foo: 'bar' })
+      expect(result).toEqual({ foo: 'bar' })
+    })
+
+    it('should throw SessionValidationError if validation fails', () => {
+      const handler = new TestHandler()
+      const schema = { safeParse: vi.fn().mockReturnValue({ success: false, error: new Error('Validation failed') }) } as any
+      expect(() => (handler as any).validateParams(schema, { foo: 'bar' })).toThrow()
+    })
+  })
+
+  it('should have usage limits enabled by default', () => {
+    const handler = new TestHandler()
+    expect(handler.hasUsageLimits).toBe(true)
+  })
 })

@@ -109,6 +109,15 @@ describe(ProHandler.name, () => {
         expect.any(Object),
       )
     })
+
+    it('should do nothing if ctx.from is missing', async () => {
+      const ctx = createMockContext({ from: undefined })
+
+      await handler.onCommand(ctx)
+
+      expect(ctx.reply).not.toHaveBeenCalled()
+      expect(ctx.replyWithInvoice).not.toHaveBeenCalled()
+    })
   })
 
   describe('events', () => {
@@ -140,6 +149,15 @@ describe(ProHandler.name, () => {
         expect(paymentRepository.create).toHaveBeenCalled()
         expect(ctx.reply).toHaveBeenCalledWith('🎉 Thank you for subscribing to PRO! You now have full access to all features.')
         expect(ctx.session.command).toBeNull()
+      })
+
+      it('should do nothing if ctx.from is missing', async () => {
+        const ctx = createMockContext({ from: undefined })
+
+        await handler.events['message:successful_payment'](ctx)
+
+        expect(userRepository.findByTelegramId).not.toHaveBeenCalled()
+        expect(userRepository.updateById).not.toHaveBeenCalled()
       })
 
       it('should do nothing if user is not found', async () => {

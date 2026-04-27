@@ -27,7 +27,7 @@ export function usageLimitMiddleware(handler: BaseHandler) {
       oneMonthAgo.setDate(oneMonthAgo.getDate() - 30) // 30 days expiration
 
       if (user.plan_started_at < oneMonthAgo) {
-        await userRepository.updateById(user._id, { plan_type: PlanTypeEnum.Free })
+        await userRepository.updateById(user._id, { plan_type: PlanTypeEnum.Free, plan_started_at: null })
         user.plan_type = PlanTypeEnum.Free
       }
     }

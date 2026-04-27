@@ -18,6 +18,9 @@ export class SplitHandler extends BaseHandler {
       let inputPath: string | undefined
 
       try {
+        outputDir = await fs.mkdtemp(join(os.tmpdir(), 'pdf-studio-bot-split-'))
+        await fs.chmod(outputDir, 0o700)
+
         const file = await ctx.getFile()
         inputPath = await file.download()
 
@@ -27,9 +30,6 @@ export class SplitHandler extends BaseHandler {
 
         const pdfReader = muhammara.createReader(inputPath)
         const pagesCount = pdfReader.getPagesCount()
-
-        outputDir = await fs.mkdtemp(join(os.tmpdir(), 'pdf-studio-bot-split-'))
-        await fs.chmod(outputDir, 0o700)
 
         await ctx.reply(`📄 Found ${pagesCount} pages. Splitting...`)
 

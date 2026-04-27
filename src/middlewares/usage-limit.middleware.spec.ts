@@ -8,6 +8,7 @@ vi.mock('../repositories', () => ({
     findByTelegramId: vi.fn(),
     create: vi.fn(),
     incrementUsage: vi.fn(),
+    updateById: vi.fn(),
   },
 }))
 
@@ -25,7 +26,7 @@ describe(usageLimitMiddleware.name, () => {
     handler = {
       hasUsageLimits: true,
     }
-    vi.clearAllMocks()
+    vi.resetAllMocks()
   })
 
   it('should call next if handler does not have usage limits', async () => {
@@ -108,5 +109,28 @@ describe(usageLimitMiddleware.name, () => {
 
     expect(next).toHaveBeenCalled()
     expect(userRepository.incrementUsage).toHaveBeenCalledWith(12345, 50)
+  })
+
+  it('should revert to Free if Pro plan has expired', async () => {
+    const expiredDate = new Date()
+    expiredDate.setDate(expiredDate.getDate() - 31)
+
+    const user = {
+      _id: 'user-id',
+      plan_type: PlanTypeEnum.Pro,
+      plan_started_at: expiredDate,
+    }
+    vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
+    vi.mocked(userRepository.incrementUsage).mockResolvedValueOnce({ ...user, plan_type: PlanTypeEnum.Free, daily_usage_count: 1 } as any)
+
+    const middleware = usageLimitMiddleware(handler)
+    await middleware(ctx, next)
+
+    expect(userRepository.updateById).toHaveBeenCalledWith('user-id', {
+      plan_type: PlanTypeEnum.Free,
+      plan_started_at: null,
+    })
+    expect(userRepository.incrementUsage).toHaveBeenCalledWith(12345, 3)
+    expect(next).toHaveBeenCalled()
   })
 })
