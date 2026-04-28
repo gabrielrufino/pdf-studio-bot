@@ -1,5 +1,6 @@
 import type { Page, PDFOptions } from 'puppeteer'
 import type { Browser } from '../config/browser'
+import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
 import dns from 'node:dns/promises'
 import fs from 'node:fs/promises'
@@ -14,7 +15,10 @@ import { DownloadParamsSchema } from '../schemas/download-params.schema'
 import { BaseHandler } from './base.handler'
 
 export class DownloadHandler extends BaseHandler {
-  constructor(private readonly browser: Browser) {
+  constructor(
+    private readonly browser: Browser,
+    private readonly userRepository: UserRepository,
+  ) {
     super()
   }
 
@@ -67,6 +71,7 @@ export class DownloadHandler extends BaseHandler {
         const document = new InputFile(filePath, `${title}.pdf`)
 
         await ctx.replyWithDocument(document)
+        await this.userRepository.incrementUsage(ctx.from!.id)
       }
       catch (error) {
         this.logger.error(error)

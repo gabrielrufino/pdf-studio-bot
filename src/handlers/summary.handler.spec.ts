@@ -27,6 +27,7 @@ const mockAi = {
 describe(SummaryHandler.name, () => {
   const mockUserRepository = {
     findByTelegramId: vi.fn(),
+    incrementUsage: vi.fn(),
   } as unknown as UserRepository
 
   const handler = new SummaryHandler(mockUserRepository, mockAi)
@@ -57,6 +58,13 @@ describe(SummaryHandler.name, () => {
       },
     } as unknown as CustomContext
   })
+
+  const mockUserWithId = (id: number, plan: PlanTypeEnum) => {
+    vi.mocked(mockUserRepository.findByTelegramId).mockResolvedValue({
+      telegram_user: { id },
+      plan_type: plan,
+    } as any)
+  }
 
   const setupTestFile = async (prefix: string) => {
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), prefix))
@@ -110,13 +118,15 @@ describe(SummaryHandler.name, () => {
         const { tempDir, targetPath } = await setupTestFile('pdf-studio-bot-test-summary-')
 
         try {
-          mockUserWithPlan(PlanTypeEnum.Free)
+          mockUserWithId(123, PlanTypeEnum.Free)
 
           mockGenerateContent.mockResolvedValueOnce({
             text: 'This is a mock summary of the PDF.',
           })
 
           await handler.events['msg:document'](ctx)
+
+          expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
 
           // Since page-1.pdf has 10 pages and <10MB, it should pass limits.
           expect(ctx.reply).toHaveBeenCalledWith('⏳ Summarizing your PDF. This might take a moment...')
