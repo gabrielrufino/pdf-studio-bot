@@ -3,138 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self';">
     <title>PDF Studio Bot - Your PDF Assistant on Telegram</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        :root {
+            --blue-600: #2563eb;
+            --blue-700: #1d4ed8;
+            --blue-100: #dbeafe;
+            --slate-50: #f8fafc;
+            --slate-200: #e2e8f0;
+            --slate-500: #64748b;
+            --slate-600: #475569;
+            --slate-700: #334155;
+            --slate-900: #0f172a;
+        }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--slate-50);
+            color: var(--slate-900);
+            margin: 0;
+            line-height: 1.5;
+        }
+        .max-w-7xl { max-width: 80rem; margin-left: auto; margin-right: auto; }
+        .px-4 { padding-left: 1rem; padding-right: 1rem; }
+        .py-16 { padding-top: 4rem; padding-bottom: 4rem; }
+        .py-20 { padding-top: 5rem; padding-bottom: 5rem; }
+        .py-12 { padding-top: 3rem; padding-bottom: 3rem; }
+        .text-center { text-align: center; }
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .justify-center { justify-content: center; }
+        .grid { display: grid; }
+        .gap-8 { gap: 2rem; }
+        .gap-12 { gap: 3rem; }
+        .bg-white { background-color: white; }
+        .text-blue-600 { color: var(--blue-600); }
+        .font-bold { font-weight: 700; }
+        .text-xl { font-size: 1.25rem; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .rounded-xl { border-radius: 0.75rem; }
+        .rounded-2xl { border-radius: 1rem; }
+        .transition { transition: all 0.2s; }
+
+        nav { background: white; border-bottom: 1px solid var(--slate-200); height: 4rem; display: flex; align-items: center; }
+        .btn { text-decoration: none; padding: 0.75rem 1.5rem; font-weight: 600; cursor: pointer; border: none; }
+        .btn-primary { background: var(--blue-600); color: white; border-radius: 0.5rem; }
+        .btn-primary:hover { background: var(--blue-700); }
+
+        header h1 { font-size: 3rem; margin-bottom: 1.5rem; }
+        header p { font-size: 1.25rem; color: var(--slate-600); max-width: 40rem; margin: 0 auto 2.5rem; }
+
+        .features-grid { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+        .feature-card { background: white; padding: 2rem; border-radius: 1rem; border: 1px solid var(--slate-200); }
+        .feature-card:hover { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .icon-box { width: 3rem; height: 3rem; background: var(--blue-100); color: var(--blue-600); border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; }
+
+        .how-it-works { background: var(--blue-600); color: white; }
+        .step-circle { width: 4rem; height: 4rem; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 1.5rem; }
+
+        footer { border-top: 1px solid var(--slate-200); }
+        .footer-links a { margin-left: 1.5rem; color: var(--slate-600); text-decoration: none; }
+        .footer-links a:hover { color: var(--blue-600); }
+
+        @media (max-width: 768px) {
+            header h1 { font-size: 2.25rem; }
+            .hidden-mobile { display: none; }
+        }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-900">
-    <!-- Navbar -->
-    <nav class="bg-white border-b border-slate-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <div class="flex items-center">
-                    <span class="text-blue-600 font-bold text-xl">PDF Studio Bot</span>
-                </div>
-                <div class="hidden md:block">
-                    <a href="https://t.me/PDFStudio_bot" target="_blank" rel="noopener noreferrer" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition">Open in Telegram</a>
-                </div>
+<body>
+    <nav>
+        <div class="max-w-7xl px-4 flex justify-between items-center" style="width: 100%;">
+            <div class="flex items-center">
+                <span class="text-blue-600 font-bold text-xl">PDF Studio Bot</span>
+            </div>
+            <div class="hidden-mobile">
+                <a href="https://t.me/PDFStudio_bot" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Open in Telegram</a>
             </div>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <header class="py-16 md:py-24 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h1 class="text-4xl md:text-6xl font-bold tracking-tight text-slate-900 mb-6">
-                The easiest way to <span class="text-blue-600">manage your PDFs</span>
-            </h1>
-            <p class="text-lg md:text-xl text-slate-600 mb-10 max-w-2xl mx-auto">
-                Download, protect, split, and merge PDF files directly from your Telegram. Fast, secure, and completely free.
-            </p>
-            <div class="flex flex-col sm:flex-row justify-center gap-4">
-                <a href="https://t.me/PDFStudio_bot" target="_blank" rel="noopener noreferrer" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-bold text-lg transition flex items-center justify-center">
-                    <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.46 3.62-.51.35-.98.53-1.39.51-.46-.01-1.33-.26-1.98-.47-.8-.26-1.43-.4-1.38-.85.03-.23.35-.47.96-.71 3.76-1.63 6.27-2.71 7.52-3.23 3.58-1.48 4.32-1.74 4.81-1.75.11 0 .35.03.5.16.12.1.16.24.18.33.02.09.03.26.02.39z"/></svg>
-                    Get Started Now
-                </a>
-                <a href="#features" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-8 py-4 rounded-xl font-bold text-lg transition">
-                    View Features
-                </a>
+    <header class="py-16 bg-white">
+        <div class="max-w-7xl px-4 text-center">
+            <h1>The easiest way to <span class="text-blue-600">manage your PDFs</span></h1>
+            <p>Download, protect, split, and merge PDF files directly from your Telegram. Fast, secure, and completely free.</p>
+            <div class="flex justify-center" style="gap: 1rem;">
+                <a href="https://t.me/PDFStudio_bot" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="padding: 1rem 2rem; font-size: 1.125rem;">Get Started Now</a>
             </div>
         </div>
     </header>
 
-    <!-- Features Section -->
     <section id="features" class="py-20">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl font-bold text-slate-900">Powerful Features</h2>
-                <p class="text-slate-600 mt-4">Everything you need to handle PDFs in one place.</p>
+        <div class="max-w-7xl px-4">
+            <div class="text-center" style="margin-bottom: 4rem;">
+                <h2 style="font-size: 2rem;">Powerful Features</h2>
+                <p style="color: var(--slate-600);">Everything you need to handle PDFs in one place.</p>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <!-- Feature 1 -->
-                <div class="bg-white p-8 rounded-2xl border border-slate-200 hover:shadow-lg transition">
-                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-6">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path></svg>
+            <div class="grid features-grid gap-8">
+                <div class="feature-card">
+                    <div class="icon-box">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path></svg>
                     </div>
-                    <h3 class="font-bold text-xl mb-3">Download from URL</h3>
-                    <p class="text-slate-600 text-sm">Send a link and receive the PDF of the page instantly.</p>
+                    <h3 class="font-bold text-xl" style="margin-bottom: 0.75rem;">Download from URL</h3>
+                    <p style="color: var(--slate-600); font-size: 0.875rem;">Send a link and receive the PDF of the page instantly.</p>
                 </div>
-
-                <!-- Feature 2 -->
-                <div class="bg-white p-8 rounded-2xl border border-slate-200 hover:shadow-lg transition">
-                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-6">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                <div class="feature-card">
+                    <div class="icon-box">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                     </div>
-                    <h3 class="font-bold text-xl mb-3">Add Password</h3>
-                    <p class="text-slate-600 text-sm">Protect your documents with a password in just a few taps.</p>
+                    <h3 class="font-bold text-xl" style="margin-bottom: 0.75rem;">Add Password</h3>
+                    <p style="color: var(--slate-600); font-size: 0.875rem;">Protect your documents with a password in just a few taps.</p>
                 </div>
-
-                <!-- Feature 3 -->
-                <div class="bg-white p-8 rounded-2xl border border-slate-200 hover:shadow-lg transition">
-                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-6">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 11-4.243-4.243 3 3 0 014.243 4.243zm0-5.758a3 3 0 11-4.243-4.243 3 3 0 014.243 4.243z"></path></svg>
+                <div class="feature-card">
+                    <div class="icon-box">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 11-4.243-4.243 3 3 0 014.243 4.243zm0-5.758a3 3 0 11-4.243-4.243 3 3 0 014.243 4.243z"></path></svg>
                     </div>
-                    <h3 class="font-bold text-xl mb-3">Split PDF</h3>
-                    <p class="text-slate-600 text-sm">Separate PDF pages into individual files easily.</p>
+                    <h3 class="font-bold text-xl" style="margin-bottom: 0.75rem;">Split PDF</h3>
+                    <p style="color: var(--slate-600); font-size: 0.875rem;">Separate PDF pages into individual files easily.</p>
                 </div>
-
-                <!-- Feature 4 -->
-                <div class="bg-white p-8 rounded-2xl border border-slate-200 hover:shadow-lg transition">
-                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-6">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path></svg>
+                <div class="feature-card">
+                    <div class="icon-box">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path></svg>
                     </div>
-                    <h3 class="font-bold text-xl mb-3">Merge PDFs</h3>
-                    <p class="text-slate-600 text-sm">Combine multiple PDF files into a single document.</p>
+                    <h3 class="font-bold text-xl" style="margin-bottom: 0.75rem;">Merge PDFs</h3>
+                    <p style="color: var(--slate-600); font-size: 0.875rem;">Combine multiple PDF files into a single document.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- How it Works -->
-    <section class="py-20 bg-blue-600 text-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl font-bold">How it Works?</h2>
-                <p class="text-blue-100 mt-4">Simple, fast, and efficient.</p>
+    <section class="py-20 how-it-works">
+        <div class="max-w-7xl px-4">
+            <div class="text-center" style="margin-bottom: 4rem;">
+                <h2 style="font-size: 2rem;">How it Works?</h2>
+                <p style="color: rgba(255,255,255,0.8);">Simple, fast, and efficient.</p>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
-                <div class="relative">
-                    <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">1</div>
-                    <h3 class="font-bold text-xl mb-2">Open the Bot</h3>
-                    <p class="text-blue-100">Click "Get Started" or send /start on Telegram.</p>
+            <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 3rem; text-align: center;">
+                <div>
+                    <div class="step-circle">1</div>
+                    <h3 class="font-bold text-xl" style="margin-bottom: 0.5rem;">Open the Bot</h3>
+                    <p style="color: rgba(255,255,255,0.8);">Click "Get Started" or send /start on Telegram.</p>
                 </div>
-                <div class="relative">
-                    <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">2</div>
-                    <h3 class="font-bold text-xl mb-2">Choose an Action</h3>
-                    <p class="text-blue-100">Send your file or link and select what you want to do.</p>
+                <div>
+                    <div class="step-circle">2</div>
+                    <h3 class="font-bold text-xl" style="margin-bottom: 0.5rem;">Choose an Action</h3>
+                    <p style="color: rgba(255,255,255,0.8);">Send your file or link and select what you want to do.</p>
                 </div>
-                <div class="relative">
-                    <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">3</div>
-                    <h3 class="font-bold text-xl mb-2">Receive the Result</h3>
-                    <p class="text-blue-100">The bot processes and sends the new file in seconds.</p>
+                <div>
+                    <div class="step-circle">3</div>
+                    <h3 class="font-bold text-xl" style="margin-bottom: 0.5rem;">Receive the Result</h3>
+                    <p style="color: rgba(255,255,255,0.8);">The bot processes and sends the new file in seconds.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="py-12 bg-white border-t border-slate-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center">
-            <div class="mb-4 md:mb-0">
+    <footer class="py-12 bg-white">
+        <div class="max-w-7xl px-4 flex justify-between items-center" style="flex-wrap: wrap; width: 100%; box-sizing: border-box;">
+            <div>
                 <span class="text-blue-600 font-bold text-xl">PDF Studio Bot</span>
-                <p class="text-slate-500 text-sm mt-1">© 2024 PDF Studio Bot. Developed by Gabriel Rufino.</p>
+                <p style="color: var(--slate-500); font-size: 0.875rem; margin-top: 0.5rem;">© 2024 PDF Studio Bot. Developed by Gabriel Rufino.</p>
             </div>
-            <div class="flex gap-6">
-                <a href="https://t.me/PDFStudio_bot" target="_blank" rel="noopener noreferrer" class="text-slate-600 hover:text-blue-600 transition">Telegram</a>
-                <a href="https://github.com/gabrielrufino/pdf-studio-bot" target="_blank" rel="noopener noreferrer" class="text-slate-600 hover:text-blue-600 transition">GitHub</a>
+            <div class="footer-links">
+                <a href="https://t.me/PDFStudio_bot" target="_blank" rel="noopener noreferrer">Telegram</a>
+                <a href="https://github.com/gabrielrufino/pdf-studio-bot" target="_blank" rel="noopener noreferrer">GitHub</a>
             </div>
         </div>
     </footer>
