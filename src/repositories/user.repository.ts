@@ -53,22 +53,44 @@ export class UserRepository extends BaseRepository<UserEntity> {
   }
 
   @EnsureInitialized
-  public async incrementUsage(telegramId: number, limit: number): Promise<UserEntity | null> {
+  public async isWithinLimit(telegramId: number, limit: number): Promise<boolean> {
     const today = new Date().toISOString().split('T')[0]
 
+    const user = await this.collection.findOne({
+      'telegram_user.id': telegramId,
+    })
+
+    if (!user) {
+      return true
+    }
+
+    if (user.last_usage_date !== today) {
+      return true
+    }
+
+    return (user.daily_usage_count || 0) < limit
+  }
+
+  @EnsureInitialized
+  public async incrementUsage(telegramId: number, limit?: number): Promise<UserEntity | null> {
+    const today = new Date().toISOString().split('T')[0]
+
+    const filter: any = { 'telegram_user.id': telegramId }
+
+    if (limit !== undefined) {
+      filter.$or = [
+        { last_usage_date: { $ne: today } },
+        {
+          $and: [
+            { last_usage_date: today },
+            { daily_usage_count: { $lt: limit } },
+          ],
+        },
+      ]
+    }
+
     const result = await this.collection.findOneAndUpdate(
-      {
-        'telegram_user.id': telegramId,
-        '$or': [
-          { last_usage_date: { $ne: today } },
-          {
-            $and: [
-              { last_usage_date: today },
-              { daily_usage_count: { $lt: limit } },
-            ],
-          },
-        ],
-      },
+      filter,
       [
         {
           $set: {

@@ -39,9 +39,9 @@ export function usageLimitMiddleware(handler: BaseHandler) {
 
     const limit = limits[user.plan_type || PlanTypeEnum.Free]
 
-    const updatedUser = await userRepository.incrementUsage(ctx.from!.id, limit)
+    const isWithinLimit = await userRepository.isWithinLimit(ctx.from!.id, limit)
 
-    if (!updatedUser) {
+    if (!isWithinLimit) {
       if (user.plan_type === PlanTypeEnum.Pro) {
         await ctx.reply('⚠️ You have reached your daily limit of 50 operations. As a PRO user, this is our safety limit. Please try again tomorrow.')
       }

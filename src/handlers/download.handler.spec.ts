@@ -1,5 +1,6 @@
 import type fs from 'node:fs/promises'
 import type { Browser } from '../config/browser'
+import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
 import { Buffer } from 'node:buffer'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -18,6 +19,7 @@ describe(DownloadHandler.name, () => {
   let handler: DownloadHandler
   let ctx: CustomContext
   let mockBrowser: Browser
+  let mockUserRepository: UserRepository
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -34,8 +36,13 @@ describe(DownloadHandler.name, () => {
       }),
     } as unknown as Browser
 
-    handler = new DownloadHandler(mockBrowser)
+    mockUserRepository = {
+      incrementUsage: vi.fn(),
+    } as unknown as UserRepository
+
+    handler = new DownloadHandler(mockBrowser, mockUserRepository)
     ctx = {
+      from: { id: 123 },
       session: {
         command: null,
         params: { url: null },
@@ -71,6 +78,7 @@ describe(DownloadHandler.name, () => {
 
         expect(mockBrowser.getInstance).toHaveBeenCalled()
         expect(ctx.replyWithDocument).toHaveBeenCalled()
+        expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
         expect(ctx.session.command).toBeNull()
         expect(ctx.session.params).toBeNull()
       })

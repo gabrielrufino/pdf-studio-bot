@@ -1,3 +1,4 @@
+import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
 import os from 'node:os'
@@ -11,6 +12,10 @@ import { PutPasswordParamsSchema } from '../schemas/put-password-params.schema'
 import { BaseHandler } from './base.handler'
 
 export class PutPasswordHandler extends BaseHandler {
+  constructor(private readonly userRepository: UserRepository) {
+    super()
+  }
+
   public readonly command = CommandEnum.PutPassword
   public readonly description = '🔐 Protect a PDF with a password'
   public readonly events = {
@@ -58,7 +63,10 @@ export class PutPasswordHandler extends BaseHandler {
               ctx.replyWithDocument(new InputFile(output), {
                 caption: '✅ Here is your password-protected PDF!',
               })
-                .then(() => resolve())
+                .then(async () => {
+                  await this.userRepository.incrementUsage(ctx.from!.id)
+                  resolve()
+                })
                 .catch(reject)
             })
         })

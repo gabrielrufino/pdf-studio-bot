@@ -14,12 +14,12 @@ import { SummaryHandler } from './summary.handler'
 import { VersionHandler } from './version.handler'
 
 const coreHandlers: Array<BaseHandler> = [
-  new DownloadHandler(browser),
+  new DownloadHandler(browser, userRepository),
   new FeedbackHandler(feedbackRepository),
-  new JoinHandler(),
+  new JoinHandler(userRepository),
   new ProHandler(userRepository, paymentRepository),
-  new PutPasswordHandler(),
-  new SplitHandler(),
+  new PutPasswordHandler(userRepository),
+  new SplitHandler(userRepository),
   new StartHandler(userRepository),
   new SummaryHandler(userRepository, ai),
   new VersionHandler(),

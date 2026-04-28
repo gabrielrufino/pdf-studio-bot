@@ -48,6 +48,7 @@ export class SummaryHandler extends BaseHandler {
         })
 
         await this.sendSummaryResponse(ctx, processingMessage.message_id, text)
+        await this.userRepository.incrementUsage(ctx.from!.id)
       }
       catch (error) {
         if (error instanceof LimitExceededError)

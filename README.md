@@ -1,6 +1,7 @@
 # PDF Studio Bot
 
 [![Telegram](https://img.shields.io/badge/Telegram-PDF%20Studio%20Bot-2CA5E0?logo=telegram&logoColor=white&style=for-the-badge)](https://t.me/PDFStudio_bot)
+[![Landing Page](https://img.shields.io/badge/Website-PDF%20Studio%20Bot-blue?style=for-the-badge)](https://gabrielrufino.github.io/pdf-studio-bot/landing/index.html)
 
 Your ultimate assistant for PDF management is now on Telegram!
 Try it now and experience the convenience: just click the button above 🚀
