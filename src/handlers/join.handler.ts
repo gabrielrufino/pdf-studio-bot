@@ -1,3 +1,4 @@
+import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
 import os from 'node:os'
@@ -9,6 +10,10 @@ import { JoinParamsSchema } from '../schemas/join-params.schema'
 import { BaseHandler } from './base.handler'
 
 export class JoinHandler extends BaseHandler {
+  constructor(private readonly userRepository: UserRepository) {
+    super()
+  }
+
   readonly command = CommandEnum.Join
   readonly description = '🔗 Join multiple PDF files into one'
   static readonly MAX_PDF_FILES = 10
@@ -80,6 +85,7 @@ export class JoinHandler extends BaseHandler {
       await ctx.replyWithDocument(new InputFile(outputPath, 'merged.pdf'), {
         caption: '✅ Here is your joined PDF file!',
       })
+      await this.userRepository.incrementUsage(ctx.from!.id)
     }
     catch (error) {
       this.logger.error(error)

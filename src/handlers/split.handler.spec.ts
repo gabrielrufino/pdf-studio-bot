@@ -1,3 +1,4 @@
+import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
 import os from 'node:os'
@@ -7,12 +8,18 @@ import { CommandEnum } from '../enums/command.enum'
 import { SplitHandler } from './split.handler'
 
 describe(SplitHandler.name, () => {
-  const handler = new SplitHandler()
+  let handler: SplitHandler
+  let mockUserRepository: UserRepository
 
   let ctx: CustomContext
 
   beforeEach(() => {
+    mockUserRepository = {
+      incrementUsage: vi.fn(),
+    } as unknown as UserRepository
+    handler = new SplitHandler(mockUserRepository)
     ctx = {
+      from: { id: 123 },
       session: {
         command: null,
         params: {} as any,
@@ -59,6 +66,7 @@ describe(SplitHandler.name, () => {
 
           expect(ctx.getFile).toHaveBeenCalled()
           expect(ctx.reply).toHaveBeenCalledWith('📄 Found 10 pages. Splitting...')
+          expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
 
           for (let i = 0; i < 10; i++) {
             expect(ctx.replyWithDocument).toHaveBeenCalledWith(

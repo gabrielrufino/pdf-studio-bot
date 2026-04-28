@@ -1,3 +1,4 @@
+import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
 import os from 'node:os'
@@ -8,6 +9,10 @@ import { CommandEnum } from '../enums/command.enum'
 import { BaseHandler } from './base.handler'
 
 export class SplitHandler extends BaseHandler {
+  constructor(private readonly userRepository: UserRepository) {
+    super()
+  }
+
   readonly command = CommandEnum.Split
   readonly description = '✂️ Split a PDF into individual pages'
   readonly events = {
@@ -55,6 +60,8 @@ export class SplitHandler extends BaseHandler {
             caption: `📄 Page ${pageNumber} of ${pagesCount}`,
           })
         }
+
+        await this.userRepository.incrementUsage(ctx.from!.id)
       }
       catch (error) {
         this.logger.error(error)

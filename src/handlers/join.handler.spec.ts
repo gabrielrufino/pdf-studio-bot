@@ -1,3 +1,4 @@
+import type { UserRepository } from '../repositories/user.repository'
 import type { JoinParams } from '../schemas/join-params.schema'
 import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
@@ -11,13 +12,19 @@ import { JoinHandler } from './join.handler'
 
 describe(JoinHandler.name, () => {
   let handler: JoinHandler
+  let mockUserRepository: UserRepository
 
   let ctx: CustomContext
 
   beforeEach(() => {
     vi.clearAllMocks()
-    handler = new JoinHandler()
+    mockUserRepository = {
+      incrementUsage: vi.fn(),
+    } as unknown as UserRepository
+
+    handler = new JoinHandler(mockUserRepository)
     ctx = {
+      from: { id: 123 },
       session: {
         command: null,
         params: { paths: [] } as JoinParams,
@@ -150,6 +157,7 @@ describe(JoinHandler.name, () => {
         await (handler as any).joinPDFs(ctx)
 
         expect(ctx.reply).toHaveBeenCalledWith('🔄 Merging your PDF files...')
+        expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
         expect(ctx.replyWithDocument).toHaveBeenCalledWith(
           expect.objectContaining({
             fileData: expect.stringContaining('merged.pdf'),

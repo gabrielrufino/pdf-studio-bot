@@ -1,3 +1,4 @@
+import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
 import os from 'node:os'
@@ -19,11 +20,17 @@ vi.mock('../config/bot', () => ({
 describe(PutPasswordHandler.name, () => {
   let handler: PutPasswordHandler
   let ctx: CustomContext
+  let mockUserRepository: UserRepository
 
   beforeEach(() => {
     vi.clearAllMocks()
-    handler = new PutPasswordHandler()
+    mockUserRepository = {
+      incrementUsage: vi.fn(),
+    } as unknown as UserRepository
+
+    handler = new PutPasswordHandler(mockUserRepository)
     ctx = {
+      from: { id: 123 },
       session: {
         command: null,
         params: { path: null },
@@ -38,7 +45,7 @@ describe(PutPasswordHandler.name, () => {
       chat: { id: 100 },
       getFile: vi.fn(),
       reply: vi.fn(),
-      replyWithDocument: vi.fn(),
+      replyWithDocument: vi.fn().mockResolvedValue({}),
     } as unknown as CustomContext
   })
 
@@ -99,6 +106,7 @@ describe(PutPasswordHandler.name, () => {
           expect(ctx.replyWithDocument).toHaveBeenCalledWith(expect.any(InputFile), {
             caption: '✅ Here is your password-protected PDF!',
           })
+          expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
           expect(ctx.session.command).toBeNull()
           expect(ctx.session.params).toBeNull()
         }
