@@ -1,8 +1,6 @@
 import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
-import fs from 'node:fs/promises'
-import os from 'node:os'
-import path from 'node:path'
+import { join } from 'node:path'
 import { InputFile } from 'grammy'
 import { Recipe } from 'muhammara'
 import { bot } from '../config/bot'
@@ -24,8 +22,7 @@ export class PutPasswordHandler extends BaseHandler {
 
       await this.validatePDF(ctx)
 
-      const file = await ctx.getFile()
-      const filePath = await file.download()
+      const filePath = await this.downloadDocument(ctx)
 
       ctx.session.params = {
         ...params,
@@ -43,9 +40,8 @@ export class PutPasswordHandler extends BaseHandler {
 
       await ctx.reply('🔒 Protecting your PDF file with the password...')
 
-      const outputDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-studio-bot-putpwd-'))
-      await fs.chmod(outputDir, 0o700)
-      const output = path.join(outputDir, 'output.pdf')
+      const outputDir = await this.createTempDir('pdf-studio-bot-putpwd-')
+      const output = join(outputDir, 'output.pdf')
 
       const password = ctx.message?.text
       bot.api.deleteMessage(ctx.chat!.id, ctx.message!.message_id)
@@ -76,11 +72,8 @@ export class PutPasswordHandler extends BaseHandler {
         await ctx.reply('❌ An error occurred while putting a password on the PDF file.')
       }
       finally {
-        await Promise.all([
-          fs.rm(outputDir, { force: true, recursive: true }).catch(error =>
-            this.logger.error({ error, path: outputDir }, 'Failed to remove temporary directory.')),
-          this.resetSession(ctx),
-        ])
+        await this.safeCleanup([outputDir])
+        await this.resetSession(ctx)
       }
     },
   }

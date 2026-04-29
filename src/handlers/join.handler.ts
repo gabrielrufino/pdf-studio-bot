@@ -1,7 +1,5 @@
 import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
-import fs from 'node:fs/promises'
-import os from 'node:os'
 import { join } from 'node:path'
 import { InputFile } from 'grammy'
 import muhammara from 'muhammara'
@@ -28,8 +26,7 @@ export class JoinHandler extends BaseHandler {
 
       await this.validatePDF(ctx)
 
-      const file = await ctx.getFile()
-      const filePath = await file.download()
+      const filePath = await this.downloadDocument(ctx)
 
       params.paths.push(filePath)
       ctx.session.params = params
@@ -67,11 +64,12 @@ export class JoinHandler extends BaseHandler {
       return
     }
 
-    const outputDir = await fs.mkdtemp(join(os.tmpdir(), 'pdf-studio-bot-join-'))
-    await fs.chmod(outputDir, 0o700)
-    const outputPath = join(outputDir, 'merged.pdf')
+    let outputDir: string | undefined
 
     try {
+      outputDir = await this.createTempDir('pdf-studio-bot-join-')
+      const outputPath = join(outputDir, 'merged.pdf')
+
       await ctx.reply('🔄 Merging your PDF files...')
 
       const pdfWriter = muhammara.createWriter(outputPath)
@@ -92,9 +90,7 @@ export class JoinHandler extends BaseHandler {
       await ctx.reply('❌ An error occurred while joining your PDF files. Please try again later.')
     }
     finally {
-      await fs.rm(outputDir, { force: true, recursive: true }).catch(error =>
-        this.logger.error({ error, path: outputDir }, 'Failed to remove temporary folder.'))
-
+      await this.safeCleanup([outputDir])
       await this.resetSession(ctx)
     }
   }

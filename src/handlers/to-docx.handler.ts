@@ -1,8 +1,6 @@
 import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
 import { execFile } from 'node:child_process'
-import fs from 'node:fs/promises'
-import os from 'node:os'
 import { join, resolve } from 'node:path'
 import { promisify } from 'node:util'
 import { InputFile } from 'grammy'
@@ -26,26 +24,18 @@ export class ToDocxHandler extends BaseHandler {
       let inputPath: string | undefined
 
       try {
-        outputDir = await fs.mkdtemp(join(os.tmpdir(), 'pdf-studio-bot-todocx-'))
-        await fs.chmod(outputDir, 0o700)
+        outputDir = await this.createTempDir('pdf-studio-bot-todocx-')
+        inputPath = await this.downloadDocument(ctx)
 
-        const file = await ctx.getFile()
-        const downloadedPath = await file.download()
-
-        if (!downloadedPath) {
-          throw new Error('Failed to download file')
-        }
-
-        inputPath = downloadedPath
         const outputPath = join(outputDir, 'output.docx')
 
         await ctx.reply('🔄 Converting your PDF to DOCX. This might take a moment...')
 
         const pythonScript = resolve(__dirname, '../utils/convert_pdf_to_docx.py')
-        await execFilePromise('python3', [pythonScript, inputPath, outputPath])
+        await execFilePromise('/usr/bin/python3', [pythonScript, inputPath, outputPath])
 
         const originalFileName = ctx.message?.document?.file_name || 'document.pdf'
-        const outputFileName = originalFileName.replace(/\.pdf$/i, '') + '.docx'
+        const outputFileName = `${originalFileName.replace(/\.pdf$/i, '')}.docx`
 
         await ctx.replyWithDocument(new InputFile(outputPath, outputFileName), {
           caption: '✅ Here is your DOCX file!',
@@ -58,14 +48,7 @@ export class ToDocxHandler extends BaseHandler {
         await ctx.reply('❌ An error occurred while converting the PDF to DOCX.')
       }
       finally {
-        if (outputDir) {
-          await fs.rm(outputDir, { force: true, recursive: true }).catch(error =>
-            this.logger.error({ error, path: outputDir }, 'Failed to remove temporary folder.'))
-        }
-        if (inputPath) {
-          await fs.rm(inputPath, { force: true, recursive: true }).catch(error =>
-            this.logger.error({ error, path: inputPath }, 'Failed to remove input file.'))
-        }
+        await this.safeCleanup([outputDir, inputPath])
         await this.resetSession(ctx)
       }
     },

@@ -1,7 +1,5 @@
 import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
-import fs from 'node:fs/promises'
-import os from 'node:os'
 import { join } from 'node:path'
 import { InputFile } from 'grammy'
 import muhammara from 'muhammara'
@@ -23,15 +21,8 @@ export class SplitHandler extends BaseHandler {
       let inputPath: string | undefined
 
       try {
-        outputDir = await fs.mkdtemp(join(os.tmpdir(), 'pdf-studio-bot-split-'))
-        await fs.chmod(outputDir, 0o700)
-
-        const file = await ctx.getFile()
-        inputPath = await file.download()
-
-        if (!inputPath) {
-          throw new Error('Failed to download file')
-        }
+        outputDir = await this.createTempDir('pdf-studio-bot-split-')
+        inputPath = await this.downloadDocument(ctx)
 
         const pdfReader = muhammara.createReader(inputPath)
         const pagesCount = pdfReader.getPagesCount()
@@ -68,14 +59,7 @@ export class SplitHandler extends BaseHandler {
         await ctx.reply('❌ An error occurred while splitting the PDF file.')
       }
       finally {
-        if (outputDir) {
-          await fs.rm(outputDir, { force: true, recursive: true }).catch(error =>
-            this.logger.error({ error, path: outputDir }, 'Failed to remove temporary folder.'))
-        }
-        if (inputPath) {
-          await fs.rm(inputPath, { force: true, recursive: true }).catch(error =>
-            this.logger.error({ error, path: inputPath }, 'Failed to remove input file.'))
-        }
+        await this.safeCleanup([outputDir, inputPath])
         await this.resetSession(ctx)
       }
     },

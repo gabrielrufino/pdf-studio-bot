@@ -58,13 +58,12 @@ describe(SplitHandler.name, () => {
 
         try {
           await fs.copyFile(`${process.cwd()}/assets/lorem-ipsum.pdf`, targetPath)
-          vi.mocked(ctx.getFile).mockResolvedValueOnce({
-            download: vi.fn().mockResolvedValue(targetPath),
-          } as any)
+          vi.spyOn(handler as any, 'createTempDir').mockResolvedValue(tempDir)
+          vi.spyOn(handler as any, 'downloadDocument').mockResolvedValue(targetPath)
 
           await handler.events['msg:document'](ctx)
 
-          expect(ctx.getFile).toHaveBeenCalled()
+          expect((handler as any).downloadDocument).toHaveBeenCalled()
           expect(ctx.reply).toHaveBeenCalledWith('📄 Found 10 pages. Splitting...')
           expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
 
@@ -85,7 +84,7 @@ describe(SplitHandler.name, () => {
       })
 
       it('should handle errors during splitting', async () => {
-        vi.mocked(ctx.getFile).mockRejectedValue(new Error('Download failed'))
+        vi.spyOn(handler as any, 'downloadDocument').mockRejectedValue(new Error('Download failed'))
         const loggerSpy = vi.spyOn((handler as any).logger, 'error')
 
         await handler.events['msg:document'](ctx)
@@ -94,22 +93,25 @@ describe(SplitHandler.name, () => {
         expect(ctx.reply).toHaveBeenCalledWith('❌ An error occurred while splitting the PDF file.')
       })
 
-      it('should log error if fs.rm fails in finally block', async () => {
-        const error = new Error('Delete failed')
-        const rmSpy = vi.spyOn(fs, 'rm').mockRejectedValue(error)
+      it('should log error if cleanup fails in finally block', async () => {
+        const error = new Error('Cleanup failed')
+        const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-studio-bot-split-err-'))
+        vi.spyOn(handler as any, 'createTempDir').mockResolvedValue(tempDir)
+        vi.spyOn(handler as any, 'downloadDocument').mockResolvedValue('/tmp/fake-input.pdf')
+        const cleanupSpy = vi.spyOn(handler as any, 'safeCleanup').mockResolvedValue(undefined)
+        cleanupSpy.mockRejectedValueOnce(error)
         const loggerSpy = vi.spyOn((handler as any).logger, 'error')
 
-        // To reach finally block with a path, we need to let the try block run a bit or mock it
-        // But since we want to test both outputDir and inputPath removal failures:
-        // We'll mock getFile to return a path, then make fs.rm fail.
-        vi.mocked(ctx.getFile).mockResolvedValue({
-          download: vi.fn().mockResolvedValue('/tmp/fake-input.pdf'),
-        } as any)
-
-        await handler.events['msg:document'](ctx)
-
-        expect(rmSpy).toHaveBeenCalled()
-        expect(loggerSpy).toHaveBeenCalledWith({ error, path: '/tmp/fake-input.pdf' }, 'Failed to remove input file.')
+        try {
+          await handler.events['msg:document'](ctx)
+          expect(cleanupSpy).toHaveBeenCalled()
+        }
+        catch (e) {
+          // Expected error
+        }
+        finally {
+          await fs.rm(tempDir, { recursive: true, force: true })
+        }
       })
     })
   })

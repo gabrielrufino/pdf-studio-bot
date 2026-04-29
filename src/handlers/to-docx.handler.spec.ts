@@ -1,7 +1,6 @@
 import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
 import { execFile } from 'node:child_process'
-import fs from 'node:fs/promises'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CommandEnum } from '../enums/command.enum'
 import { ToDocxHandler } from './to-docx.handler'
@@ -56,16 +55,16 @@ describe(ToDocxHandler.name, () => {
   describe('events', () => {
     describe('msg:document', () => {
       it('should convert PDF to DOCX and send it', async () => {
-        vi.spyOn(fs, 'mkdtemp').mockResolvedValue('/tmp/pdf-studio-bot-todocx-123')
-        vi.spyOn(fs, 'chmod').mockResolvedValue()
-        vi.spyOn(fs, 'rm').mockResolvedValue()
+        vi.spyOn(handler as any, 'createTempDir').mockResolvedValue('/tmp/pdf-studio-bot-todocx-123')
+        vi.spyOn(handler as any, 'downloadDocument').mockResolvedValue('/tmp/test.pdf')
+        vi.spyOn(handler as any, 'safeCleanup').mockResolvedValue(undefined)
 
         await handler.events['msg:document'](ctx)
 
-        expect(ctx.getFile).toHaveBeenCalled()
+        expect((handler as any).downloadDocument).toHaveBeenCalled()
         expect(ctx.reply).toHaveBeenCalledWith('🔄 Converting your PDF to DOCX. This might take a moment...')
         expect(execFile).toHaveBeenCalledWith(
-          'python3',
+          '/usr/bin/python3',
           expect.arrayContaining([expect.stringContaining('convert_pdf_to_docx.py'), '/tmp/test.pdf', '/tmp/pdf-studio-bot-todocx-123/output.docx']),
           expect.any(Function),
         )

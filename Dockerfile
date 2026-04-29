@@ -2,7 +2,7 @@ FROM node:24-alpine AS builder
 
 # Install dependencies needed for native modules and enable pnpm
 # hadolint ignore=DL3018
-RUN apk add --no-cache python3 py3-pip make g++ chromium && \
+RUN apk add --no-cache python3 py3-pip make g++ gcc musl-dev cmake ninja-build chromium && \
     corepack enable
 
 WORKDIR /app
@@ -43,7 +43,9 @@ COPY package.json pnpm-lock.yaml requirements.txt ./
 
 # Install only production dependencies
 RUN pnpm install --frozen-lockfile --prod && \
+    apk add --no-cache --virtual .build-deps make g++ gcc musl-dev cmake ninja-build && \
     pip install --no-cache-dir -r requirements.txt --break-system-packages && \
+    apk del .build-deps && \
     pnpm store prune
 
 # Copy built application from builder stage
