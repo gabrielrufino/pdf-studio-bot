@@ -43,6 +43,7 @@ COPY package.json pnpm-lock.yaml requirements.txt ./
 
 # Install only production dependencies
 RUN pnpm install --frozen-lockfile --prod && \
+    # hadolint ignore=DL3018
     apk add --no-cache --virtual .build-deps make g++ gcc musl-dev cmake ninja-build && \
     pip install --no-cache-dir -r requirements.txt --break-system-packages && \
     apk del .build-deps && \

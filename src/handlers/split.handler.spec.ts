@@ -100,18 +100,11 @@ describe(SplitHandler.name, () => {
         vi.spyOn(handler as any, 'downloadDocument').mockResolvedValue('/tmp/fake-input.pdf')
         const cleanupSpy = vi.spyOn(handler as any, 'safeCleanup').mockResolvedValue(undefined)
         cleanupSpy.mockRejectedValueOnce(error)
-        const loggerSpy = vi.spyOn((handler as any).logger, 'error')
 
-        try {
-          await handler.events['msg:document'](ctx)
-          expect(cleanupSpy).toHaveBeenCalled()
-        }
-        catch (e) {
-          // Expected error
-        }
-        finally {
-          await fs.rm(tempDir, { recursive: true, force: true })
-        }
+        await expect(handler.events['msg:document'](ctx)).rejects.toThrow('Cleanup failed')
+
+        expect(cleanupSpy).toHaveBeenCalled()
+        await fs.rm(tempDir, { recursive: true, force: true })
       })
     })
   })
