@@ -11,6 +11,7 @@ import { PutPasswordHandler } from './put-password.handler'
 import { SplitHandler } from './split.handler'
 import { StartHandler } from './start.handler'
 import { SummaryHandler } from './summary.handler'
+import { ToDocxHandler } from './to-docx.handler'
 import { VersionHandler } from './version.handler'
 
 const coreHandlers: Array<BaseHandler> = [
@@ -22,6 +23,7 @@ const coreHandlers: Array<BaseHandler> = [
   new SplitHandler(userRepository),
   new StartHandler(userRepository),
   new SummaryHandler(userRepository, ai),
+  new ToDocxHandler(userRepository),
   new VersionHandler(),
 ]
 

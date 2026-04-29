@@ -2,16 +2,17 @@ FROM node:24-alpine AS builder
 
 # Install dependencies needed for native modules and enable pnpm
 # hadolint ignore=DL3018
-RUN apk add --no-cache python3 make g++ chromium && \
+RUN apk add --no-cache python3 py3-pip make g++ chromium && \
     corepack enable
 
 WORKDIR /app
 
 # Copy package files
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml requirements.txt ./
 
 # Install all dependencies (needed for building)
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile && \
+    pip install --no-cache-dir -r requirements.txt --break-system-packages
 
 # Copy source code and build
 COPY tsconfig.json ./
@@ -23,7 +24,7 @@ FROM node:24-alpine AS production
 
 # Install chromium and enable pnpm
 # hadolint ignore=DL3018
-RUN apk add --no-cache chromium && \
+RUN apk add --no-cache python3 py3-pip chromium && \
     corepack enable
 
 # ✅ Configurar Puppeteer
@@ -38,10 +39,11 @@ RUN addgroup -g 1001 -S nodejs && \
 WORKDIR /app
 
 # Copy package files
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml requirements.txt ./
 
 # Install only production dependencies
 RUN pnpm install --frozen-lockfile --prod && \
+    pip install --no-cache-dir -r requirements.txt --break-system-packages && \
     pnpm store prune
 
 # Copy built application from builder stage

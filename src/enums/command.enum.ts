@@ -7,6 +7,7 @@ export enum CommandEnum {
   PutPassword = 'putpassword',
   Split = 'split',
   Start = 'start',
+  ToDocx = 'todocx',
   Summary = 'summary',
   Test = 'test',
   Version = 'version',
