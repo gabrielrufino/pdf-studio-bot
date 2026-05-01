@@ -65,7 +65,7 @@ describe(PdfToImagesHandler.name, () => {
       it('should convert PDF to images and send them', async () => {
         const mockImages = [Buffer.from([1, 2, 3]), Buffer.from([4, 5, 6])]
         const mockDocument = {
-          getPageCount: vi.fn().mockReturnValue(2),
+          length: 2,
           [Symbol.asyncIterator]: vi.fn().mockReturnValue(mockImages[Symbol.iterator]()),
         }
         vi.mocked(pdf).mockResolvedValue(mockDocument as any)

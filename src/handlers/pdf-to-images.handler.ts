@@ -36,7 +36,7 @@ export class PdfToImagesHandler extends BaseHandler {
 
         const document = await pdf(inputPath)
         let pageNumber = 1
-        const totalPages = document.getPageCount()
+        const totalPages = document.length
 
         await ctx.reply(`🖼️ Converting ${totalPages} pages to images...`)
 
