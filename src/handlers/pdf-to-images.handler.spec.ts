@@ -5,7 +5,6 @@ import { pdf } from 'pdf-to-img'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CommandEnum } from '../enums/command.enum'
 import { PlanTypeEnum } from '../enums/plan-type.enum'
-import { InvalidFileError } from '../errors/invalid-file.error'
 import { PdfToImagesHandler } from './pdf-to-images.handler'
 
 vi.mock('node:fs/promises', () => ({
@@ -77,7 +76,16 @@ describe(PdfToImagesHandler.name, () => {
 
   describe('events', () => {
     describe('msg:document', () => {
+      it('should return early if command is not PdfToImages', async () => {
+        ctx.session.command = CommandEnum.Split
+
+        await handler.events['msg:document'](ctx)
+
+        expect(ctx.getFile).not.toHaveBeenCalled()
+      })
+
       it('should convert PDF to images and send them as a media group', async () => {
+        ctx.session.command = CommandEnum.PdfToImages
         const mockImages = [Buffer.from([1, 2, 3]), Buffer.from([4, 5, 6])]
         const mockDocument = {
           length: 2,
@@ -95,6 +103,7 @@ describe(PdfToImagesHandler.name, () => {
       })
 
       it('should handle errors during conversion', async () => {
+        ctx.session.command = CommandEnum.PdfToImages
         vi.mocked(pdf).mockRejectedValue(new Error('Conversion failed'))
 
         await handler.events['msg:document'](ctx)
@@ -103,6 +112,7 @@ describe(PdfToImagesHandler.name, () => {
       })
 
       it('should not reply with generic error if file is not a PDF (InvalidFileError)', async () => {
+        ctx.session.command = CommandEnum.PdfToImages
         ctx.message!.document!.mime_type = 'image/png'
 
         await handler.events['msg:document'](ctx)

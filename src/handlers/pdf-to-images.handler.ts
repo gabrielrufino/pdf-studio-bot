@@ -26,6 +26,10 @@ export class PdfToImagesHandler extends BaseHandler {
   readonly description = '🖼️ Convert PDF pages to images'
   readonly events = {
     'msg:document': async (ctx: CustomContext) => {
+      if (ctx.session.command !== CommandEnum.PdfToImages) {
+        return
+      }
+
       let inputPath: string | undefined
       let outputDir: string | undefined
 
