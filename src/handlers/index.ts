@@ -6,6 +6,7 @@ import { DownloadHandler } from './download.handler'
 import { FeedbackHandler } from './feedback.handler'
 import { HelpHandler } from './help.handler'
 import { JoinHandler } from './join.handler'
+import { PdfToImagesHandler } from './pdf-to-images.handler'
 import { ProHandler } from './pro.handler'
 import { PutPasswordHandler } from './put-password.handler'
 import { SplitHandler } from './split.handler'
@@ -17,6 +18,7 @@ const coreHandlers: Array<BaseHandler> = [
   new DownloadHandler(browser, userRepository),
   new FeedbackHandler(feedbackRepository),
   new JoinHandler(userRepository),
+  new PdfToImagesHandler(userRepository),
   new ProHandler(userRepository, paymentRepository),
   new PutPasswordHandler(userRepository),
   new SplitHandler(userRepository),
