@@ -1,9 +1,10 @@
+import type { InputMediaPhoto } from 'grammy/types'
 import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import { join } from 'node:path'
-import { InputFile, type InputMediaPhoto } from 'grammy'
+import { InputFile } from 'grammy'
 import muhammara from 'muhammara'
 import { pdf } from 'pdf-to-img'
 import { CommandEnum } from '../enums/command.enum'
@@ -25,12 +26,11 @@ export class PdfToImagesHandler extends BaseHandler {
   readonly description = '🖼️ Convert PDF pages to images'
   readonly events = {
     'msg:document': async (ctx: CustomContext) => {
-      await this.validatePDF(ctx)
-
       let inputPath: string | undefined
       let outputDir: string | undefined
 
       try {
+        await this.validatePDF(ctx)
         const file = await ctx.getFile()
         inputPath = await file.download()
 

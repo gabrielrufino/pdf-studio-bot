@@ -105,7 +105,8 @@ describe(PdfToImagesHandler.name, () => {
       it('should not reply with generic error if file is not a PDF (InvalidFileError)', async () => {
         ctx.message!.document!.mime_type = 'image/png'
 
-        await expect(handler.events['msg:document'](ctx)).rejects.toThrow(InvalidFileError)
+        await handler.events['msg:document'](ctx)
+
         expect(ctx.reply).toHaveBeenCalledWith('⚠️ Please send only PDF files.')
         expect(ctx.reply).not.toHaveBeenCalledWith('❌ An error occurred while converting the PDF to images.')
       })
