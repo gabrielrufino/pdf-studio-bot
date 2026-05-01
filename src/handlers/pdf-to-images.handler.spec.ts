@@ -9,6 +9,9 @@ import { PdfToImagesHandler } from './pdf-to-images.handler'
 vi.mock('node:fs/promises', () => ({
   default: {
     rm: vi.fn().mockResolvedValue(undefined),
+    mkdtemp: vi.fn().mockResolvedValue('/tmp/pdf-studio-bot-pdf-to-images-test'),
+    chmod: vi.fn().mockResolvedValue(undefined),
+    writeFile: vi.fn().mockResolvedValue(undefined),
   },
 }))
 vi.mock('pdf-to-img')
