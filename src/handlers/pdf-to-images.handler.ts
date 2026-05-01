@@ -1,5 +1,6 @@
 import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
+import { Buffer } from 'node:buffer'
 import fs from 'node:fs/promises'
 import { InputFile } from 'grammy'
 import { pdf } from 'pdf-to-img'
@@ -34,7 +35,7 @@ export class PdfToImagesHandler extends BaseHandler {
         await ctx.reply(`🖼️ Converting ${totalPages} pages to images...`)
 
         for await (const image of document) {
-          const imageFile = new InputFile(image, `page-${pageNumber}.png`)
+          const imageFile = new InputFile(Buffer.from(image), `page-${pageNumber}.png`)
 
           await ctx.replyWithPhoto(imageFile, {
             caption: `🖼️ Page ${pageNumber} of ${totalPages}`,
