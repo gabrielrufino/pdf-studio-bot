@@ -4,6 +4,7 @@ import { Buffer } from 'node:buffer'
 import { pdf } from 'pdf-to-img'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CommandEnum } from '../enums/command.enum'
+import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { PdfToImagesHandler } from './pdf-to-images.handler'
 
 vi.mock('node:fs/promises', () => ({
@@ -12,9 +13,17 @@ vi.mock('node:fs/promises', () => ({
     mkdtemp: vi.fn().mockResolvedValue('/tmp/pdf-studio-bot-pdf-to-images-test'),
     chmod: vi.fn().mockResolvedValue(undefined),
     writeFile: vi.fn().mockResolvedValue(undefined),
+    stat: vi.fn().mockResolvedValue({ size: 100 }),
   },
 }))
 vi.mock('pdf-to-img')
+vi.mock('muhammara', () => ({
+  default: {
+    createReader: vi.fn().mockReturnValue({
+      getPagesCount: vi.fn().mockReturnValue(2),
+    }),
+  },
+}))
 
 describe(PdfToImagesHandler.name, () => {
   let handler: PdfToImagesHandler
@@ -26,6 +35,7 @@ describe(PdfToImagesHandler.name, () => {
 
     mockUserRepository = {
       incrementUsage: vi.fn(),
+      findByTelegramId: vi.fn().mockResolvedValue({ plan_type: PlanTypeEnum.Pro }),
     } as unknown as UserRepository
 
     handler = new PdfToImagesHandler(mockUserRepository)
