@@ -5,6 +5,7 @@ import { pdf } from 'pdf-to-img'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CommandEnum } from '../enums/command.enum'
 import { PlanTypeEnum } from '../enums/plan-type.enum'
+import { InvalidFileError } from '../errors/invalid-file.error'
 import { PdfToImagesHandler } from './pdf-to-images.handler'
 
 vi.mock('node:fs/promises', () => ({
@@ -41,6 +42,7 @@ describe(PdfToImagesHandler.name, () => {
     handler = new PdfToImagesHandler(mockUserRepository)
     ctx = {
       from: { id: 123 },
+      chat: { id: 456 },
       session: {
         command: null,
       },
@@ -54,6 +56,9 @@ describe(PdfToImagesHandler.name, () => {
       }),
       reply: vi.fn(),
       replyWithPhoto: vi.fn(),
+      api: {
+        sendMediaGroup: vi.fn(),
+      },
     } as unknown as CustomContext
   })
 
@@ -72,7 +77,7 @@ describe(PdfToImagesHandler.name, () => {
 
   describe('events', () => {
     describe('msg:document', () => {
-      it('should convert PDF to images and send them', async () => {
+      it('should convert PDF to images and send them as a media group', async () => {
         const mockImages = [Buffer.from([1, 2, 3]), Buffer.from([4, 5, 6])]
         const mockDocument = {
           length: 2,
@@ -85,7 +90,7 @@ describe(PdfToImagesHandler.name, () => {
         expect(ctx.getFile).toHaveBeenCalled()
         expect(pdf).toHaveBeenCalledWith('/tmp/test.pdf')
         expect(ctx.reply).toHaveBeenCalledWith('🖼️ Converting 2 pages to images...')
-        expect(ctx.replyWithPhoto).toHaveBeenCalledTimes(2)
+        expect(ctx.api.sendMediaGroup).toHaveBeenCalledWith(456, expect.any(Array))
         expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
       })
 
@@ -97,11 +102,12 @@ describe(PdfToImagesHandler.name, () => {
         expect(ctx.reply).toHaveBeenCalledWith('❌ An error occurred while converting the PDF to images.')
       })
 
-      it('should reply with error if file is not a PDF', async () => {
+      it('should not reply with generic error if file is not a PDF (InvalidFileError)', async () => {
         ctx.message!.document!.mime_type = 'image/png'
 
-        await expect(handler.events['msg:document'](ctx)).rejects.toThrow()
+        await expect(handler.events['msg:document'](ctx)).rejects.toThrow(InvalidFileError)
         expect(ctx.reply).toHaveBeenCalledWith('⚠️ Please send only PDF files.')
+        expect(ctx.reply).not.toHaveBeenCalledWith('❌ An error occurred while converting the PDF to images.')
       })
     })
   })

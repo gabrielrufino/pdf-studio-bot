@@ -3,11 +3,12 @@ import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import { join } from 'node:path'
-import { InputFile } from 'grammy'
+import { InputFile, type InputMediaPhoto } from 'grammy'
 import muhammara from 'muhammara'
 import { pdf } from 'pdf-to-img'
 import { CommandEnum } from '../enums/command.enum'
 import { PlanTypeEnum } from '../enums/plan-type.enum'
+import { InvalidFileError } from '../errors/invalid-file.error'
 import { LimitExceededError } from '../errors/limit-exceeded.error'
 import { UserNotFoundError } from '../errors/user-not-found.error'
 import { BaseHandler } from './base.handler'
@@ -47,24 +48,43 @@ export class PdfToImagesHandler extends BaseHandler {
         outputDir = await fs.mkdtemp(join(os.tmpdir(), 'pdf-studio-bot-pdf-to-images-'))
         await fs.chmod(outputDir, 0o700)
 
+        const images: string[] = []
         let pageNumber = 1
         for await (const image of document) {
           const imagePath = join(outputDir, `page-${pageNumber}.png`)
           await fs.writeFile(imagePath, image)
-
-          const imageFile = new InputFile(imagePath, `page-${pageNumber}.png`)
-
-          await ctx.replyWithPhoto(imageFile, {
-            caption: `🖼️ Page ${pageNumber} of ${totalPages}`,
-          })
+          images.push(imagePath)
           pageNumber++
+        }
+
+        const CHUNK_SIZE = 10
+        for (let i = 0; i < images.length; i += CHUNK_SIZE) {
+          const chunk = images.slice(i, i + CHUNK_SIZE)
+          if (chunk.length > 1) {
+            const mediaGroup: InputMediaPhoto[] = chunk.map((imagePath, index) => {
+              const currentPage = i + index + 1
+              return {
+                type: 'photo',
+                media: new InputFile(imagePath, `page-${currentPage}.png`),
+                caption: index === 0 ? `🖼️ Pages ${i + 1}-${i + chunk.length} of ${totalPages}` : undefined,
+              }
+            })
+            await ctx.api.sendMediaGroup(ctx.chat!.id, mediaGroup)
+          }
+          else {
+            const currentPage = i + 1
+            await ctx.replyWithPhoto(new InputFile(chunk[0], `page-${currentPage}.png`), {
+              caption: `🖼️ Page ${currentPage} of ${totalPages}`,
+            })
+          }
         }
 
         await this.userRepository.incrementUsage(ctx.from?.id ?? 0)
       }
       catch (error) {
-        if (error instanceof LimitExceededError)
+        if (error instanceof InvalidFileError || error instanceof LimitExceededError) {
           return
+        }
 
         this.logger.error(error)
         await ctx.reply('❌ An error occurred while converting the PDF to images.')
