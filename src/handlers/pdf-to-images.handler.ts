@@ -5,7 +5,6 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import { join } from 'node:path'
 import { InputFile } from 'grammy'
-import muhammara from 'muhammara'
 import { pdf } from 'pdf-to-img'
 import { CommandEnum } from '../enums/command.enum'
 import { PlanTypeEnum } from '../enums/plan-type.enum'
@@ -35,6 +34,17 @@ export class PdfToImagesHandler extends BaseHandler {
 
       try {
         await this.validatePDF(ctx)
+
+        const user = await this.userRepository.findByTelegramId(ctx.from?.id ?? 0)
+        if (!user) {
+          throw new UserNotFoundError()
+        }
+
+        if (user.plan_type !== PlanTypeEnum.Pro && (ctx.message?.document?.file_size ?? 0) > PdfToImagesHandler.MAX_FILE_SIZE) {
+          await this.notifyLimitExceeded(ctx)
+          throw new LimitExceededError()
+        }
+
         const file = await ctx.getFile()
         inputPath = await file.download()
 
@@ -42,10 +52,13 @@ export class PdfToImagesHandler extends BaseHandler {
           throw new Error('Failed to download file')
         }
 
-        await this.verifyLimits(ctx, inputPath)
-
         const document = await pdf(inputPath)
         const totalPages = document.length
+
+        if (user.plan_type !== PlanTypeEnum.Pro && totalPages > PdfToImagesHandler.MAX_PAGES) {
+          await this.notifyLimitExceeded(ctx)
+          throw new LimitExceededError()
+        }
 
         await ctx.reply(`🖼️ Converting ${totalPages} pages to images...`)
 
@@ -110,26 +123,6 @@ export class PdfToImagesHandler extends BaseHandler {
   async onCommand(ctx: CustomContext): Promise<void> {
     await this.setSessionCommand(ctx)
     await ctx.reply('Please send the PDF file you want to convert to images.')
-  }
-
-  private async verifyLimits(ctx: CustomContext, path: string): Promise<void> {
-    const user = await this.userRepository.findByTelegramId(ctx.from?.id ?? 0)
-    if (!user)
-      throw new UserNotFoundError()
-    if (user.plan_type === PlanTypeEnum.Pro)
-      return
-
-    const stats = await fs.stat(path)
-    if (stats.size > PdfToImagesHandler.MAX_FILE_SIZE) {
-      await this.notifyLimitExceeded(ctx)
-      throw new LimitExceededError()
-    }
-
-    const pdfReader = muhammara.createReader(path)
-    if (pdfReader.getPagesCount() > PdfToImagesHandler.MAX_PAGES) {
-      await this.notifyLimitExceeded(ctx)
-      throw new LimitExceededError()
-    }
   }
 
   private async notifyLimitExceeded(ctx: CustomContext): Promise<void> {
