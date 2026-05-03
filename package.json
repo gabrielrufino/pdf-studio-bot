@@ -20,7 +20,7 @@
     "prepare": "if [[ $NODE_ENV != \"production\" ]]; then husky; fi"
   },
   "dependencies": {
-    "@google/genai": "^1.50.1",
+    "@google/genai": "^1.51.0",
     "@grammyjs/files": "^1.2.0",
     "@grammyjs/ratelimiter": "^1.2.1",
     "@grammyjs/runner": "^2.0.3",
@@ -32,7 +32,7 @@
     "pino": "^9.14.0",
     "pino-loki": "^3.0.0",
     "puppeteer": "^24.42.0",
-    "zod": "^4.3.6"
+    "zod": "^4.4.2"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^3.16.0",
