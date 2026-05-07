@@ -17,7 +17,7 @@
     "test:cov": "npm test -- --coverage",
     "test:watch": "vitest",
     "test:mutate": "stryker run",
-    "prepare": "if [[ $NODE_ENV != \"production\" ]]; then husky; fi"
+    "prepare": "if [ \"$NODE_ENV\" != \"production\" ]; then husky; fi"
   },
   "dependencies": {
     "@google/genai": "^1.51.0",
