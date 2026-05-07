@@ -56,10 +56,12 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
+      "@google/genai",
       "@parcel/watcher",
       "esbuild",
       "mongodb-memory-server",
       "muhammara",
+      "protobufjs",
       "puppeteer",
       "unrs-resolver"
     ]
