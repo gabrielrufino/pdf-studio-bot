@@ -36,7 +36,11 @@ async function main() {
         return
       }
 
-      const command = ctx.session.command
+      let command = ctx.session.command
+      if (event === 'callback_query' && !command) {
+        command = 'help'
+      }
+
       const handler = handlers.find(h => h.command === command)
       const eventHandler = handler?.events[event]
 
@@ -61,8 +65,10 @@ async function main() {
   )
 
   bot.on('message', async (ctx) => {
+    const { text, reply_markup } = new HelpMessage(handlers).build()
     await ctx.reply(
-      `${new UnknownMessage().build()}\n\n${new HelpMessage(handlers).build()}`,
+      `${new UnknownMessage().build()}\n\n${text}`,
+      { reply_markup },
     )
   })
 

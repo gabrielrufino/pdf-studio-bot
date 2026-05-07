@@ -1,12 +1,22 @@
+import { InlineKeyboard } from 'grammy'
 import type { BaseHandler } from '../handlers/base.handler'
-import type { Message } from '../interfaces/message'
 
-export class HelpMessage implements Message {
+export class HelpMessage {
   constructor(private readonly handlers: BaseHandler[]) {}
 
   public build() {
-    return this.handlers
-      .map(h => `/${h.command} - ${h.description}`)
-      .join('\n')
+    const keyboard = new InlineKeyboard()
+
+    this.handlers.forEach((h, index) => {
+      keyboard.text(h.description, h.command)
+      if ((index + 1) % 2 === 0) {
+        keyboard.row()
+      }
+    })
+
+    return {
+      text: 'Please select an operation:',
+      reply_markup: keyboard,
+    }
   }
 }
