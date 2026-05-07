@@ -12,10 +12,14 @@ describe(HelpMessage.name, () => {
     const { text, reply_markup } = new HelpMessage(mockHandlers).build()
     expect(text).toBe('Please select an operation:')
     expect(reply_markup).toBeInstanceOf(InlineKeyboard)
-    expect(reply_markup.inline_keyboard[0][0].text).toBe('Show the list of available commands')
-    expect(reply_markup.inline_keyboard[0][0].callback_data).toBe('help')
-    expect(reply_markup.inline_keyboard[1][0].text).toBe('Download a PDF from a URL')
-    expect(reply_markup.inline_keyboard[1][0].callback_data).toBe('download')
+
+    const keyboard = reply_markup as InlineKeyboard
+    const buttons = keyboard.inline_keyboard
+
+    expect(buttons[0][0].text).toBe('Show the list of available commands')
+    expect((buttons[0][0] as any).callback_data).toBe('help')
+    expect(buttons[1][0].text).toBe('Download a PDF from a URL')
+    expect((buttons[1][0] as any).callback_data).toBe('download')
   })
 
   it('should return an object with text and reply_markup', () => {
