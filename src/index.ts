@@ -7,6 +7,7 @@ import { bot } from './config/bot'
 import { browser } from './config/browser'
 import { mongoClient } from './config/database'
 import { logger } from './config/logger'
+import { CommandEnum } from './enums/command.enum'
 import { InvalidFileError } from './errors/invalid-file.error'
 import { SessionValidationError } from './errors/session-validation.error'
 import { handlers } from './handlers'
@@ -36,7 +37,11 @@ async function main() {
         return
       }
 
-      const command = ctx.session.command
+      let command = ctx.session.command
+      if (event === 'callback_query' && !command) {
+        command = CommandEnum.Help
+      }
+
       const handler = handlers.find(h => h.command === command)
       const eventHandler = handler?.events[event]
 
@@ -61,8 +66,10 @@ async function main() {
   )
 
   bot.on('message', async (ctx) => {
+    const { text, reply_markup } = new HelpMessage(handlers).build()
     await ctx.reply(
-      `${new UnknownMessage().build()}\n\n${new HelpMessage(handlers).build()}`,
+      `${new UnknownMessage().build()}\n\n${text}`,
+      { reply_markup },
     )
   })
 
