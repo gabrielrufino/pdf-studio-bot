@@ -1,5 +1,5 @@
-import { InlineKeyboard } from 'grammy'
 import type { BaseHandler } from '../handlers/base.handler'
+import { InlineKeyboard } from 'grammy'
 
 export class HelpMessage {
   constructor(private readonly handlers: BaseHandler[]) {}
@@ -7,11 +7,8 @@ export class HelpMessage {
   public build() {
     const keyboard = new InlineKeyboard()
 
-    this.handlers.forEach((h, index) => {
-      keyboard.text(h.description, h.command)
-      if ((index + 1) % 2 === 0) {
-        keyboard.row()
-      }
+    this.handlers.forEach((h) => {
+      keyboard.text(h.description, h.command).row()
     })
 
     return {

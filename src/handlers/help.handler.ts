@@ -14,7 +14,7 @@ export class HelpHandler extends BaseHandler {
   readonly events = {
     callback_query: async (ctx: CustomContext) => {
       const command = ctx.callbackQuery?.data
-      const handler = this.handlers.find(h => h.command === command)
+      const handler = [this, ...this.handlers].find(h => h.command === command)
 
       if (handler) {
         await ctx.answerCallbackQuery()
