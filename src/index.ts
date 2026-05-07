@@ -38,7 +38,7 @@ async function main() {
       }
 
       let command = ctx.session.command
-      if (event === 'callback_query' && (!command || handlers.some(h => h.command === ctx.callbackQuery?.data))) {
+      if (event === 'callback_query' && !command) {
         command = CommandEnum.Help
       }
 
