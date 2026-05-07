@@ -10,6 +10,8 @@ import { logger } from './config/logger'
 import { InvalidFileError } from './errors/invalid-file.error'
 import { SessionValidationError } from './errors/session-validation.error'
 import { handlers } from './handlers'
+import { HelpMessage } from './messages/help.message'
+import { UnknownMessage } from './messages/unknown.message'
 import { usageLimitMiddleware } from './middlewares/usage-limit.middleware'
 import { repositories } from './repositories'
 
@@ -28,7 +30,7 @@ async function main() {
 
   const events = new Set(handlers.flatMap(handler => Object.keys(handler.events) as FilterQuery[]))
   for (const event of events) {
-    bot.on(event, async (ctx) => {
+    bot.on(event, async (ctx, next) => {
       const userId = ctx.from?.id || ctx.chat?.id
       if (!userId) {
         return
@@ -39,7 +41,7 @@ async function main() {
       const eventHandler = handler?.events[event]
 
       if (!handler || !eventHandler) {
-        return
+        return next()
       }
 
       try {
@@ -57,6 +59,12 @@ async function main() {
   await bot.api.setMyCommands(
     handlers.map(h => ({ command: h.command, description: h.description })),
   )
+
+  bot.on('message', async (ctx) => {
+    await ctx.reply(
+      `${new UnknownMessage().build()}\n\n${new HelpMessage(handlers).build()}`,
+    )
+  })
 
   const stop = async () => {
     logger.info('Shutting down gracefully...')
