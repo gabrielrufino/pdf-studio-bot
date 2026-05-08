@@ -52,11 +52,11 @@ describe(HelpHandler.name, () => {
       expect(onCommandSpy).toHaveBeenCalledWith(ctx)
     })
 
-    it('should not do anything if handler is not found', async () => {
+    it('should only answer the query if handler is not found', async () => {
       ctx.callbackQuery!.data = 'unknown'
       await handler.events.callback_query(ctx)
 
-      expect(ctx.answerCallbackQuery).not.toHaveBeenCalled()
+      expect(ctx.answerCallbackQuery).toHaveBeenCalled()
     })
   })
 })

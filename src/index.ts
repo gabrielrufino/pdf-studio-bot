@@ -38,7 +38,7 @@ async function main() {
       }
 
       let command = ctx.session.command
-      if (event === 'callback_query' && !command) {
+      if (event === 'callback_query' && (!command || handlers.some(h => h.command === ctx.callbackQuery?.data))) {
         command = CommandEnum.Help
       }
 
@@ -72,6 +72,8 @@ async function main() {
       { reply_markup },
     )
   })
+
+  bot.on('callback_query', ctx => ctx.answerCallbackQuery())
 
   const stop = async () => {
     logger.info('Shutting down gracefully...')
