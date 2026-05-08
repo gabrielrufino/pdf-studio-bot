@@ -45,7 +45,10 @@ export class JoinHandler extends BaseHandler {
 
       if (text === 'done') {
         await this.joinPDFs(ctx)
+        return
       }
+
+      await ctx.reply('⚠️ Please send more PDF files or type "done" to merge them.')
     },
   }
 
