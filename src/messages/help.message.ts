@@ -8,24 +8,24 @@ export class HelpMessage {
   public build() {
     const keyboard = new InlineKeyboard()
 
-    const operations = [
+    const operations = new Set<string>([
       CommandEnum.Download,
       CommandEnum.Join,
       CommandEnum.PdfToImages,
       CommandEnum.PutPassword,
       CommandEnum.Split,
       CommandEnum.Summary,
-    ]
+    ])
 
-    const information = [
+    const information = new Set<string>([
       CommandEnum.Pro,
       CommandEnum.Feedback,
       CommandEnum.Version,
       CommandEnum.Help,
-    ]
+    ])
 
-    const operationHandlers = this.handlers.filter(h => operations.includes(h.command))
-    const informationHandlers = this.handlers.filter(h => information.includes(h.command))
+    const operationHandlers = this.handlers.filter(h => operations.has(h.command))
+    const informationHandlers = this.handlers.filter(h => information.has(h.command))
 
     const allHandlers = [...operationHandlers, ...informationHandlers]
 
