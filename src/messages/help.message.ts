@@ -27,15 +27,20 @@ export class HelpMessage {
     const operationHandlers = this.handlers.filter(h => operations.includes(h.command))
     const informationHandlers = this.handlers.filter(h => information.includes(h.command))
 
-    operationHandlers.forEach((h) => {
-      keyboard.text(h.description, h.command).row()
-    })
+    const allHandlers = [...operationHandlers, ...informationHandlers]
 
-    keyboard.text('---').row()
+    for (let i = 0; i < allHandlers.length; i += 2) {
+      const h1 = allHandlers[i]
+      const h2 = allHandlers[i + 1]
 
-    informationHandlers.forEach((h) => {
-      keyboard.text(h.description, h.command).row()
-    })
+      keyboard.text(h1.description, h1.command)
+
+      if (h2) {
+        keyboard.text(h2.description, h2.command)
+      }
+
+      keyboard.row()
+    }
 
     return {
       text: 'Please select an operation:',
