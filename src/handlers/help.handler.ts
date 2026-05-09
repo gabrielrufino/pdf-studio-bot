@@ -18,6 +18,7 @@ export class HelpHandler extends BaseHandler {
       const handler = [this, ...this.handlers].find(h => h.command === command)
 
       if (handler) {
+        await ctx.deleteMessage()
         await handler.onCommand(ctx)
       }
     },
