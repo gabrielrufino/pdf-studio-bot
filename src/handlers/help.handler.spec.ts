@@ -18,7 +18,7 @@ describe(HelpHandler.name, () => {
     ctx = {
       reply: vi.fn(),
       answerCallbackQuery: vi.fn(),
-      deleteMessage: vi.fn(),
+      deleteMessage: vi.fn().mockResolvedValue(undefined),
       callbackQuery: {
         data: 'download',
       },

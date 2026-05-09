@@ -18,7 +18,7 @@ export class HelpHandler extends BaseHandler {
       const handler = [this, ...this.handlers].find(h => h.command === command)
 
       if (handler) {
-        await ctx.deleteMessage()
+        await ctx.deleteMessage().catch(error => this.logger.error({ error }, 'Failed to delete help menu message'))
         await handler.onCommand(ctx)
       }
     },

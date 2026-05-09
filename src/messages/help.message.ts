@@ -1,5 +1,6 @@
 import type { BaseHandler } from '../handlers/base.handler'
 import { InlineKeyboard } from 'grammy'
+import { CommandEnum } from '../enums/command.enum'
 
 export class HelpMessage {
   constructor(private readonly handlers: BaseHandler[]) {}
@@ -7,7 +8,32 @@ export class HelpMessage {
   public build() {
     const keyboard = new InlineKeyboard()
 
-    this.handlers.forEach((h) => {
+    const operations = [
+      CommandEnum.Download,
+      CommandEnum.Join,
+      CommandEnum.PdfToImages,
+      CommandEnum.PutPassword,
+      CommandEnum.Split,
+      CommandEnum.Summary,
+    ]
+
+    const information = [
+      CommandEnum.Pro,
+      CommandEnum.Feedback,
+      CommandEnum.Version,
+      CommandEnum.Help,
+    ]
+
+    const operationHandlers = this.handlers.filter(h => operations.includes(h.command))
+    const informationHandlers = this.handlers.filter(h => information.includes(h.command))
+
+    operationHandlers.forEach((h) => {
+      keyboard.text(h.description, h.command).row()
+    })
+
+    keyboard.text('---').row()
+
+    informationHandlers.forEach((h) => {
       keyboard.text(h.description, h.command).row()
     })
 
