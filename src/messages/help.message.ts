@@ -29,18 +29,9 @@ export class HelpMessage {
 
     const allHandlers = [...operationHandlers, ...informationHandlers]
 
-    for (let i = 0; i < allHandlers.length; i += 2) {
-      const h1 = allHandlers[i]
-      const h2 = allHandlers[i + 1]
-
-      keyboard.text(h1.description, h1.command)
-
-      if (h2) {
-        keyboard.text(h2.description, h2.command)
-      }
-
-      keyboard.row()
-    }
+    allHandlers.forEach((h) => {
+      keyboard.text(h.description, h.command).row()
+    })
 
     return {
       text: 'Please select an operation:',
