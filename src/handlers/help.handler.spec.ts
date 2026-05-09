@@ -18,6 +18,7 @@ describe(HelpHandler.name, () => {
     ctx = {
       reply: vi.fn(),
       answerCallbackQuery: vi.fn(),
+      deleteMessage: vi.fn().mockResolvedValue(undefined),
       callbackQuery: {
         data: 'download',
       },
@@ -49,6 +50,7 @@ describe(HelpHandler.name, () => {
       await handler.events.callback_query(ctx)
 
       expect(ctx.answerCallbackQuery).toHaveBeenCalled()
+      expect(ctx.deleteMessage).toHaveBeenCalled()
       expect(onCommandSpy).toHaveBeenCalledWith(ctx)
     })
 
