@@ -22,6 +22,18 @@ describe(HelpMessage.name, () => {
     expect((buttons[1][0] as any).callback_data).toBe('help')
   })
 
+  it('should include uncategorized handlers', () => {
+    const customHandlers = [
+      { command: 'custom', description: 'Custom command' },
+    ] as any
+    const { reply_markup } = new HelpMessage(customHandlers).build()
+    const keyboard = reply_markup as InlineKeyboard
+    const buttons = keyboard.inline_keyboard
+
+    expect(buttons[0][0].text).toBe('Custom command')
+    expect((buttons[0][0] as any).callback_data).toBe('custom')
+  })
+
   it('should return an object with text and reply_markup', () => {
     const result = new HelpMessage(mockHandlers).build()
     expect(result).toBeTypeOf('object')

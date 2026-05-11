@@ -149,8 +149,8 @@ describe(JoinHandler.name, () => {
       ]
 
       try {
-        await fs.copyFile(join(process.cwd(), 'assets/page-1.pdf'), paths[0])
-        await fs.copyFile(join(process.cwd(), 'assets/page-2.pdf'), paths[1])
+        await fs.copyFile(join(process.cwd(), 'assets/lorem-ipsum.pdf'), paths[0])
+        await fs.copyFile(join(process.cwd(), 'assets/page-3.pdf'), paths[1])
 
         ; (ctx.session.params as JoinParams).paths = [...paths]
 
@@ -185,6 +185,38 @@ describe(JoinHandler.name, () => {
         expect.stringContaining('❌ An error occurred while joining your PDF files'),
       )
       expect(ctx.session.command).toBeNull()
+    })
+
+    it('should log error if removing temporary folder fails', async () => {
+      const tempDir = await fs.mkdtemp(join(os.tmpdir(), 'pdf-studio-bot-test-join-err-'))
+      const paths = [
+        join(tempDir, 'file-1.pdf'),
+        join(tempDir, 'file-2.pdf'),
+      ]
+
+      try {
+        await fs.copyFile(join(process.cwd(), 'assets/lorem-ipsum.pdf'), paths[0])
+        await fs.copyFile(join(process.cwd(), 'assets/page-3.pdf'), paths[1])
+
+        ; (ctx.session.params as JoinParams).paths = [...paths]
+
+        const fsPromises = await import('node:fs/promises')
+        vi.spyOn(fsPromises.default, 'rm').mockRejectedValueOnce(new Error('rm failed'))
+        const loggerSpy = vi.spyOn((handler as any).logger, 'error')
+
+        await (handler as any).joinPDFs(ctx)
+
+        expect(loggerSpy).toHaveBeenCalledWith(expect.objectContaining({ error: expect.any(Error) }), expect.stringContaining('Failed to remove'))
+      }
+      finally {
+        await fs.rm(tempDir, { recursive: true, force: true })
+      }
+    })
+
+    it('should reply with warning if text is not "done"', async () => {
+      ctx.message!.text = 'not-done'
+      await handler.events['msg:text'](ctx)
+      expect(ctx.reply).toHaveBeenCalledWith('⚠️ Please send more PDF files or type "done" to merge them.')
     })
   })
 })

@@ -134,4 +134,24 @@ describe(usageLimitMiddleware.name, () => {
     expect(userRepository.isWithinLimit).toHaveBeenCalledWith(12345, 3)
     expect(next).toHaveBeenCalled()
   })
+
+  it('should not revert to Free if Pro plan has not expired', async () => {
+    const recentDate = new Date()
+    recentDate.setDate(recentDate.getDate() - 15)
+
+    const user = {
+      _id: 'user-id',
+      plan_type: PlanTypeEnum.Pro,
+      plan_started_at: recentDate,
+    }
+    vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
+    vi.mocked(userRepository.isWithinLimit).mockResolvedValueOnce(true)
+
+    const middleware = usageLimitMiddleware(handler)
+    await middleware(ctx, next)
+
+    expect(userRepository.updateById).not.toHaveBeenCalled()
+    expect(userRepository.isWithinLimit).toHaveBeenCalledWith(12345, 50)
+    expect(next).toHaveBeenCalled()
+  })
 })

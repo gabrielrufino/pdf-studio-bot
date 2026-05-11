@@ -113,7 +113,10 @@ export class DownloadHandler extends BaseHandler {
         }
       }
     }
-    catch {
+    catch (error: any) {
+      if (error.message === 'URL resolves to a private IP address') {
+        throw error
+      }
       // Ignore resolution errors, as they'll be handled by Puppeteer
     }
   }
