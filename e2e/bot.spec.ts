@@ -1,6 +1,6 @@
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { MongoClient } from 'mongodb'
 import { MongoMemoryServer } from 'mongodb-memory-server'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 describe('bot E2E', () => {
   let mongod: MongoMemoryServer
@@ -9,9 +9,9 @@ describe('bot E2E', () => {
   beforeAll(async () => {
     mongod = await MongoMemoryServer.create()
     const uri = mongod.getUri()
-    process.env.MONGODB_CONNECTION_STRING = uri
-    process.env.BOT_TOKEN = 'fake-token'
-    process.env.GOOGLE_GENAI_API_KEY = 'fake-genai-key'
+    vi.stubEnv('MONGODB_CONNECTION_STRING', uri)
+    vi.stubEnv('BOT_TOKEN', 'BOT_TOKEN')
+    vi.stubEnv('GOOGLE_GENAI_API_KEY', 'GOOGLE_GENAI_API_KEY')
 
     client = new MongoClient(uri)
     await client.connect()
