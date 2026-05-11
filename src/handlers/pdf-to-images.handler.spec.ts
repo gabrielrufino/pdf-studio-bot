@@ -102,6 +102,49 @@ describe(PdfToImagesHandler.name, () => {
         expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
       })
 
+      it('should convert PDF to images and send them as a photo if only one page', async () => {
+        ctx.session.command = CommandEnum.PdfToImages
+        const mockImages = [Buffer.from([1, 2, 3])]
+        const mockDocument = {
+          length: 1,
+          [Symbol.asyncIterator]: vi.fn().mockReturnValue(mockImages[Symbol.iterator]()),
+        }
+        vi.mocked(pdf).mockResolvedValue(mockDocument as any)
+
+        await handler.events['msg:document'](ctx)
+
+        expect(ctx.replyWithPhoto).toHaveBeenCalled()
+        expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
+      })
+
+      it('should notify limit exceeded for free users', async () => {
+        ctx.session.command = CommandEnum.PdfToImages
+        vi.mocked(mockUserRepository.findByTelegramId).mockResolvedValue({ plan_type: PlanTypeEnum.Free } as any)
+        ctx.message!.document!.file_size = 20 * 1024 * 1024 // > 10MB
+
+        await handler.events['msg:document'](ctx)
+
+        expect(ctx.reply).toHaveBeenCalledWith(expect.stringContaining('exceeded the limits of the free plan'))
+      })
+
+      it('should log error if removing temporary files fails', async () => {
+        ctx.session.command = CommandEnum.PdfToImages
+        const mockImages = [Buffer.from([1, 2, 3])]
+        const mockDocument = {
+          length: 1,
+          [Symbol.asyncIterator]: vi.fn().mockReturnValue(mockImages[Symbol.iterator]()),
+        }
+        vi.mocked(pdf).mockResolvedValue(mockDocument as any)
+
+        const fs = await import('node:fs/promises')
+        vi.mocked(fs.default.rm).mockRejectedValue(new Error('rm failed'))
+        const loggerSpy = vi.spyOn((handler as any).logger, 'error')
+
+        await handler.events['msg:document'](ctx)
+
+        expect(loggerSpy).toHaveBeenCalledWith(expect.objectContaining({ error: expect.any(Error) }), expect.stringContaining('Failed to remove'))
+      })
+
       it('should handle errors during conversion', async () => {
         ctx.session.command = CommandEnum.PdfToImages
         vi.mocked(pdf).mockRejectedValue(new Error('Conversion failed'))

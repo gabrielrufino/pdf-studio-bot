@@ -97,7 +97,8 @@ describe(PutPasswordHandler.name, () => {
         const targetPath = path.join(tempDir, 'test.pdf')
 
         try {
-          await fs.copyFile(`${process.cwd()}/assets/lorem-ipsum.pdf`, targetPath)
+          const assetPath = path.join(process.cwd(), 'assets/lorem-ipsum.pdf')
+          await fs.copyFile(assetPath, targetPath)
           ctx.session.params = { path: targetPath }
 
           await handler.events['msg:text'](ctx)
@@ -113,6 +114,32 @@ describe(PutPasswordHandler.name, () => {
         finally {
           await fs.rm(tempDir, { recursive: true, force: true })
         }
+      })
+
+      it('should handle errors during password protection', async () => {
+        ctx.session.params = { path: '/invalid/path' }
+        const loggerSpy = vi.spyOn((handler as any).logger, 'error')
+
+        await handler.events['msg:text'](ctx)
+
+        expect(loggerSpy).toHaveBeenCalled()
+        expect(ctx.reply).toHaveBeenCalledWith('❌ An error occurred while putting a password on the PDF file.')
+      })
+
+      it('should log error if removing temporary directory fails', async () => {
+        const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-studio-bot-test-putpwd-err-'))
+        const targetPath = path.join(tempDir, 'test.pdf')
+        const assetPath = path.join(process.cwd(), 'assets/lorem-ipsum.pdf')
+        await fs.copyFile(assetPath, targetPath)
+        ctx.session.params = { path: targetPath }
+
+        const fsPromises = await import('node:fs/promises')
+        vi.spyOn(fsPromises.default, 'rm').mockRejectedValueOnce(new Error('rm failed'))
+        const loggerSpy = vi.spyOn((handler as any).logger, 'error')
+
+        await handler.events['msg:text'](ctx)
+
+        expect(loggerSpy).toHaveBeenCalledWith(expect.objectContaining({ error: expect.any(Error) }), expect.stringContaining('Failed to remove'))
       })
     })
   })

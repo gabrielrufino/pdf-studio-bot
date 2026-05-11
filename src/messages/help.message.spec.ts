@@ -8,7 +8,7 @@ describe(HelpMessage.name, () => {
     { command: 'download', description: 'Download a PDF from a URL' },
   ] as any
 
-  it('should build a help message with inline keyboard', () => {
+  it('should build a help message with inline keyboard and one column', () => {
     const { text, reply_markup } = new HelpMessage(mockHandlers).build()
     expect(text).toBe('Please select an operation:')
     expect(reply_markup).toBeInstanceOf(InlineKeyboard)
@@ -16,10 +16,22 @@ describe(HelpMessage.name, () => {
     const keyboard = reply_markup as InlineKeyboard
     const buttons = keyboard.inline_keyboard
 
-    expect(buttons[0][0].text).toBe('Show the list of available commands')
-    expect((buttons[0][0] as any).callback_data).toBe('help')
-    expect(buttons[1][0].text).toBe('Download a PDF from a URL')
-    expect((buttons[1][0] as any).callback_data).toBe('download')
+    expect(buttons[0][0].text).toBe('Download a PDF from a URL')
+    expect((buttons[0][0] as any).callback_data).toBe('download')
+    expect(buttons[1][0].text).toBe('Show the list of available commands')
+    expect((buttons[1][0] as any).callback_data).toBe('help')
+  })
+
+  it('should include uncategorized handlers', () => {
+    const customHandlers = [
+      { command: 'custom', description: 'Custom command' },
+    ] as any
+    const { reply_markup } = new HelpMessage(customHandlers).build()
+    const keyboard = reply_markup as InlineKeyboard
+    const buttons = keyboard.inline_keyboard
+
+    expect(buttons[0][0].text).toBe('Custom command')
+    expect((buttons[0][0] as any).callback_data).toBe('custom')
   })
 
   it('should return an object with text and reply_markup', () => {

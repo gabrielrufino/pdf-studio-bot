@@ -18,6 +18,7 @@ describe(HelpHandler.name, () => {
     ctx = {
       reply: vi.fn(),
       answerCallbackQuery: vi.fn(),
+      deleteMessage: vi.fn().mockResolvedValue(undefined),
       callbackQuery: {
         data: 'download',
       },
@@ -49,6 +50,21 @@ describe(HelpHandler.name, () => {
       await handler.events.callback_query(ctx)
 
       expect(ctx.answerCallbackQuery).toHaveBeenCalled()
+      expect(ctx.deleteMessage).toHaveBeenCalled()
+      expect(onCommandSpy).toHaveBeenCalledWith(ctx)
+    })
+
+    it('should handle callback_query and only answer if deleteMessage fails', async () => {
+      const error = new Error('Failed to delete')
+      ctx.deleteMessage = vi.fn().mockRejectedValue(error)
+      const downloadHandler = mockHandlers[0]
+      const onCommandSpy = vi.spyOn(downloadHandler, 'onCommand').mockResolvedValue(undefined)
+      const loggerSpy = vi.spyOn((handler as any).logger, 'error')
+
+      await handler.events.callback_query(ctx)
+
+      expect(ctx.answerCallbackQuery).toHaveBeenCalled()
+      expect(loggerSpy).toHaveBeenCalledWith({ error }, 'Failed to delete help menu message')
       expect(onCommandSpy).toHaveBeenCalledWith(ctx)
     })
 

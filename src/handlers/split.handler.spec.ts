@@ -30,7 +30,7 @@ describe(SplitHandler.name, () => {
         },
       },
       getFile: vi.fn().mockResolvedValue({
-        download: vi.fn().mockResolvedValue(`${process.cwd()}/assets/lorem-ipsum.pdf`),
+        download: vi.fn().mockResolvedValue('/tmp/fake.pdf'),
       }),
       reply: vi.fn(),
       replyWithDocument: vi.fn(),
@@ -110,6 +110,18 @@ describe(SplitHandler.name, () => {
 
         expect(rmSpy).toHaveBeenCalled()
         expect(loggerSpy).toHaveBeenCalledWith({ error, path: '/tmp/fake-input.pdf' }, 'Failed to remove input file.')
+      })
+
+      it('should throw error if download fails (inputPath is null)', async () => {
+        vi.mocked(ctx.getFile).mockResolvedValueOnce({
+          download: vi.fn().mockResolvedValue(null),
+        } as any)
+        const loggerSpy = vi.spyOn((handler as any).logger, 'error')
+
+        await handler.events['msg:document'](ctx)
+
+        expect(loggerSpy).toHaveBeenCalledWith(new Error('Failed to download file'))
+        expect(ctx.reply).toHaveBeenCalledWith('❌ An error occurred while splitting the PDF file.')
       })
     })
   })
