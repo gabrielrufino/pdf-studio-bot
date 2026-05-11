@@ -1,6 +1,6 @@
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { MongoClient } from 'mongodb'
 import { MongoMemoryServer } from 'mongodb-memory-server'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 describe('bot E2E', () => {
   let mongod: MongoMemoryServer
@@ -10,8 +10,8 @@ describe('bot E2E', () => {
     mongod = await MongoMemoryServer.create()
     const uri = mongod.getUri()
     vi.stubEnv('MONGODB_CONNECTION_STRING', uri)
-    vi.stubEnv('BOT_TOKEN', 'BOT_TOKEN')
-    vi.stubEnv('GOOGLE_GENAI_API_KEY', 'GOOGLE_GENAI_API_KEY')
+    vi.stubEnv('BOT_TOKEN', '123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11')
+    vi.stubEnv('GOOGLE_GENAI_API_KEY', 'AIzaSyAs-GHIJKLMN1234567890abcdefghijkl')
 
     client = new MongoClient(uri)
     await client.connect()
@@ -20,6 +20,7 @@ describe('bot E2E', () => {
   afterAll(async () => {
     await client.close()
     await mongod.stop()
+    vi.unstubAllEnvs()
   })
 
   it('should respond to /start command', async () => {
@@ -42,6 +43,9 @@ describe('bot E2E', () => {
       supports_inline_queries: false,
       can_connect_to_business: false,
       has_main_web_app: false,
+      can_manage_bots: true,
+      has_topics_enabled: false,
+      allows_users_to_create_topics: false,
     }
 
     // Register handlers (similar to src/index.ts)
@@ -56,7 +60,8 @@ describe('bot E2E', () => {
     const calls: any[] = []
     bot.api.config.use((_prev, method, payload) => {
       calls.push({ method, payload })
-      return { ok: true, result: { message_id: 1, chat: { id: payload.chat_id, type: 'private' }, date: Date.now(), text: payload.text } } as any
+      const p = payload as any
+      return { ok: true, result: { message_id: 1, chat: { id: p.chat_id, type: 'private' }, date: Date.now(), text: p.text } } as any
     })
 
     // Simulate /start command

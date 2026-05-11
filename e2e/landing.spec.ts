@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test'
 
+const URL = 'http://localhost:3000'
+
 test('landing page has title and get started button', async ({ page }) => {
-  await page.goto('http://127.0.0.1:3000')
+  await page.goto(URL)
 
   // Expect a title "to contain" a substring.
   await expect(page).toHaveTitle(/PDF Studio Bot/)
@@ -14,7 +16,7 @@ test('landing page has title and get started button', async ({ page }) => {
 })
 
 test('landing page displays features', async ({ page }) => {
-  await page.goto('http://127.0.0.1:3000')
+  await page.goto(URL)
 
   await expect(page.getByText('Download from URL')).toBeVisible()
   await expect(page.getByText('Add Password')).toBeVisible()

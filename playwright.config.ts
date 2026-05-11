@@ -1,6 +1,9 @@
 import process from 'node:process'
 import { defineConfig, devices } from '@playwright/test'
 
+const PORT = 3000
+const BASE_URL = `http://localhost:${PORT}`
+
 export default defineConfig({
   testDir: './e2e',
   testMatch: /.*\.spec\.ts/,
@@ -21,8 +24,8 @@ export default defineConfig({
   ],
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npx serve landing -p 3000',
-    url: 'http://127.0.0.1:3000',
+    command: `npx serve landing -p ${PORT}`,
+    url: BASE_URL,
     reuseExistingServer: !process.env.CI,
   },
 })
