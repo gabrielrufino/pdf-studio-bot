@@ -1,8 +1,8 @@
 import { MongoClient } from 'mongodb'
 import { MongoMemoryServer } from 'mongodb-memory-server'
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-describe('Bot E2E', () => {
+describe('bot E2E', () => {
   let mongod: MongoMemoryServer
   let client: MongoClient
 
@@ -33,30 +33,30 @@ describe('Bot E2E', () => {
 
     // Mock bot info
     bot.botInfo = {
-        id: 1,
-        is_bot: true,
-        first_name: 'PDF Studio Bot',
-        username: 'PDFStudio_bot',
-        can_join_groups: true,
-        can_read_all_group_messages: false,
-        supports_inline_queries: false,
-        can_connect_to_business: false,
-        has_main_web_app: false,
+      id: 1,
+      is_bot: true,
+      first_name: 'PDF Studio Bot',
+      username: 'PDFStudio_bot',
+      can_join_groups: true,
+      can_read_all_group_messages: false,
+      supports_inline_queries: false,
+      can_connect_to_business: false,
+      has_main_web_app: false,
     }
 
     // Register handlers (similar to src/index.ts)
     for (const handler of handlers) {
-        bot.command(
-          handler.command,
-          handler.onCommand.bind(handler),
-        )
+      bot.command(
+        handler.command,
+        handler.onCommand.bind(handler),
+      )
     }
 
     // Mock bot.api calls
     const calls: any[] = []
     bot.api.config.use((_prev, method, payload) => {
-        calls.push({ method, payload })
-        return { ok: true, result: { message_id: 1, chat: { id: payload.chat_id, type: 'private' }, date: Date.now(), text: payload.text } } as any
+      calls.push({ method, payload })
+      return { ok: true, result: { message_id: 1, chat: { id: payload.chat_id, type: 'private' }, date: Date.now(), text: payload.text } } as any
     })
 
     // Simulate /start command
