@@ -137,6 +137,3 @@ package-lock.json
 .stryker-tmp
 reports
 
-# Playwright
-playwright-report
-test-results
