@@ -15,6 +15,7 @@
     "start": "node .",
     "start:dev": "tsx watch --env-file=.env src/index.ts",
     "test": "vitest run",
+    "test:e2e": "vitest run src/e2e/bot.spec.ts",
     "test:cov": "npm test -- --coverage",
     "test:watch": "vitest",
     "test:mutate": "stryker run",
