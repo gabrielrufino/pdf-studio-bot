@@ -1,8 +1,8 @@
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { MongoClient } from 'mongodb'
 import { MongoMemoryServer } from 'mongodb-memory-server'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
-describe('Bot E2E', () => {
+describe('bot E2E', () => {
   let mongod: MongoMemoryServer
   let client: MongoClient
   let bot: any
@@ -70,67 +70,67 @@ describe('Bot E2E', () => {
   it('should respond to /start command', async () => {
     calls = []
     await bot.handleUpdate(createUpdate('/start', 1001))
-    expect(calls.some(c => c.method === 'sendMessage' && c.payload.text.includes('Welcome'))).toBe(true)
+    expect(calls.some((c: any) => c.method === 'sendMessage' && c.payload.text.includes('Welcome'))).toBe(true)
   })
 
   it('should respond to /help command', async () => {
     calls = []
     await bot.handleUpdate(createUpdate('/help', 1002))
-    expect(calls.some(c => c.method === 'sendMessage' && c.payload.text.toLowerCase().includes('operation'))).toBe(true)
+    expect(calls.some((c: any) => c.method === 'sendMessage' && c.payload.text.toLowerCase().includes('operation'))).toBe(true)
   })
 
   it('should handle /download command', async () => {
     calls = []
     await bot.handleUpdate(createUpdate('/download', 1003))
-    expect(calls.some(c => c.method === 'sendMessage' && c.payload.text.includes('URL'))).toBe(true)
+    expect(calls.some((c: any) => c.method === 'sendMessage' && c.payload.text.includes('URL'))).toBe(true)
   })
 
   it('should handle /join command', async () => {
     calls = []
     await bot.handleUpdate(createUpdate('/join', 1004))
-    expect(calls.some(c => c.method === 'sendMessage' && c.payload.text.toLowerCase().includes('join'))).toBe(true)
+    expect(calls.some((c: any) => c.method === 'sendMessage' && c.payload.text.toLowerCase().includes('join'))).toBe(true)
   })
 
   it('should handle /pdftoimages command', async () => {
     calls = []
     await bot.handleUpdate(createUpdate('/pdftoimages', 1005))
-    expect(calls.some(c => c.method === 'sendMessage' && c.payload.text.includes('PDF'))).toBe(true)
+    expect(calls.some((c: any) => c.method === 'sendMessage' && c.payload.text.includes('PDF'))).toBe(true)
   })
 
   it('should handle /putpassword command', async () => {
     calls = []
     await bot.handleUpdate(createUpdate('/putpassword', 1006))
-    expect(calls.some(c => c.method === 'sendMessage' && c.payload.text.includes('PDF'))).toBe(true)
+    expect(calls.some((c: any) => c.method === 'sendMessage' && c.payload.text.includes('PDF'))).toBe(true)
   })
 
   it('should handle /split command', async () => {
     calls = []
     await bot.handleUpdate(createUpdate('/split', 1007))
-    expect(calls.some(c => c.method === 'sendMessage' && c.payload.text.includes('PDF'))).toBe(true)
+    expect(calls.some((c: any) => c.method === 'sendMessage' && c.payload.text.includes('PDF'))).toBe(true)
   })
 
   it('should handle /summary command', async () => {
     calls = []
     await bot.handleUpdate(createUpdate('/summary', 1008))
-    expect(calls.some(c => c.method === 'sendMessage' && c.payload.text.includes('PDF'))).toBe(true)
+    expect(calls.some((c: any) => c.method === 'sendMessage' && c.payload.text.includes('PDF'))).toBe(true)
   })
 
   it('should handle /feedback command', async () => {
     calls = []
     await bot.handleUpdate(createUpdate('/feedback', 1009))
-    expect(calls.some(c => c.method === 'sendMessage' && c.payload.text.includes('feedback'))).toBe(true)
+    expect(calls.some((c: any) => c.method === 'sendMessage' && c.payload.text.includes('feedback'))).toBe(true)
   })
 
   it('should respond to /pro command', async () => {
     calls = []
     await bot.handleUpdate(createUpdate('/pro', 1010))
-    expect(calls.some(c => c.method === 'sendInvoice' || (c.method === 'sendMessage' && c.payload.text.includes('PRO')))).toBe(true)
+    expect(calls.some((c: any) => c.method === 'sendInvoice' || (c.method === 'sendMessage' && c.payload.text.includes('PRO')))).toBe(true)
   })
 
   it('should respond to /version command', async () => {
     calls = []
     await bot.handleUpdate(createUpdate('/version', 1011))
-    const sendMessageCall = calls.find(c => c.method === 'sendMessage')
+    const sendMessageCall = calls.find((c: any) => c.method === 'sendMessage')
     expect(sendMessageCall).toBeDefined()
     expect(sendMessageCall.payload.text).toMatch(/\d+\.\d+\.\d+/)
   })

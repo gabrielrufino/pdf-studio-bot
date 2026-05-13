@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     include: [
       'src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
-      'e2e/bot.spec.ts',
+      'src/e2e/bot.spec.ts',
     ],
     exclude: [
       '**/node_modules/**',
