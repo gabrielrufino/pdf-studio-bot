@@ -12,8 +12,8 @@ describe('bot E2E', () => {
     mongod = await MongoMemoryServer.create()
     const uri = mongod.getUri()
     vi.stubEnv('MONGODB_CONNECTION_STRING', uri)
-    vi.stubEnv('BOT_TOKEN', '123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11')
-    vi.stubEnv('GOOGLE_GENAI_API_KEY', 'AIzaSyAs-GHIJKLMN1234567890abcdefghijkl')
+    vi.stubEnv('BOT_TOKEN', 'DUMMY_TOKEN')
+    vi.stubEnv('GOOGLE_GENAI_API_KEY', 'DUMMY_KEY')
 
     client = new MongoClient(uri)
     await client.connect()
