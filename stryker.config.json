@@ -15,12 +15,9 @@
     "src/**/*.ts",
     "!src/**/*.spec.ts",
     "!src/**/*.test.ts",
-    "!src/e2e/**/*.ts",
     "!src/index.ts",
     "!src/**/index.ts"
   ],
-  "ignorePatterns": ["e2e/**/*"],
-  "tempDirName": ".stryker-tmp",
   "checkers": [
     "typescript"
   ],
