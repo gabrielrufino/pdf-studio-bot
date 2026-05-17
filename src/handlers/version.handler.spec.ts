@@ -10,7 +10,7 @@ describe(VersionHandler.name, () => {
 
   beforeEach(() => {
     handler = new VersionHandler()
-    ctx = {
+    ctx = { t: (key: string) => key,
       reply: vi.fn(),
     } as unknown as CustomContext
   })
@@ -23,7 +23,7 @@ describe(VersionHandler.name, () => {
     it('should reply with package version', async () => {
       await handler.onCommand(ctx)
 
-      expect(ctx.reply).toHaveBeenCalledWith(version)
+      expect(ctx.reply).toHaveBeenCalledWith('version_info', { parse_mode: 'HTML' })
     })
   })
 })

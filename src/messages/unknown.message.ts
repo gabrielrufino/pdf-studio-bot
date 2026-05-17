@@ -1,7 +1,10 @@
+import type { CustomContext } from '../types/custom-context.type'
 import type { Message } from '../interfaces/message'
 
 export class UnknownMessage implements Message {
+  constructor(private readonly ctx: CustomContext) {}
+
   public build() {
-    return '⚠️ I\'m sorry, I didn\'t understand that. Please check the available commands below:'
+    return this.ctx.t('unknown_message')
   }
 }

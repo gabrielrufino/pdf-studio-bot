@@ -22,7 +22,7 @@ export class JoinHandler extends BaseHandler {
       const params = this.validateParams(JoinParamsSchema, ctx.session.params)
 
       if (params.paths.length >= JoinHandler.MAX_PDF_FILES) {
-        await ctx.reply(`⚠️ You have reached the limit of ${JoinHandler.MAX_PDF_FILES} PDF files. Please type "done" to merge them or start over.`)
+        await ctx.reply(ctx.t('join_limit_reached').replace('{max}', JoinHandler.MAX_PDF_FILES.toString()))
         return
       }
 
@@ -35,20 +35,21 @@ export class JoinHandler extends BaseHandler {
       ctx.session.params = params
 
       await ctx.reply(
-        `📎 File "${ctx.message?.document?.file_name || 'file'}" received.\n\n`
-        + `You have sent ${params.paths.length}/${JoinHandler.MAX_PDF_FILES} file(s) so far.\n`
-        + 'Send more files or type "done" to merge them.',
+        ctx.t('join_file_received')
+          .replace('{name}', ctx.message?.document?.file_name || 'file')
+          .replace('{current}', params.paths.length.toString())
+          .replace('{max}', JoinHandler.MAX_PDF_FILES.toString()),
       )
     },
     'msg:text': async (ctx: CustomContext) => {
       const text = ctx.message?.text?.toLowerCase()
 
-      if (text === 'done') {
+      if (text === ctx.t('done')) {
         await this.joinPDFs(ctx)
         return
       }
 
-      await ctx.reply('⚠️ Please send more PDF files or type "done" to merge them.')
+      await ctx.reply(ctx.t('join_more_files_required'))
     },
   }
 
@@ -56,9 +57,7 @@ export class JoinHandler extends BaseHandler {
     await this.setSessionCommand(ctx)
     ctx.session.params = { paths: [] }
     await ctx.reply(
-      '📎 Send the PDF files you want to join.\n\n'
-      + `Send up to ${JoinHandler.MAX_PDF_FILES} files one by one.\n`
-      + 'When done, type "done" to merge them.',
+      ctx.t('join_send_files').replace('{max}', JoinHandler.MAX_PDF_FILES.toString()),
     )
   }
 
@@ -66,7 +65,7 @@ export class JoinHandler extends BaseHandler {
     const { paths } = this.validateParams(JoinParamsSchema, ctx.session.params)
 
     if (paths.length < 2) {
-      await ctx.reply('⚠️ You need to send at least two PDF files to join them. Please send more files.')
+      await ctx.reply(ctx.t('join_at_least_two'))
       return
     }
 
@@ -75,7 +74,7 @@ export class JoinHandler extends BaseHandler {
     const outputPath = join(outputDir, 'merged.pdf')
 
     try {
-      await ctx.reply('🔄 Merging your PDF files...')
+      await ctx.reply(ctx.t('join_merging'))
 
       const pdfWriter = muhammara.createWriter(outputPath)
 
@@ -86,13 +85,13 @@ export class JoinHandler extends BaseHandler {
       pdfWriter.end()
 
       await ctx.replyWithDocument(new InputFile(outputPath, 'merged.pdf'), {
-        caption: '✅ Here is your joined PDF file!',
+        caption: ctx.t('join_success'),
       })
       await this.userRepository.incrementUsage(ctx.from!.id)
     }
     catch (error) {
       this.logger.error(error)
-      await ctx.reply('❌ An error occurred while joining your PDF files. Please try again later.')
+      await ctx.reply(ctx.t('join_error'))
     }
     finally {
       await fs.rm(outputDir, { force: true, recursive: true }).catch(error =>

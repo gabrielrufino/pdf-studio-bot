@@ -39,7 +39,7 @@ describe(PdfToImagesHandler.name, () => {
     } as unknown as UserRepository
 
     handler = new PdfToImagesHandler(mockUserRepository)
-    ctx = {
+    ctx = { t: (key: string) => key,
       from: { id: 123 },
       chat: { id: 456 },
       session: {
@@ -69,7 +69,7 @@ describe(PdfToImagesHandler.name, () => {
     it('should set session command and ask for PDF', async () => {
       await handler.onCommand(ctx)
 
-      expect(ctx.reply).toHaveBeenCalledWith('Please send the PDF file you want to convert to images.')
+      expect(ctx.reply).toHaveBeenCalledWith('pdftoimages_send_file')
       expect(ctx.session.command).toBe(CommandEnum.PdfToImages)
     })
   })
@@ -97,7 +97,7 @@ describe(PdfToImagesHandler.name, () => {
 
         expect(ctx.getFile).toHaveBeenCalled()
         expect(pdf).toHaveBeenCalledWith('/tmp/test.pdf')
-        expect(ctx.reply).toHaveBeenCalledWith('🖼️ Converting 2 pages to images...')
+        expect(ctx.reply).toHaveBeenCalledWith('pdftoimages_converting')
         expect(ctx.api.sendMediaGroup).toHaveBeenCalledWith(456, expect.any(Array))
         expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
       })
@@ -151,7 +151,7 @@ describe(PdfToImagesHandler.name, () => {
 
         await handler.events['msg:document'](ctx)
 
-        expect(ctx.reply).toHaveBeenCalledWith('❌ An error occurred while converting the PDF to images.')
+        expect(ctx.reply).toHaveBeenCalledWith('pdftoimages_error')
       })
 
       it('should not reply with generic error if file is not a PDF (InvalidFileError)', async () => {
@@ -160,8 +160,8 @@ describe(PdfToImagesHandler.name, () => {
 
         await handler.events['msg:document'](ctx)
 
-        expect(ctx.reply).toHaveBeenCalledWith('⚠️ Please send only PDF files.')
-        expect(ctx.reply).not.toHaveBeenCalledWith('❌ An error occurred while converting the PDF to images.')
+        expect(ctx.reply).toHaveBeenCalledWith('invalid_pdf')
+        expect(ctx.reply).not.toHaveBeenCalledWith('pdftoimages_error')
       })
     })
   })

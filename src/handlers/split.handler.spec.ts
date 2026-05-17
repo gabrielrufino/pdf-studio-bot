@@ -18,7 +18,7 @@ describe(SplitHandler.name, () => {
       incrementUsage: vi.fn(),
     } as unknown as UserRepository
     handler = new SplitHandler(mockUserRepository)
-    ctx = {
+    ctx = { t: (key: string) => key,
       from: { id: 123 },
       session: {
         command: null,
@@ -45,7 +45,7 @@ describe(SplitHandler.name, () => {
     it('should set session command and ask for PDF file', async () => {
       await handler.onCommand(ctx)
 
-      expect(ctx.reply).toHaveBeenCalledWith('Please send the PDF file you want to split.')
+      expect(ctx.reply).toHaveBeenCalledWith('split_send_file')
       expect(ctx.session.command).toBe(CommandEnum.Split)
     })
   })
@@ -65,7 +65,7 @@ describe(SplitHandler.name, () => {
           await handler.events['msg:document'](ctx)
 
           expect(ctx.getFile).toHaveBeenCalled()
-          expect(ctx.reply).toHaveBeenCalledWith('📄 Found 10 pages. Splitting...')
+          expect(ctx.reply).toHaveBeenCalledWith('split_splitting')
           expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
 
           for (let i = 0; i < 10; i++) {
@@ -91,7 +91,7 @@ describe(SplitHandler.name, () => {
         await handler.events['msg:document'](ctx)
 
         expect(loggerSpy).toHaveBeenCalled()
-        expect(ctx.reply).toHaveBeenCalledWith('❌ An error occurred while splitting the PDF file.')
+        expect(ctx.reply).toHaveBeenCalledWith('split_error')
       })
 
       it('should log error if fs.rm fails in finally block', async () => {
@@ -121,7 +121,7 @@ describe(SplitHandler.name, () => {
         await handler.events['msg:document'](ctx)
 
         expect(loggerSpy).toHaveBeenCalledWith(new Error('Failed to download file'))
-        expect(ctx.reply).toHaveBeenCalledWith('❌ An error occurred while splitting the PDF file.')
+        expect(ctx.reply).toHaveBeenCalledWith('split_error')
       })
     })
   })

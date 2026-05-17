@@ -15,7 +15,7 @@ describe(messageRecorderMiddleware.name, () => {
 
   beforeEach(() => {
     next = vi.fn()
-    ctx = {
+    ctx = { t: (key: string) => key,
       from: { id: 12345 },
       message: { text: 'hello' },
       session: { command: null },

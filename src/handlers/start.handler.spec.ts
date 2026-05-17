@@ -30,7 +30,7 @@ describe(StartHandler.name, () => {
 
   describe(StartHandler.prototype.onCommand.name, () => {
     it('should call userRepository.findByTelegramId with the correct telegram ID', async () => {
-      const ctx = {
+      const ctx: any = { t: (key: string) => key,
         from: {
           id: 12345,
         },
@@ -47,7 +47,7 @@ describe(StartHandler.name, () => {
     })
 
     it('should create a new user if not found', async () => {
-      const ctx = {
+      const ctx: any = { t: (key: string) => key,
         from: {
           id: 12345,
         },
@@ -77,7 +77,7 @@ describe(StartHandler.name, () => {
       vi.spyOn(userRepository, 'findByTelegramId')
         .mockResolvedValueOnce(existingUser)
 
-      const ctx = {
+      const ctx: any = { t: (key: string) => key,
         from: {
           id: 12345,
         },
@@ -94,7 +94,7 @@ describe(StartHandler.name, () => {
     })
 
     it('should send the welcome message', async () => {
-      const ctx = {
+      const ctx: any = { t: (key: string) => key,
         from: {
           id: 12345,
         },
@@ -109,14 +109,14 @@ describe(StartHandler.name, () => {
 
       expect(ctx.reply).toHaveBeenCalledTimes(1)
       expect(ctx.reply).toHaveBeenCalledWith(
-        new WelcomeMessage()
+        new WelcomeMessage(ctx)
           .build(),
         { parse_mode: 'HTML' },
       )
     })
 
     it('should reset the session', async () => {
-      const ctx = {
+      const ctx: any = { t: (key: string) => key,
         from: {
           id: 12345,
         },

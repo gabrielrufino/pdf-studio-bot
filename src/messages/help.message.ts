@@ -1,4 +1,5 @@
 import type { BaseHandler } from '../handlers/base.handler'
+import type { CustomContext } from '../types/custom-context.type'
 import { InlineKeyboard } from 'grammy'
 import { CommandEnum } from '../enums/command.enum'
 
@@ -10,6 +11,7 @@ export class HelpMessage {
     CommandEnum.PutPassword,
     CommandEnum.Split,
     CommandEnum.Summary,
+    CommandEnum.Language,
   ])
 
   private static readonly INFORMATION = new Set<string>([
@@ -19,7 +21,10 @@ export class HelpMessage {
     CommandEnum.Help,
   ])
 
-  constructor(private readonly handlers: BaseHandler[]) {}
+  constructor(
+    private readonly handlers: BaseHandler[],
+    private readonly ctx: CustomContext,
+  ) {}
 
   public build() {
     const keyboard = new InlineKeyboard()
@@ -33,11 +38,11 @@ export class HelpMessage {
     const allHandlers = [...operationHandlers, ...informationHandlers, ...otherHandlers]
 
     allHandlers.forEach((h) => {
-      keyboard.text(h.description, h.command).row()
+      keyboard.text(this.ctx.t(`operation_${h.command}`), h.command).row()
     })
 
     return {
-      text: 'Please select an operation:',
+      text: this.ctx.t('help_select_operation'),
       reply_markup: keyboard,
     }
   }

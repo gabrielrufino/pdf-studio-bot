@@ -17,7 +17,7 @@ describe(FeedbackHandler.name, () => {
 
   describe(FeedbackHandler.prototype.onCommand.name, () => {
     it('should set session command and send reply', async () => {
-      const ctx = {
+      const ctx: any = { t: (key: string) => key,
         session: { command: null, params: null },
         reply: vi.fn().mockResolvedValue(undefined),
       } as unknown as CustomContext
@@ -28,7 +28,7 @@ describe(FeedbackHandler.name, () => {
     })
 
     it('should send the correct reply message', async () => {
-      const ctx = {
+      const ctx: any = { t: (key: string) => key,
         session: { command: null, params: null },
         reply: vi.fn().mockResolvedValue(undefined),
       } as unknown as CustomContext
@@ -36,14 +36,14 @@ describe(FeedbackHandler.name, () => {
       await new FeedbackHandler(feedbackRepositoryMock).onCommand(ctx)
 
       expect(ctx.reply).toHaveBeenCalledWith(
-        'We value your feedback! Please reply to this message with your thoughts or suggestions about our service. Your input helps us improve and serve you better. Thank you!',
+        'feedback_send_message',
       )
     })
   })
 
   describe('events[\'msg:text\']', () => {
     it('should create feedback and send thank you reply', async () => {
-      const ctx = {
+      const ctx: any = { t: (key: string) => key,
         session: { command: CommandEnum.Feedback, params: null },
         from: { id: 123, first_name: 'John', is_bot: false, language_code: 'en' },
         message: { text: 'Great service!' },
@@ -57,7 +57,7 @@ describe(FeedbackHandler.name, () => {
         text: ctx.message!.text,
         created_at: expect.any(Date),
       }))
-      expect(ctx.reply).toHaveBeenCalledWith('Thank you for your feedback! We appreciate you taking the time to share your thoughts with us. If you have any more feedback or questions, feel free to reach out anytime.')
+      expect(ctx.reply).toHaveBeenCalledWith('feedback_success')
     })
   })
 })

@@ -48,7 +48,7 @@ describe(DownloadHandler.name, () => {
     } as unknown as UserRepository
 
     handler = new DownloadHandler(mockBrowser, mockUserRepository)
-    ctx = {
+    ctx = { t: (key: string) => key,
       from: { id: 123 },
       session: {
         command: null,
@@ -70,9 +70,7 @@ describe(DownloadHandler.name, () => {
     it('should set session command and ask for URL', async () => {
       await handler.onCommand(ctx)
 
-      expect(ctx.reply).toHaveBeenCalledWith(
-        expect.stringContaining('🌐 Send me a URL and I\'ll convert it to PDF!'),
-      )
+      expect(ctx.reply).toHaveBeenCalledWith('download_send_url')
       expect(ctx.session.command).toBe(CommandEnum.Download)
       expect(ctx.session.params).toEqual({ url: null })
     })
@@ -95,7 +93,7 @@ describe(DownloadHandler.name, () => {
 
         await handler.events['msg:text'](ctx)
 
-        expect(ctx.reply).toHaveBeenCalledWith('❌ An error occurred while converting the URL to PDF.')
+        expect(ctx.reply).toHaveBeenCalledWith('download_error')
       })
 
       it('should reply with error if URL is invalid (doesn\'t start with http)', async () => {
@@ -103,7 +101,7 @@ describe(DownloadHandler.name, () => {
 
         await handler.events['msg:text'](ctx)
 
-        expect(ctx.reply).toHaveBeenCalledWith('❌ An error occurred while converting the URL to PDF.')
+        expect(ctx.reply).toHaveBeenCalledWith('download_error')
       })
 
       it('should work with http protocol', async () => {
@@ -122,7 +120,7 @@ describe(DownloadHandler.name, () => {
         await handler.events['msg:text'](ctx)
 
         expect(loggerSpy).toHaveBeenCalledWith(error)
-        expect(ctx.reply).toHaveBeenCalledWith('❌ An error occurred while converting the URL to PDF.')
+        expect(ctx.reply).toHaveBeenCalledWith('download_error')
         expect(mockPage.close).toHaveBeenCalled()
       })
 
@@ -131,7 +129,7 @@ describe(DownloadHandler.name, () => {
 
         await handler.events['msg:text'](ctx)
 
-        expect(ctx.reply).toHaveBeenCalledWith('❌ An error occurred while converting the URL to PDF.')
+        expect(ctx.reply).toHaveBeenCalledWith('download_error')
       })
 
       it('should block URL that resolves to private IP', async () => {
@@ -141,7 +139,7 @@ describe(DownloadHandler.name, () => {
 
         await handler.events['msg:text'](ctx)
 
-        expect(ctx.reply).toHaveBeenCalledWith('❌ An error occurred while converting the URL to PDF.')
+        expect(ctx.reply).toHaveBeenCalledWith('download_error')
       })
     })
   })

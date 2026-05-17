@@ -3,6 +3,7 @@ export enum CommandEnum {
   Feedback = 'feedback',
   Help = 'help',
   Join = 'join',
+  Language = 'language',
   PdfToImages = 'pdftoimages',
   Pro = 'pro',
   PutPassword = 'putpassword',

@@ -32,7 +32,7 @@ describe(BaseHandler.name, () => {
 
   it('should set session command correctly', async () => {
     const handler = new TestHandler()
-    const ctx = {
+    const ctx: any = { t: (key: string) => key,
       session: {
         command: null,
         params: null,
@@ -46,7 +46,7 @@ describe(BaseHandler.name, () => {
 
   it('should reset session correctly', async () => {
     const handler = new TestHandler()
-    const ctx = {
+    const ctx: any = { t: (key: string) => key,
       session: {
         command: CommandEnum.Test,
         params: { someParam: 'value' },
@@ -62,7 +62,7 @@ describe(BaseHandler.name, () => {
   describe('validatePDF', () => {
     it('should not throw if mime type is application/pdf', async () => {
       const handler = new TestHandler()
-      const ctx = {
+      const ctx: any = { t: (key: string) => key,
         message: {
           document: {
             mime_type: 'application/pdf',
@@ -75,7 +75,7 @@ describe(BaseHandler.name, () => {
 
     it('should throw InvalidFileError and reply if mime type is not application/pdf', async () => {
       const handler = new TestHandler()
-      const ctx = {
+      const ctx: any = { t: (key: string) => key,
         message: {
           document: {
             mime_type: 'image/png',
@@ -85,12 +85,12 @@ describe(BaseHandler.name, () => {
       } as unknown as CustomContext
 
       await expect(handler.validatePDF(ctx)).rejects.toThrow(InvalidFileError)
-      expect(ctx.reply).toHaveBeenCalledWith('⚠️ Please send only PDF files.')
+      expect(ctx.reply).toHaveBeenCalledWith('invalid_pdf')
     })
 
     it('should throw InvalidFileError and reply if document is missing', async () => {
       const handler = new TestHandler()
-      const ctx = {
+      const ctx: any = { t: (key: string) => key,
         message: {
           text: 'hello',
         },
@@ -98,14 +98,14 @@ describe(BaseHandler.name, () => {
       } as unknown as CustomContext
 
       await expect(handler.validatePDF(ctx)).rejects.toThrow(InvalidFileError)
-      expect(ctx.reply).toHaveBeenCalledWith('⚠️ Please send only PDF files.')
+      expect(ctx.reply).toHaveBeenCalledWith('invalid_pdf')
     })
   })
 
   describe('removeTemporaryFiles', () => {
     it('should remove temporary file if path exists in params', async () => {
       const handler = new TestHandler()
-      const ctx = {
+      const ctx: any = { t: (key: string) => key,
         session: {
           command: CommandEnum.Test,
           params: { path: '/tmp/test-file' },
@@ -121,7 +121,7 @@ describe(BaseHandler.name, () => {
 
     it('should remove temporary files if paths exist in params', async () => {
       const handler = new TestHandler()
-      const ctx = {
+      const ctx: any = { t: (key: string) => key,
         session: {
           command: CommandEnum.Test,
           params: { paths: ['/tmp/file1', '/tmp/file2'] },
@@ -138,7 +138,7 @@ describe(BaseHandler.name, () => {
 
     it('should ignore non-string paths in paths array', async () => {
       const handler = new TestHandler()
-      const ctx = {
+      const ctx: any = { t: (key: string) => key,
         session: {
           command: CommandEnum.Test,
           params: { paths: ['/tmp/file1', 123, null] },
@@ -155,7 +155,7 @@ describe(BaseHandler.name, () => {
 
     it('should catch and log error if fs.rm fails', async () => {
       const handler = new TestHandler()
-      const ctx = {
+      const ctx: any = { t: (key: string) => key,
         session: {
           command: CommandEnum.Test,
           params: { path: '/tmp/test-file' },

@@ -10,6 +10,6 @@ export class VersionHandler extends BaseHandler {
   public readonly events = {}
 
   async onCommand(ctx: CustomContext) {
-    await ctx.reply(version)
+    await ctx.reply(ctx.t('version_info').replace('{version}', version), { parse_mode: 'HTML' })
   }
 }

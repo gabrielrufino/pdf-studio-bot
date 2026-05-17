@@ -37,7 +37,7 @@ describe(SummaryHandler.name, () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    ctx = {
+    ctx = { t: (key: string) => key,
       from: { id: 123 },
       chat: { id: 456 },
       session: {
@@ -91,7 +91,7 @@ describe(SummaryHandler.name, () => {
     it('should set session command and ask for PDF file', async () => {
       await handler.onCommand(ctx)
 
-      expect(ctx.reply).toHaveBeenCalledWith('Please send the PDF file you want to summarize.')
+      expect(ctx.reply).toHaveBeenCalledWith('summary_send_file')
       expect(ctx.session.command).toBe(CommandEnum.Summary)
     })
   })
@@ -103,7 +103,7 @@ describe(SummaryHandler.name, () => {
 
         await handler.events['msg:document'](ctx)
 
-        expect(ctx.reply).toHaveBeenCalledWith('❌ An error occurred while summarizing the PDF file.')
+        expect(ctx.reply).toHaveBeenCalledWith('summary_error')
       })
 
       it('should handle missing inputPath', async () => {
@@ -111,7 +111,7 @@ describe(SummaryHandler.name, () => {
 
         await handler.events['msg:document'](ctx)
 
-        expect(ctx.reply).toHaveBeenCalledWith('❌ An error occurred while summarizing the PDF file.')
+        expect(ctx.reply).toHaveBeenCalledWith('summary_error')
       })
 
       it('should summarize PDF if constraints are respected and user is free', async () => {
@@ -129,7 +129,7 @@ describe(SummaryHandler.name, () => {
           expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
 
           // Since page-1.pdf has 10 pages and <10MB, it should pass limits.
-          expect(ctx.reply).toHaveBeenCalledWith('⏳ Summarizing your PDF. This might take a moment...')
+          expect(ctx.reply).toHaveBeenCalledWith('summary_summarizing')
           expect(mockUpload).toHaveBeenCalledWith({
             file: targetPath,
             config: {
@@ -267,7 +267,7 @@ describe(SummaryHandler.name, () => {
           await handler.events['msg:document'](ctx)
 
           expect(loggerSpy).toHaveBeenCalled()
-          expect(ctx.reply).toHaveBeenCalledWith('❌ An error occurred while summarizing the PDF file.')
+          expect(ctx.reply).toHaveBeenCalledWith('summary_error')
         }
         finally {
           await fs.rm(tempDir, { recursive: true, force: true })

@@ -46,7 +46,7 @@ export class ProHandler extends BaseHandler {
           })),
         ])
 
-        await ctx.reply('🎉 Thank you for subscribing to PRO! You now have full access to all features.')
+        await ctx.reply(ctx.t('pro_success'))
       }
 
       await this.resetSession(ctx)
@@ -62,7 +62,7 @@ export class ProHandler extends BaseHandler {
     const user = await this.userRepository.findByTelegramId(userId)
 
     if (user?.plan_type === PlanTypeEnum.Pro) {
-      await ctx.reply('You are already a PRO user! Enjoy all the benefits! 💎')
+      await ctx.reply(ctx.t('pro_already_pro'))
       await this.resetSession(ctx)
       return
     }
@@ -75,7 +75,7 @@ export class ProHandler extends BaseHandler {
 
     await ctx.replyWithInvoice(
       'PDF Studio PRO',
-      'Get unlimited access to all features and higher limits!',
+      ctx.t('pro_upgrade'),
       'pdf-studio-pro-subscription',
       CurrencyEnum.XTR,
       [{ label: 'PRO Subscription', amount }],

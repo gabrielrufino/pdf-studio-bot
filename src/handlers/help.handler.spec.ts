@@ -15,7 +15,7 @@ describe(HelpHandler.name, () => {
 
   beforeEach(() => {
     handler = new HelpHandler(mockHandlers)
-    ctx = {
+    ctx = { t: (key: string) => key,
       reply: vi.fn(),
       answerCallbackQuery: vi.fn(),
       deleteMessage: vi.fn().mockResolvedValue(undefined),
@@ -33,12 +33,7 @@ describe(HelpHandler.name, () => {
     it('should reply with a dynamically generated help message', async () => {
       await handler.onCommand(ctx)
 
-      expect(ctx.reply).toHaveBeenCalledWith(
-        'Please select an operation:',
-        expect.objectContaining({
-          reply_markup: expect.anything(),
-        }),
-      )
+      expect(ctx.reply).toHaveBeenCalledWith('help_select_operation', expect.objectContaining({ reply_markup: expect.anything() }))
     })
   })
 
