@@ -34,7 +34,7 @@ export async function i18nMiddleware(ctx: CustomContext, next: NextFunction) {
     language = 'en' as any
   }
 
-  const translations = locales[language] || locales.en
+  const translations = locales[language as string] || locales.en
 
   ctx.t = (key: string) => translations[key] || key
 
