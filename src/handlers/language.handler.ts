@@ -1,6 +1,9 @@
 import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
 import { InlineKeyboard } from 'grammy'
+import en from '../locales/en.json'
+import es from '../locales/es.json'
+import pt from '../locales/pt.json'
 import { CommandEnum } from '../enums/command.enum'
 import { LanguageEnum } from '../enums/language.enum'
 import { BaseHandler } from './base.handler'
@@ -26,8 +29,14 @@ export class LanguageHandler extends BaseHandler {
         await this.userRepository.updateById(user._id, user)
       }
 
-      await ctx.answerCallbackQuery(ctx.t('language_changed'))
-      await ctx.editMessageText(ctx.t('language_changed'))
+      ctx.session.language = data as LanguageEnum
+
+      const locales: Record<string, Record<string, string>> = { en, pt, es }
+      const translations = locales[data] || locales.en
+      const message = translations.language_changed || 'Language changed!'
+
+      await ctx.answerCallbackQuery(message)
+      await ctx.editMessageText(message)
       await this.resetSession(ctx)
     },
   }

@@ -13,16 +13,25 @@ const locales: Record<string, Record<string, string>> = {
 
 export async function i18nMiddleware(ctx: CustomContext, next: NextFunction) {
   const userId = ctx.from?.id
-  let language: string = 'en'
+  let language = ctx.session.language
 
-  if (userId) {
+  if (!language && userId) {
     const user = await userRepository.findByTelegramId(userId)
     if (user?.language) {
       language = user.language
     }
     else if (ctx.from?.language_code && ['en', 'pt', 'es'].includes(ctx.from.language_code)) {
-      language = ctx.from.language_code
+      language = ctx.from.language_code as any
     }
+    else {
+      language = 'en' as any
+    }
+
+    ctx.session.language = language
+  }
+
+  if (!language) {
+    language = 'en' as any
   }
 
   const translations = locales[language] || locales.en

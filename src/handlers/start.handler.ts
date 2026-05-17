@@ -30,6 +30,8 @@ export class StartHandler extends BaseHandler {
         telegram_user: ctx.from,
         language,
       }))
+
+      ctx.session.language = language
     }
     else {
       await this.userRepository.updateById(user._id, user)

@@ -44,7 +44,7 @@ export class JoinHandler extends BaseHandler {
     'msg:text': async (ctx: CustomContext) => {
       const text = ctx.message?.text?.toLowerCase()
 
-      if (text === ctx.t('done')) {
+      if (text === 'done' || text === ctx.t('done')) {
         await this.joinPDFs(ctx)
         return
       }
