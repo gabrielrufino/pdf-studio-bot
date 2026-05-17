@@ -18,23 +18,16 @@ describe(SplitHandler.name, () => {
       incrementUsage: vi.fn(),
     } as unknown as UserRepository
     handler = new SplitHandler(mockUserRepository)
-    ctx = { t: (key: string) => key,
-      from: { id: 123 },
-      session: {
-        command: null,
-        params: {} as any,
+    ctx = { t: (key: string) => key, from: { id: 123 }, session: {
+      command: null,
+      params: {} as any,
+    }, message: {
+      document: {
+        mime_type: 'application/pdf',
       },
-      message: {
-        document: {
-          mime_type: 'application/pdf',
-        },
-      },
-      getFile: vi.fn().mockResolvedValue({
-        download: vi.fn().mockResolvedValue('/tmp/fake.pdf'),
-      }),
-      reply: vi.fn(),
-      replyWithDocument: vi.fn(),
-    } as unknown as CustomContext
+    }, getFile: vi.fn().mockResolvedValue({
+      download: vi.fn().mockResolvedValue('/tmp/fake.pdf'),
+    }), reply: vi.fn(), replyWithDocument: vi.fn() } as unknown as CustomContext
   })
 
   it('should have correct command', () => {

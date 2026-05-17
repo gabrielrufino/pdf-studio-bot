@@ -21,14 +21,7 @@ describe(ProHandler.name, () => {
     ...overrides,
   } as unknown as UserEntity)
 
-  const createMockContext = (overrides?: any): CustomContext => ({ t: (key: string) => key,
-    from: { id: 12345 },
-    session: { command: null, params: null },
-    reply: vi.fn(),
-    replyWithInvoice: vi.fn(),
-    answerPreCheckoutQuery: vi.fn(),
-    ...overrides,
-  } as unknown as CustomContext)
+  const createMockContext = (overrides?: any): CustomContext => ({ t: (key: string) => key, from: { id: 12345 }, session: { command: null, params: null }, reply: vi.fn(), replyWithInvoice: vi.fn(), answerPreCheckoutQuery: vi.fn(), ...overrides } as unknown as CustomContext)
 
   beforeEach(() => {
     userRepository = {

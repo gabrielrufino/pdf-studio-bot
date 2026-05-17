@@ -29,24 +29,16 @@ describe(PutPasswordHandler.name, () => {
     } as unknown as UserRepository
 
     handler = new PutPasswordHandler(mockUserRepository)
-    ctx = { t: (key: string) => key,
-      from: { id: 123 },
-      session: {
-        command: null,
-        params: { path: null },
+    ctx = { t: (key: string) => key, from: { id: 123 }, session: {
+      command: null,
+      params: { path: null },
+    }, message: {
+      text: 'password123',
+      message_id: 1,
+      document: {
+        mime_type: 'application/pdf',
       },
-      message: {
-        text: 'password123',
-        message_id: 1,
-        document: {
-          mime_type: 'application/pdf',
-        },
-      },
-      chat: { id: 100 },
-      getFile: vi.fn(),
-      reply: vi.fn(),
-      replyWithDocument: vi.fn().mockResolvedValue({}),
-    } as unknown as CustomContext
+    }, chat: { id: 100 }, getFile: vi.fn(), reply: vi.fn(), replyWithDocument: vi.fn().mockResolvedValue({}) } as unknown as CustomContext
   })
 
   it('should have correct command', () => {

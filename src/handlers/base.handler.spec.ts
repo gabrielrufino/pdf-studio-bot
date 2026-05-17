@@ -32,12 +32,10 @@ describe(BaseHandler.name, () => {
 
   it('should set session command correctly', async () => {
     const handler = new TestHandler()
-    const ctx: any = { t: (key: string) => key,
-      session: {
-        command: null,
-        params: null,
-      },
-    } as CustomContext
+    const ctx: any = { t: (key: string) => key, session: {
+      command: null,
+      params: null,
+    } } as CustomContext
 
     await handler.setSessionCommand(ctx)
 
@@ -46,12 +44,10 @@ describe(BaseHandler.name, () => {
 
   it('should reset session correctly', async () => {
     const handler = new TestHandler()
-    const ctx: any = { t: (key: string) => key,
-      session: {
-        command: CommandEnum.Test,
-        params: { someParam: 'value' },
-      },
-    } as unknown as CustomContext
+    const ctx: any = { t: (key: string) => key, session: {
+      command: CommandEnum.Test,
+      params: { someParam: 'value' },
+    } } as unknown as CustomContext
 
     await handler.resetSession(ctx)
 
@@ -62,27 +58,22 @@ describe(BaseHandler.name, () => {
   describe('validatePDF', () => {
     it('should not throw if mime type is application/pdf', async () => {
       const handler = new TestHandler()
-      const ctx: any = { t: (key: string) => key,
-        message: {
-          document: {
-            mime_type: 'application/pdf',
-          },
+      const ctx: any = { t: (key: string) => key, message: {
+        document: {
+          mime_type: 'application/pdf',
         },
-      } as unknown as CustomContext
+      } } as unknown as CustomContext
 
       await expect(handler.validatePDF(ctx)).resolves.not.toThrow()
     })
 
     it('should throw InvalidFileError and reply if mime type is not application/pdf', async () => {
       const handler = new TestHandler()
-      const ctx: any = { t: (key: string) => key,
-        message: {
-          document: {
-            mime_type: 'image/png',
-          },
+      const ctx: any = { t: (key: string) => key, message: {
+        document: {
+          mime_type: 'image/png',
         },
-        reply: vi.fn(),
-      } as unknown as CustomContext
+      }, reply: vi.fn() } as unknown as CustomContext
 
       await expect(handler.validatePDF(ctx)).rejects.toThrow(InvalidFileError)
       expect(ctx.reply).toHaveBeenCalledWith('invalid_pdf')
@@ -90,12 +81,9 @@ describe(BaseHandler.name, () => {
 
     it('should throw InvalidFileError and reply if document is missing', async () => {
       const handler = new TestHandler()
-      const ctx: any = { t: (key: string) => key,
-        message: {
-          text: 'hello',
-        },
-        reply: vi.fn(),
-      } as unknown as CustomContext
+      const ctx: any = { t: (key: string) => key, message: {
+        text: 'hello',
+      }, reply: vi.fn() } as unknown as CustomContext
 
       await expect(handler.validatePDF(ctx)).rejects.toThrow(InvalidFileError)
       expect(ctx.reply).toHaveBeenCalledWith('invalid_pdf')
@@ -105,12 +93,10 @@ describe(BaseHandler.name, () => {
   describe('removeTemporaryFiles', () => {
     it('should remove temporary file if path exists in params', async () => {
       const handler = new TestHandler()
-      const ctx: any = { t: (key: string) => key,
-        session: {
-          command: CommandEnum.Test,
-          params: { path: '/tmp/test-file' },
-        },
-      } as unknown as CustomContext
+      const ctx: any = { t: (key: string) => key, session: {
+        command: CommandEnum.Test,
+        params: { path: '/tmp/test-file' },
+      } } as unknown as CustomContext
 
       const rmSpy = vi.spyOn(fs, 'rm').mockResolvedValue(undefined)
 
@@ -121,12 +107,10 @@ describe(BaseHandler.name, () => {
 
     it('should remove temporary files if paths exist in params', async () => {
       const handler = new TestHandler()
-      const ctx: any = { t: (key: string) => key,
-        session: {
-          command: CommandEnum.Test,
-          params: { paths: ['/tmp/file1', '/tmp/file2'] },
-        },
-      } as unknown as CustomContext
+      const ctx: any = { t: (key: string) => key, session: {
+        command: CommandEnum.Test,
+        params: { paths: ['/tmp/file1', '/tmp/file2'] },
+      } } as unknown as CustomContext
 
       const rmSpy = vi.spyOn(fs, 'rm').mockResolvedValue(undefined)
 
@@ -138,12 +122,10 @@ describe(BaseHandler.name, () => {
 
     it('should ignore non-string paths in paths array', async () => {
       const handler = new TestHandler()
-      const ctx: any = { t: (key: string) => key,
-        session: {
-          command: CommandEnum.Test,
-          params: { paths: ['/tmp/file1', 123, null] },
-        },
-      } as unknown as CustomContext
+      const ctx: any = { t: (key: string) => key, session: {
+        command: CommandEnum.Test,
+        params: { paths: ['/tmp/file1', 123, null] },
+      } } as unknown as CustomContext
 
       const rmSpy = vi.spyOn(fs, 'rm').mockResolvedValue(undefined)
 
@@ -155,12 +137,10 @@ describe(BaseHandler.name, () => {
 
     it('should catch and log error if fs.rm fails', async () => {
       const handler = new TestHandler()
-      const ctx: any = { t: (key: string) => key,
-        session: {
-          command: CommandEnum.Test,
-          params: { path: '/tmp/test-file' },
-        },
-      } as unknown as CustomContext
+      const ctx: any = { t: (key: string) => key, session: {
+        command: CommandEnum.Test,
+        params: { path: '/tmp/test-file' },
+      } } as unknown as CustomContext
 
       const error = new Error('Permission denied')
       const rmSpy = vi.spyOn(fs, 'rm').mockRejectedValue(error)

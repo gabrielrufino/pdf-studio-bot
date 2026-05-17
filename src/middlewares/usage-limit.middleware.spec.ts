@@ -20,10 +20,7 @@ describe(usageLimitMiddleware.name, () => {
 
   beforeEach(() => {
     next = vi.fn()
-    ctx = { t: (key: string) => key,
-      from: { id: 12345 },
-      reply: vi.fn(),
-    }
+    ctx = { t: (key: string) => key, from: { id: 12345 }, reply: vi.fn() }
     handler = {
       hasUsageLimits: true,
     }

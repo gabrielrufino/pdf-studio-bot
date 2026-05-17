@@ -37,26 +37,18 @@ describe(SummaryHandler.name, () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    ctx = { t: (key: string) => key,
-      from: { id: 123 },
-      chat: { id: 456 },
-      session: {
-        command: null,
-        params: {} as any,
+    ctx = { t: (key: string) => key, from: { id: 123 }, chat: { id: 456 }, session: {
+      command: null,
+      params: {} as any,
+    }, message: {
+      document: {
+        mime_type: 'application/pdf',
       },
-      message: {
-        document: {
-          mime_type: 'application/pdf',
-        },
-      },
-      getFile: vi.fn().mockResolvedValue({
-        download: vi.fn().mockResolvedValue('/tmp/fake.pdf'),
-      }),
-      reply: vi.fn().mockResolvedValue({ message_id: 789 }),
-      api: {
-        editMessageText: vi.fn(),
-      },
-    } as unknown as CustomContext
+    }, getFile: vi.fn().mockResolvedValue({
+      download: vi.fn().mockResolvedValue('/tmp/fake.pdf'),
+    }), reply: vi.fn().mockResolvedValue({ message_id: 789 }), api: {
+      editMessageText: vi.fn(),
+    } } as unknown as CustomContext
   })
 
   const mockUserWithId = (id: number, plan: PlanTypeEnum) => {

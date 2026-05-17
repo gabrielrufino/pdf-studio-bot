@@ -39,26 +39,17 @@ describe(PdfToImagesHandler.name, () => {
     } as unknown as UserRepository
 
     handler = new PdfToImagesHandler(mockUserRepository)
-    ctx = { t: (key: string) => key,
-      from: { id: 123 },
-      chat: { id: 456 },
-      session: {
-        command: null,
+    ctx = { t: (key: string) => key, from: { id: 123 }, chat: { id: 456 }, session: {
+      command: null,
+    }, message: {
+      document: {
+        mime_type: 'application/pdf',
       },
-      message: {
-        document: {
-          mime_type: 'application/pdf',
-        },
-      },
-      getFile: vi.fn().mockResolvedValue({
-        download: vi.fn().mockResolvedValue('/tmp/test.pdf'),
-      }),
-      reply: vi.fn(),
-      replyWithPhoto: vi.fn(),
-      api: {
-        sendMediaGroup: vi.fn(),
-      },
-    } as unknown as CustomContext
+    }, getFile: vi.fn().mockResolvedValue({
+      download: vi.fn().mockResolvedValue('/tmp/test.pdf'),
+    }), reply: vi.fn(), replyWithPhoto: vi.fn(), api: {
+      sendMediaGroup: vi.fn(),
+    } } as unknown as CustomContext
   })
 
   it('should have correct command', () => {

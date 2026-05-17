@@ -23,23 +23,16 @@ describe(JoinHandler.name, () => {
     } as unknown as UserRepository
 
     handler = new JoinHandler(mockUserRepository)
-    ctx = { t: (key: string) => key,
-      from: { id: 123 },
-      session: {
-        command: null,
-        params: { paths: [] } as JoinParams,
+    ctx = { t: (key: string) => key, from: { id: 123 }, session: {
+      command: null,
+      params: { paths: [] } as JoinParams,
+    }, message: {
+      text: '',
+      document: {
+        mime_type: 'application/pdf',
+        file_name: 'test.pdf',
       },
-      message: {
-        text: '',
-        document: {
-          mime_type: 'application/pdf',
-          file_name: 'test.pdf',
-        },
-      },
-      getFile: vi.fn(),
-      reply: vi.fn(),
-      replyWithDocument: vi.fn(),
-    } as unknown as CustomContext
+    }, getFile: vi.fn(), reply: vi.fn(), replyWithDocument: vi.fn() } as unknown as CustomContext
   })
 
   it('should have correct command', () => {

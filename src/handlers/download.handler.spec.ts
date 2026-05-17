@@ -48,18 +48,12 @@ describe(DownloadHandler.name, () => {
     } as unknown as UserRepository
 
     handler = new DownloadHandler(mockBrowser, mockUserRepository)
-    ctx = { t: (key: string) => key,
-      from: { id: 123 },
-      session: {
-        command: null,
-        params: { url: null },
-      },
-      message: {
-        text: 'https://example.com',
-      },
-      reply: vi.fn(),
-      replyWithDocument: vi.fn(),
-    } as unknown as CustomContext
+    ctx = { t: (key: string) => key, from: { id: 123 }, session: {
+      command: null,
+      params: { url: null },
+    }, message: {
+      text: 'https://example.com',
+    }, reply: vi.fn(), replyWithDocument: vi.fn() } as unknown as CustomContext
   })
 
   it('should have correct command', () => {

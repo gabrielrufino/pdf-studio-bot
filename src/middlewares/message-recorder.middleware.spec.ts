@@ -15,11 +15,7 @@ describe(messageRecorderMiddleware.name, () => {
 
   beforeEach(() => {
     next = vi.fn()
-    ctx = { t: (key: string) => key,
-      from: { id: 12345 },
-      message: { text: 'hello' },
-      session: { command: null },
-    }
+    ctx = { t: (key: string) => key, from: { id: 12345 }, message: { text: 'hello' }, session: { command: null } }
     vi.clearAllMocks()
   })
 

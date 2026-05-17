@@ -8,7 +8,7 @@ describe(HelpMessage.name, () => {
     { command: 'download', description: 'Download a PDF from a URL' },
   ] as any
 
-  const ctx = { t: (key: string) => key, t: (key: string) => key } as any
+  const ctx = { t: (key: string) => key } as any
 
   it('should build a help message with inline keyboard and one column', () => {
     const { text, reply_markup } = new HelpMessage(mockHandlers, ctx).build()

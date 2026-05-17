@@ -15,14 +15,9 @@ describe(HelpHandler.name, () => {
 
   beforeEach(() => {
     handler = new HelpHandler(mockHandlers)
-    ctx = { t: (key: string) => key,
-      reply: vi.fn(),
-      answerCallbackQuery: vi.fn(),
-      deleteMessage: vi.fn().mockResolvedValue(undefined),
-      callbackQuery: {
-        data: 'download',
-      },
-    } as unknown as CustomContext
+    ctx = { t: (key: string) => key, reply: vi.fn(), answerCallbackQuery: vi.fn(), deleteMessage: vi.fn().mockResolvedValue(undefined), callbackQuery: {
+      data: 'download',
+    } } as unknown as CustomContext
   })
 
   it('should have correct command', () => {
