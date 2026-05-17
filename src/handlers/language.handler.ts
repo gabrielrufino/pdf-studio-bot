@@ -1,11 +1,11 @@
 import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
 import { InlineKeyboard } from 'grammy'
+import { CommandEnum } from '../enums/command.enum'
+import { LanguageEnum } from '../enums/language.enum'
 import en from '../locales/en.json'
 import es from '../locales/es.json'
 import pt from '../locales/pt.json'
-import { CommandEnum } from '../enums/command.enum'
-import { LanguageEnum } from '../enums/language.enum'
 import { BaseHandler } from './base.handler'
 
 export class LanguageHandler extends BaseHandler {
