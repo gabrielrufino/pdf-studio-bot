@@ -24,7 +24,7 @@ describe(HelpMessage.name, () => {
     expect((buttons[1][0] as any).callback_data).toBe('help')
   })
 
-  it('should include uncategorized handlers', () => {
+  it('should not include uncategorized handlers', () => {
     const customHandlers = [
       { command: 'custom', description: 'Custom command' },
     ] as any
@@ -32,8 +32,8 @@ describe(HelpMessage.name, () => {
     const keyboard = reply_markup as InlineKeyboard
     const buttons = keyboard.inline_keyboard
 
-    expect(buttons[0][0].text).toBe('operation_custom')
-    expect((buttons[0][0] as any).callback_data).toBe('custom')
+    const flatButtons = buttons.flat()
+    expect(flatButtons).toHaveLength(0)
   })
 
   it('should return an object with text and reply_markup', () => {

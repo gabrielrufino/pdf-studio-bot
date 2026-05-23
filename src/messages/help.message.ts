@@ -31,11 +31,8 @@ export class HelpMessage {
 
     const operationHandlers = this.handlers.filter(h => HelpMessage.OPERATIONS.has(h.command))
     const informationHandlers = this.handlers.filter(h => HelpMessage.INFORMATION.has(h.command))
-    const otherHandlers = this.handlers.filter(
-      h => !HelpMessage.OPERATIONS.has(h.command) && !HelpMessage.INFORMATION.has(h.command),
-    )
 
-    const allHandlers = [...operationHandlers, ...informationHandlers, ...otherHandlers]
+    const allHandlers = [...operationHandlers, ...informationHandlers]
 
     allHandlers.forEach((h) => {
       keyboard.text(this.ctx.t(`operation_${h.command}`), h.command).row()
