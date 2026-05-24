@@ -87,7 +87,13 @@ describe(RemovePasswordHandler.name, () => {
           await new Promise((resolve, reject) => {
             new Recipe(assetPath, inputPath)
               .encrypt({ userPassword: 'password123', ownerPassword: 'password123' })
-              .endPDF((err) => err ? reject(err) : resolve(null))
+              .endPDF((err?: Error) => {
+                if (err) {
+                  return reject(err)
+                }
+
+                resolve(null)
+              })
           })
 
           ctx.session.params = { path: inputPath }
@@ -118,7 +124,13 @@ describe(RemovePasswordHandler.name, () => {
           await new Promise((resolve, reject) => {
             new Recipe(assetPath, inputPath)
               .encrypt({ userPassword: 'password123', ownerPassword: 'password123' })
-              .endPDF((err) => err ? reject(err) : resolve(null))
+              .endPDF((err?: Error) => {
+                if (err) {
+                  return reject(err)
+                }
+
+                resolve(null)
+              })
           })
 
           ctx.session.params = { path: inputPath }
