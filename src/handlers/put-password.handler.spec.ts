@@ -29,24 +29,16 @@ describe(PutPasswordHandler.name, () => {
     } as unknown as UserRepository
 
     handler = new PutPasswordHandler(mockUserRepository)
-    ctx = {
-      from: { id: 123 },
-      session: {
-        command: null,
-        params: { path: null },
+    ctx = { t: (key: string) => key, from: { id: 123 }, session: {
+      command: null,
+      params: { path: null },
+    }, message: {
+      text: 'password123',
+      message_id: 1,
+      document: {
+        mime_type: 'application/pdf',
       },
-      message: {
-        text: 'password123',
-        message_id: 1,
-        document: {
-          mime_type: 'application/pdf',
-        },
-      },
-      chat: { id: 100 },
-      getFile: vi.fn(),
-      reply: vi.fn(),
-      replyWithDocument: vi.fn().mockResolvedValue({}),
-    } as unknown as CustomContext
+    }, chat: { id: 100 }, getFile: vi.fn(), reply: vi.fn(), replyWithDocument: vi.fn().mockResolvedValue({}) } as unknown as CustomContext
   })
 
   it('should have correct command', () => {
@@ -57,7 +49,7 @@ describe(PutPasswordHandler.name, () => {
     it('should set session command and ask for file', async () => {
       await handler.onCommand(ctx)
 
-      expect(ctx.reply).toHaveBeenCalledWith('📄 Please send the PDF file you want to protect with a password.')
+      expect(ctx.reply).toHaveBeenCalledWith('putpassword_send_file')
       expect(ctx.session.command).toBe(CommandEnum.PutPassword)
       expect(ctx.session.params).toEqual({ path: null })
     })
@@ -75,7 +67,7 @@ describe(PutPasswordHandler.name, () => {
 
         expect(ctx.getFile).toHaveBeenCalled()
         expect(ctx.session.params).toEqual({ path: filePath })
-        expect(ctx.reply).toHaveBeenCalledWith('🔑 File received! Now, please send the password you\'d like to use to protect it.')
+        expect(ctx.reply).toHaveBeenCalledWith('putpassword_send_password')
       })
 
       it('should throw SessionValidationError if session is invalid', async () => {
@@ -103,9 +95,9 @@ describe(PutPasswordHandler.name, () => {
 
           await handler.events['msg:text'](ctx)
 
-          expect(ctx.reply).toHaveBeenCalledWith('🔒 Protecting your PDF file with the password...')
+          expect(ctx.reply).toHaveBeenCalledWith('putpassword_protecting')
           expect(ctx.replyWithDocument).toHaveBeenCalledWith(expect.any(InputFile), {
-            caption: '✅ Here is your password-protected PDF!',
+            caption: 'putpassword_success',
           })
           expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
           expect(ctx.session.command).toBeNull()
@@ -123,7 +115,7 @@ describe(PutPasswordHandler.name, () => {
         await handler.events['msg:text'](ctx)
 
         expect(loggerSpy).toHaveBeenCalled()
-        expect(ctx.reply).toHaveBeenCalledWith('❌ An error occurred while putting a password on the PDF file.')
+        expect(ctx.reply).toHaveBeenCalledWith('putpassword_error')
       })
 
       it('should log error if removing temporary directory fails', async () => {

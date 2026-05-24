@@ -25,7 +25,7 @@ export class HelpHandler extends BaseHandler {
   }
 
   async onCommand(ctx: CustomContext) {
-    const { text, reply_markup } = new HelpMessage([this, ...this.handlers]).build()
+    const { text, reply_markup } = new HelpMessage([this, ...this.handlers], ctx).build()
     await ctx.reply(text, { reply_markup })
   }
 }

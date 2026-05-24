@@ -36,6 +36,7 @@ describe(UserRepository.name, () => {
       plan_started_at: expect.any(Date),
       daily_usage_count: 0,
       last_usage_date: undefined,
+      language: 'en',
       created_at: expect.any(Date),
       updated_at: expect.any(Date),
     })

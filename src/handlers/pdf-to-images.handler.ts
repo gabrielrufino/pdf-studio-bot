@@ -60,7 +60,7 @@ export class PdfToImagesHandler extends BaseHandler {
           throw new LimitExceededError()
         }
 
-        await ctx.reply(`🖼️ Converting ${totalPages} pages to images...`)
+        await ctx.reply(ctx.t('pdftoimages_converting'))
 
         outputDir = await fs.mkdtemp(join(os.tmpdir(), 'pdf-studio-bot-pdf-to-images-'))
         await fs.chmod(outputDir, 0o700)
@@ -104,7 +104,7 @@ export class PdfToImagesHandler extends BaseHandler {
         }
 
         this.logger.error(error)
-        await ctx.reply('❌ An error occurred while converting the PDF to images.')
+        await ctx.reply(ctx.t('pdftoimages_error'))
       }
       finally {
         if (outputDir) {
@@ -122,7 +122,7 @@ export class PdfToImagesHandler extends BaseHandler {
 
   async onCommand(ctx: CustomContext): Promise<void> {
     await this.setSessionCommand(ctx)
-    await ctx.reply('Please send the PDF file you want to convert to images.')
+    await ctx.reply(ctx.t('pdftoimages_send_file'))
   }
 
   private async notifyLimitExceeded(ctx: CustomContext): Promise<void> {

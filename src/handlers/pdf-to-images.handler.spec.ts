@@ -39,26 +39,17 @@ describe(PdfToImagesHandler.name, () => {
     } as unknown as UserRepository
 
     handler = new PdfToImagesHandler(mockUserRepository)
-    ctx = {
-      from: { id: 123 },
-      chat: { id: 456 },
-      session: {
-        command: null,
+    ctx = { t: (key: string) => key, from: { id: 123 }, chat: { id: 456 }, session: {
+      command: null,
+    }, message: {
+      document: {
+        mime_type: 'application/pdf',
       },
-      message: {
-        document: {
-          mime_type: 'application/pdf',
-        },
-      },
-      getFile: vi.fn().mockResolvedValue({
-        download: vi.fn().mockResolvedValue('/tmp/test.pdf'),
-      }),
-      reply: vi.fn(),
-      replyWithPhoto: vi.fn(),
-      api: {
-        sendMediaGroup: vi.fn(),
-      },
-    } as unknown as CustomContext
+    }, getFile: vi.fn().mockResolvedValue({
+      download: vi.fn().mockResolvedValue('/tmp/test.pdf'),
+    }), reply: vi.fn(), replyWithPhoto: vi.fn(), api: {
+      sendMediaGroup: vi.fn(),
+    } } as unknown as CustomContext
   })
 
   it('should have correct command', () => {
@@ -69,7 +60,7 @@ describe(PdfToImagesHandler.name, () => {
     it('should set session command and ask for PDF', async () => {
       await handler.onCommand(ctx)
 
-      expect(ctx.reply).toHaveBeenCalledWith('Please send the PDF file you want to convert to images.')
+      expect(ctx.reply).toHaveBeenCalledWith('pdftoimages_send_file')
       expect(ctx.session.command).toBe(CommandEnum.PdfToImages)
     })
   })
@@ -97,7 +88,7 @@ describe(PdfToImagesHandler.name, () => {
 
         expect(ctx.getFile).toHaveBeenCalled()
         expect(pdf).toHaveBeenCalledWith('/tmp/test.pdf')
-        expect(ctx.reply).toHaveBeenCalledWith('🖼️ Converting 2 pages to images...')
+        expect(ctx.reply).toHaveBeenCalledWith('pdftoimages_converting')
         expect(ctx.api.sendMediaGroup).toHaveBeenCalledWith(456, expect.any(Array))
         expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
       })
@@ -151,7 +142,7 @@ describe(PdfToImagesHandler.name, () => {
 
         await handler.events['msg:document'](ctx)
 
-        expect(ctx.reply).toHaveBeenCalledWith('❌ An error occurred while converting the PDF to images.')
+        expect(ctx.reply).toHaveBeenCalledWith('pdftoimages_error')
       })
 
       it('should not reply with generic error if file is not a PDF (InvalidFileError)', async () => {
@@ -160,8 +151,8 @@ describe(PdfToImagesHandler.name, () => {
 
         await handler.events['msg:document'](ctx)
 
-        expect(ctx.reply).toHaveBeenCalledWith('⚠️ Please send only PDF files.')
-        expect(ctx.reply).not.toHaveBeenCalledWith('❌ An error occurred while converting the PDF to images.')
+        expect(ctx.reply).toHaveBeenCalledWith('invalid_pdf')
+        expect(ctx.reply).not.toHaveBeenCalledWith('pdftoimages_error')
       })
     })
   })

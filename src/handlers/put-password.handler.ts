@@ -32,7 +32,7 @@ export class PutPasswordHandler extends BaseHandler {
         path: filePath,
       }
 
-      await ctx.reply('🔑 File received! Now, please send the password you\'d like to use to protect it.')
+      await ctx.reply(ctx.t('putpassword_send_password'))
     },
     'msg:text': async (ctx: CustomContext) => {
       const params = this.validateParams(PutPasswordParamsSchema, ctx.session.params)
@@ -41,7 +41,7 @@ export class PutPasswordHandler extends BaseHandler {
         throw new SessionValidationError()
       }
 
-      await ctx.reply('🔒 Protecting your PDF file with the password...')
+      await ctx.reply(ctx.t('putpassword_protecting'))
 
       const outputDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-studio-bot-putpwd-'))
       await fs.chmod(outputDir, 0o700)
@@ -61,7 +61,7 @@ export class PutPasswordHandler extends BaseHandler {
                 return reject(err)
               }
               ctx.replyWithDocument(new InputFile(output), {
-                caption: '✅ Here is your password-protected PDF!',
+                caption: ctx.t('putpassword_success'),
               })
                 .then(async () => {
                   await this.userRepository.incrementUsage(ctx.from!.id)
@@ -73,7 +73,7 @@ export class PutPasswordHandler extends BaseHandler {
       }
       catch (error) {
         this.logger.error(error)
-        await ctx.reply('❌ An error occurred while putting a password on the PDF file.')
+        await ctx.reply(ctx.t('putpassword_error'))
       }
       finally {
         await Promise.all([
@@ -89,6 +89,6 @@ export class PutPasswordHandler extends BaseHandler {
     await this.setSessionCommand(ctx)
     ctx.session.params = { path: null }
 
-    await ctx.reply('📄 Please send the PDF file you want to protect with a password.')
+    await ctx.reply(ctx.t('putpassword_send_file'))
   }
 }

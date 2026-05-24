@@ -41,7 +41,7 @@ export class SummaryHandler extends BaseHandler {
 
         await this.verifyLimits(ctx, inputPath)
 
-        const processingMessage = await ctx.reply('⏳ Summarizing your PDF. This might take a moment...')
+        const processingMessage = await ctx.reply(ctx.t('summary_summarizing'))
 
         const text = await this.performSummarization(inputPath, (fileName) => {
           uploadedFileName = fileName
@@ -55,7 +55,7 @@ export class SummaryHandler extends BaseHandler {
           return
 
         this.logger.error(error)
-        await ctx.reply('❌ An error occurred while summarizing the PDF file.')
+        await ctx.reply(ctx.t('summary_error'))
       }
       finally {
         if (uploadedFileName) {
@@ -75,7 +75,7 @@ export class SummaryHandler extends BaseHandler {
 
   public async onCommand(ctx: CustomContext): Promise<void> {
     await this.setSessionCommand(ctx)
-    await ctx.reply('Please send the PDF file you want to summarize.')
+    await ctx.reply(ctx.t('summary_send_file'))
   }
 
   private async verifyLimits(ctx: CustomContext, path: string): Promise<void> {

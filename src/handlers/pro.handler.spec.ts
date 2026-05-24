@@ -21,14 +21,7 @@ describe(ProHandler.name, () => {
     ...overrides,
   } as unknown as UserEntity)
 
-  const createMockContext = (overrides?: any): CustomContext => ({
-    from: { id: 12345 },
-    session: { command: null, params: null },
-    reply: vi.fn(),
-    replyWithInvoice: vi.fn(),
-    answerPreCheckoutQuery: vi.fn(),
-    ...overrides,
-  } as unknown as CustomContext)
+  const createMockContext = (overrides?: any): CustomContext => ({ t: (key: string) => key, from: { id: 12345 }, session: { command: null, params: null }, reply: vi.fn(), replyWithInvoice: vi.fn(), answerPreCheckoutQuery: vi.fn(), ...overrides } as unknown as CustomContext)
 
   beforeEach(() => {
     userRepository = {
@@ -65,7 +58,7 @@ describe(ProHandler.name, () => {
 
       await handler.onCommand(ctx)
 
-      expect(ctx.reply).toHaveBeenCalledWith('You are already a PRO user! Enjoy all the benefits! 💎')
+      expect(ctx.reply).toHaveBeenCalledWith('pro_already_pro')
       expect(ctx.session.command).toBeNull()
     })
 
@@ -81,7 +74,7 @@ describe(ProHandler.name, () => {
       expect(ctx.session.command).toBe(CommandEnum.Pro)
       expect(ctx.replyWithInvoice).toHaveBeenCalledWith(
         'PDF Studio PRO',
-        'Get unlimited access to all features and higher limits!',
+        'pro_upgrade',
         'pdf-studio-pro-subscription',
         CurrencyEnum.XTR,
         [{ label: 'PRO Subscription', amount: 1 }],
@@ -147,7 +140,7 @@ describe(ProHandler.name, () => {
           plan_started_at: expect.any(Date),
         })
         expect(paymentRepository.create).toHaveBeenCalled()
-        expect(ctx.reply).toHaveBeenCalledWith('🎉 Thank you for subscribing to PRO! You now have full access to all features.')
+        expect(ctx.reply).toHaveBeenCalledWith('pro_success')
         expect(ctx.session.command).toBeNull()
       })
 
