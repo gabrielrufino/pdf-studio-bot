@@ -13,6 +13,7 @@ import { SessionValidationError } from './errors/session-validation.error'
 import { handlers } from './handlers'
 import { HelpMessage } from './messages/help.message'
 import { UnknownMessage } from './messages/unknown.message'
+import { i18nMiddleware } from './middlewares/i18n.middleware'
 import { usageLimitMiddleware } from './middlewares/usage-limit.middleware'
 import { repositories } from './repositories'
 
@@ -20,6 +21,8 @@ async function main() {
   await Promise.all(
     repositories.map(repo => repo.init()),
   )
+
+  bot.use(i18nMiddleware)
 
   for (const handler of handlers) {
     bot.command(
@@ -66,9 +69,9 @@ async function main() {
   )
 
   bot.on('message', async (ctx) => {
-    const { text, reply_markup } = new HelpMessage(handlers).build()
+    const { text, reply_markup } = new HelpMessage(handlers, ctx).build()
     await ctx.reply(
-      `${new UnknownMessage().build()}\n\n${text}`,
+      `${new UnknownMessage(ctx).build()}\n\n${text}`,
       { reply_markup },
     )
   })

@@ -43,10 +43,10 @@ export function usageLimitMiddleware(handler: BaseHandler) {
 
     if (!isWithinLimit) {
       if (user.plan_type === PlanTypeEnum.Pro) {
-        await ctx.reply('⚠️ You have reached your daily limit of 50 operations. As a PRO user, this is our safety limit. Please try again tomorrow.')
+        await ctx.reply(ctx.t('pro_limit_reached'))
       }
       else {
-        await ctx.reply('⚠️ You have reached your daily limit of 3 operations. Upgrade to PRO for unlimited access (up to 50 ops/day)! /pro')
+        await ctx.reply(ctx.t('free_limit_reached'))
       }
       return
     }

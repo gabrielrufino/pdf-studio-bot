@@ -1,4 +1,5 @@
 import type { User as TelegramUser } from 'grammy/types'
+import { LanguageEnum } from '../enums/language.enum'
 import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { BaseEntity } from './base.entity'
 
@@ -19,4 +20,6 @@ export class UserEntity extends BaseEntity {
   daily_usage_count: number = 0
 
   last_usage_date?: string = undefined
+
+  language: LanguageEnum = LanguageEnum.English
 }

@@ -1,0 +1,43 @@
+import type { NextFunction } from 'grammy'
+import type { CustomContext } from '../types/custom-context.type'
+import { LanguageEnum } from '../enums/language.enum'
+import en from '../locales/en.json'
+import es from '../locales/es.json'
+import pt from '../locales/pt.json'
+import { userRepository } from '../repositories'
+
+export const locales: Record<string, Record<string, string>> = {
+  en,
+  pt,
+  es,
+}
+
+export async function i18nMiddleware(ctx: CustomContext, next: NextFunction) {
+  const userId = ctx.from?.id
+  let language = ctx.session.language
+
+  if (!language && userId) {
+    const user = await userRepository.findByTelegramId(userId)
+    if (user?.language) {
+      language = user.language
+    }
+    else if (ctx.from?.language_code && Object.values(LanguageEnum).includes(ctx.from.language_code as any)) {
+      language = ctx.from.language_code as any
+    }
+    else {
+      language = LanguageEnum.English
+    }
+
+    ctx.session.language = language
+  }
+
+  if (!language) {
+    language = LanguageEnum.English
+  }
+
+  const translations = locales[language as string] || locales.en
+
+  ctx.t = (key: string) => translations[key] || key
+
+  return next()
+}

@@ -20,10 +20,7 @@ describe(usageLimitMiddleware.name, () => {
 
   beforeEach(() => {
     next = vi.fn()
-    ctx = {
-      from: { id: 12345 },
-      reply: vi.fn(),
-    }
+    ctx = { t: (key: string) => key, from: { id: 12345 }, reply: vi.fn() }
     handler = {
       hasUsageLimits: true,
     }
@@ -78,7 +75,7 @@ describe(usageLimitMiddleware.name, () => {
     const middleware = usageLimitMiddleware(handler)
     await middleware(ctx, next)
 
-    expect(ctx.reply).toHaveBeenCalledWith(expect.stringContaining('reached your daily limit of 3 operations'))
+    expect(ctx.reply).toHaveBeenCalledWith(expect.stringContaining('free_limit_reached'))
     expect(next).not.toHaveBeenCalled()
   })
 
@@ -93,7 +90,7 @@ describe(usageLimitMiddleware.name, () => {
     const middleware = usageLimitMiddleware(handler)
     await middleware(ctx, next)
 
-    expect(ctx.reply).toHaveBeenCalledWith(expect.stringContaining('reached your daily limit of 50 operations'))
+    expect(ctx.reply).toHaveBeenCalledWith(expect.stringContaining('pro_limit_reached'))
     expect(next).not.toHaveBeenCalled()
   })
 

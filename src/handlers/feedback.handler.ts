@@ -24,7 +24,7 @@ export class FeedbackHandler extends BaseHandler {
         created_at: new Date(),
       }))
 
-      await ctx.reply('Thank you for your feedback! We appreciate you taking the time to share your thoughts with us. If you have any more feedback or questions, feel free to reach out anytime.')
+      await ctx.reply(ctx.t('feedback_success'))
       await this.resetSession(ctx)
     },
   }
@@ -32,6 +32,6 @@ export class FeedbackHandler extends BaseHandler {
   public async onCommand(ctx: CustomContext): Promise<void> {
     await this.setSessionCommand(ctx)
 
-    await ctx.reply('We value your feedback! Please reply to this message with your thoughts or suggestions about our service. Your input helps us improve and serve you better. Thank you!')
+    await ctx.reply(ctx.t('feedback_send_message'))
   }
 }

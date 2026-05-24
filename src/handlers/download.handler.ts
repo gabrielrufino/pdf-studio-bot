@@ -75,7 +75,7 @@ export class DownloadHandler extends BaseHandler {
       }
       catch (error) {
         this.logger.error(error)
-        await ctx.reply('❌ An error occurred while converting the URL to PDF.')
+        await ctx.reply(ctx.t('download_error'))
       }
       finally {
         if (page) {
@@ -90,11 +90,7 @@ export class DownloadHandler extends BaseHandler {
     await this.setSessionCommand(ctx)
     ctx.session.params = { url: null }
 
-    await ctx.reply(
-      '🌐 Send me a URL and I\'ll convert it to PDF!\n\n'
-      + '📝 Supported: websites, articles, documentation\n'
-      + '⚠️ Note: Some sites may block automated access',
-    )
+    await ctx.reply(ctx.t('download_send_url'))
   }
 
   private async validateUrl(url: string): Promise<void> {

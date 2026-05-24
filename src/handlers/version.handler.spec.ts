@@ -1,6 +1,5 @@
 import type { CustomContext } from '../types/custom-context.type'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { version } from '../../package.json'
 import { CommandEnum } from '../enums/command.enum'
 import { VersionHandler } from './version.handler'
 
@@ -10,9 +9,7 @@ describe(VersionHandler.name, () => {
 
   beforeEach(() => {
     handler = new VersionHandler()
-    ctx = {
-      reply: vi.fn(),
-    } as unknown as CustomContext
+    ctx = { t: (key: string) => key, reply: vi.fn() } as unknown as CustomContext
   })
 
   it('should have correct command', () => {
@@ -23,7 +20,7 @@ describe(VersionHandler.name, () => {
     it('should reply with package version', async () => {
       await handler.onCommand(ctx)
 
-      expect(ctx.reply).toHaveBeenCalledWith(version)
+      expect(ctx.reply).toHaveBeenCalledWith('version_info', { parse_mode: 'HTML' })
     })
   })
 })

@@ -23,23 +23,16 @@ describe(JoinHandler.name, () => {
     } as unknown as UserRepository
 
     handler = new JoinHandler(mockUserRepository)
-    ctx = {
-      from: { id: 123 },
-      session: {
-        command: null,
-        params: { paths: [] } as JoinParams,
+    ctx = { t: (key: string) => key, from: { id: 123 }, session: {
+      command: null,
+      params: { paths: [] } as JoinParams,
+    }, message: {
+      text: '',
+      document: {
+        mime_type: 'application/pdf',
+        file_name: 'test.pdf',
       },
-      message: {
-        text: '',
-        document: {
-          mime_type: 'application/pdf',
-          file_name: 'test.pdf',
-        },
-      },
-      getFile: vi.fn(),
-      reply: vi.fn(),
-      replyWithDocument: vi.fn(),
-    } as unknown as CustomContext
+    }, getFile: vi.fn(), reply: vi.fn(), replyWithDocument: vi.fn() } as unknown as CustomContext
   })
 
   it('should have correct command', () => {
@@ -51,7 +44,7 @@ describe(JoinHandler.name, () => {
       await handler.onCommand(ctx)
 
       expect(ctx.reply).toHaveBeenCalledWith(
-        expect.stringContaining('📎 Send the PDF files you want to join.'),
+        'join_send_files',
       )
       expect(ctx.session.command).toBe(CommandEnum.Join)
       expect(ctx.session.params).toEqual({ paths: [] })
@@ -70,10 +63,7 @@ describe(JoinHandler.name, () => {
 
         expect(ctx.getFile).toHaveBeenCalled()
         expect((ctx.session.params as JoinParams).paths).toContain(filePath)
-        expect(ctx.reply).toHaveBeenCalledWith(
-          expect.stringContaining('📎 File "test.pdf" received.\n\n'
-            + `You have sent 1/${JoinHandler.MAX_PDF_FILES} file(s) so far.`),
-        )
+        expect(ctx.reply).toHaveBeenCalledWith('join_file_received')
       })
 
       it('should throw SessionValidationError if session is invalid', async () => {
@@ -91,9 +81,7 @@ describe(JoinHandler.name, () => {
 
         expect(ctx.getFile).not.toHaveBeenCalled()
         expect((ctx.session.params as JoinParams).paths.length).toBe(JoinHandler.MAX_PDF_FILES)
-        expect(ctx.reply).toHaveBeenCalledWith(
-          expect.stringContaining(`⚠️ You have reached the limit of ${JoinHandler.MAX_PDF_FILES} PDF files.`),
-        )
+        expect(ctx.reply).toHaveBeenCalledWith('join_limit_reached')
       })
     })
 
@@ -106,7 +94,7 @@ describe(JoinHandler.name, () => {
         expect(ctx.getFile).not.toHaveBeenCalled()
         expect((ctx.session.params as JoinParams).paths.length).toBe(0)
         expect(ctx.reply).toHaveBeenCalledWith(
-          expect.stringContaining('⚠️ Please send only PDF files.'),
+          'invalid_pdf',
         )
       })
     })
@@ -137,7 +125,7 @@ describe(JoinHandler.name, () => {
       await (handler as any).joinPDFs(ctx)
 
       expect(ctx.reply).toHaveBeenCalledWith(
-        expect.stringContaining('⚠️ You need to send at least two PDF files'),
+        'join_at_least_two',
       )
     })
 
@@ -156,7 +144,7 @@ describe(JoinHandler.name, () => {
 
         await (handler as any).joinPDFs(ctx)
 
-        expect(ctx.reply).toHaveBeenCalledWith('🔄 Merging your PDF files...')
+        expect(ctx.reply).toHaveBeenCalledWith('join_merging')
         expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
         expect(ctx.replyWithDocument).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -164,7 +152,7 @@ describe(JoinHandler.name, () => {
             filename: 'merged.pdf',
           }),
           expect.objectContaining({
-            caption: '✅ Here is your joined PDF file!',
+            caption: 'join_success',
           }),
         )
 
@@ -182,7 +170,7 @@ describe(JoinHandler.name, () => {
       await (handler as any).joinPDFs(ctx)
 
       expect(ctx.reply).toHaveBeenCalledWith(
-        expect.stringContaining('❌ An error occurred while joining your PDF files'),
+        'join_error',
       )
       expect(ctx.session.command).toBeNull()
     })
@@ -216,7 +204,7 @@ describe(JoinHandler.name, () => {
     it('should reply with warning if text is not "done"', async () => {
       ctx.message!.text = 'not-done'
       await handler.events['msg:text'](ctx)
-      expect(ctx.reply).toHaveBeenCalledWith('⚠️ Please send more PDF files or type "done" to merge them.')
+      expect(ctx.reply).toHaveBeenCalledWith('join_more_files_required')
     })
   })
 })

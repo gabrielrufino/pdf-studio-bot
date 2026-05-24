@@ -1,6 +1,7 @@
 import type { Db } from 'mongodb'
 import { EnsureInitialized } from '../decorators/ensure-initialized.decorator'
 import { UserEntity } from '../entities/user.entity'
+import { LanguageEnum } from '../enums/language.enum'
 import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { BaseRepository } from './base.repository'
 
@@ -32,6 +33,10 @@ export class UserRepository extends BaseRepository<UserEntity> {
             },
             last_usage_date: {
               bsonType: ['string', 'null'],
+            },
+            language: {
+              bsonType: 'string',
+              enum: Object.values(LanguageEnum),
             },
             created_at: {
               bsonType: 'date',

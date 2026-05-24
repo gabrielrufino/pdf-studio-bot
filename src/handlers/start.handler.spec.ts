@@ -30,16 +30,12 @@ describe(StartHandler.name, () => {
 
   describe(StartHandler.prototype.onCommand.name, () => {
     it('should call userRepository.findByTelegramId with the correct telegram ID', async () => {
-      const ctx = {
-        from: {
-          id: 12345,
-        },
-        session: {
-          command: null,
-          params: null,
-        },
-        reply: vi.fn(),
-      } as unknown as CustomContext
+      const ctx: any = { t: (key: string) => key, from: {
+        id: 12345,
+      }, session: {
+        command: null,
+        params: null,
+      }, reply: vi.fn() } as unknown as CustomContext
 
       await handler.onCommand(ctx)
 
@@ -47,16 +43,12 @@ describe(StartHandler.name, () => {
     })
 
     it('should create a new user if not found', async () => {
-      const ctx = {
-        from: {
-          id: 12345,
-        },
-        session: {
-          command: null,
-          params: null,
-        },
-        reply: vi.fn(),
-      } as unknown as CustomContext
+      const ctx: any = { t: (key: string) => key, from: {
+        id: 12345,
+      }, session: {
+        command: null,
+        params: null,
+      }, reply: vi.fn() } as unknown as CustomContext
 
       await handler.onCommand(ctx)
 
@@ -77,16 +69,12 @@ describe(StartHandler.name, () => {
       vi.spyOn(userRepository, 'findByTelegramId')
         .mockResolvedValueOnce(existingUser)
 
-      const ctx = {
-        from: {
-          id: 12345,
-        },
-        session: {
-          command: null,
-          params: null,
-        },
-        reply: vi.fn(),
-      } as unknown as CustomContext
+      const ctx: any = { t: (key: string) => key, from: {
+        id: 12345,
+      }, session: {
+        command: null,
+        params: null,
+      }, reply: vi.fn() } as unknown as CustomContext
 
       await handler.onCommand(ctx)
 
@@ -94,38 +82,30 @@ describe(StartHandler.name, () => {
     })
 
     it('should send the welcome message', async () => {
-      const ctx = {
-        from: {
-          id: 12345,
-        },
-        session: {
-          command: null,
-          params: null,
-        },
-        reply: vi.fn(),
-      } as unknown as CustomContext
+      const ctx: any = { t: (key: string) => key, from: {
+        id: 12345,
+      }, session: {
+        command: null,
+        params: null,
+      }, reply: vi.fn() } as unknown as CustomContext
 
       await handler.onCommand(ctx)
 
       expect(ctx.reply).toHaveBeenCalledTimes(1)
       expect(ctx.reply).toHaveBeenCalledWith(
-        new WelcomeMessage()
+        new WelcomeMessage(ctx)
           .build(),
         { parse_mode: 'HTML' },
       )
     })
 
     it('should reset the session', async () => {
-      const ctx = {
-        from: {
-          id: 12345,
-        },
-        session: {
-          command: CommandEnum.Start,
-          params: { foo: 'bar' },
-        },
-        reply: vi.fn(),
-      } as unknown as CustomContext
+      const ctx: any = { t: (key: string) => key, from: {
+        id: 12345,
+      }, session: {
+        command: CommandEnum.Start,
+        params: { foo: 'bar' },
+      }, reply: vi.fn() } as unknown as CustomContext
 
       await handler.onCommand(ctx)
 

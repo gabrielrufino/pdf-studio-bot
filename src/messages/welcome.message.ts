@@ -1,21 +1,10 @@
 import type { Message } from '../interfaces/message'
+import type { CustomContext } from '../types/custom-context.type'
 
 export class WelcomeMessage implements Message {
+  constructor(private readonly ctx: CustomContext) {}
+
   public build() {
-    return `
-Welcome to <b>PDF Studio</b>! 🎉📄
-
-Here, you'll find all the tools you need to work with PDF files quickly and efficiently.
-
-With PDF Studio, you can:
-✨ Edit, split, or merge PDFs.
-🔍 Convert files to and from PDF.
-🔒 Secure your documents with passwords.
-✏️ Fill out interactive forms, and much more!
-
-We're here to make your PDF experience seamless. If you need assistance, just ask! 🚀
-
-Ready to get started? 😃
-`
+    return this.ctx.t('welcome')
   }
 }

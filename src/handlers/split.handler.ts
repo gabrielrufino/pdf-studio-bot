@@ -36,7 +36,7 @@ export class SplitHandler extends BaseHandler {
         const pdfReader = muhammara.createReader(inputPath)
         const pagesCount = pdfReader.getPagesCount()
 
-        await ctx.reply(`📄 Found ${pagesCount} pages. Splitting...`)
+        await ctx.reply(ctx.t('split_splitting'))
 
         const outputFiles = Array.from({ length: pagesCount }, (_, i) => {
           const outPath = join(outputDir!, `page-${String(i + 1).padStart(3, '0')}.pdf`)
@@ -65,7 +65,7 @@ export class SplitHandler extends BaseHandler {
       }
       catch (error) {
         this.logger.error(error)
-        await ctx.reply('❌ An error occurred while splitting the PDF file.')
+        await ctx.reply(ctx.t('split_error'))
       }
       finally {
         if (outputDir) {
@@ -83,6 +83,6 @@ export class SplitHandler extends BaseHandler {
 
   async onCommand(ctx: CustomContext): Promise<void> {
     await this.setSessionCommand(ctx)
-    await ctx.reply('Please send the PDF file you want to split.')
+    await ctx.reply(ctx.t('split_send_file'))
   }
 }

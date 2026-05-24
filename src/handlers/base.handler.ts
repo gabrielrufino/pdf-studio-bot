@@ -29,7 +29,7 @@ export abstract class BaseHandler {
 
   protected async validatePDF(ctx: CustomContext): Promise<void> {
     if (ctx.message?.document?.mime_type !== 'application/pdf') {
-      await ctx.reply('⚠️ Please send only PDF files.')
+      await ctx.reply(ctx.t('invalid_pdf'))
       throw new InvalidFileError()
     }
   }
