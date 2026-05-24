@@ -1,5 +1,6 @@
 import type { NextFunction } from 'grammy'
 import type { CustomContext } from '../types/custom-context.type'
+import { LanguageEnum } from '../enums/language.enum'
 import en from '../locales/en.json'
 import es from '../locales/es.json'
 import pt from '../locales/pt.json'
@@ -20,18 +21,18 @@ export async function i18nMiddleware(ctx: CustomContext, next: NextFunction) {
     if (user?.language) {
       language = user.language
     }
-    else if (ctx.from?.language_code && ['en', 'pt', 'es'].includes(ctx.from.language_code)) {
+    else if (ctx.from?.language_code && Object.values(LanguageEnum).includes(ctx.from.language_code as any)) {
       language = ctx.from.language_code as any
     }
     else {
-      language = 'en' as any
+      language = LanguageEnum.English
     }
 
     ctx.session.language = language
   }
 
   if (!language) {
-    language = 'en' as any
+    language = LanguageEnum.English
   }
 
   const translations = locales[language as string] || locales.en
