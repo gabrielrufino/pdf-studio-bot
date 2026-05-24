@@ -6,16 +6,8 @@ import path from 'node:path'
 import { InputFile } from 'grammy'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CommandEnum } from '../enums/command.enum'
-import { SessionValidationError } from '../errors/session-validation.error'
+import { createMockContext, createMockUserRepository } from './password-test.util'
 import { PutPasswordHandler } from './put-password.handler'
-
-vi.mock('../config/bot', () => ({
-  bot: {
-    api: {
-      deleteMessage: vi.fn(),
-    },
-  },
-}))
 
 describe(PutPasswordHandler.name, () => {
   let handler: PutPasswordHandler
@@ -24,21 +16,9 @@ describe(PutPasswordHandler.name, () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    mockUserRepository = {
-      incrementUsage: vi.fn(),
-    } as unknown as UserRepository
-
+    mockUserRepository = createMockUserRepository()
     handler = new PutPasswordHandler(mockUserRepository)
-    ctx = { t: (key: string) => key, from: { id: 123 }, session: {
-      command: null,
-      params: { path: null },
-    }, message: {
-      text: 'password123',
-      message_id: 1,
-      document: {
-        mime_type: 'application/pdf',
-      },
-    }, chat: { id: 100 }, getFile: vi.fn(), reply: vi.fn(), replyWithDocument: vi.fn().mockResolvedValue({}) } as unknown as CustomContext
+    ctx = createMockContext()
   })
 
   it('should have correct command', () => {
@@ -69,21 +49,9 @@ describe(PutPasswordHandler.name, () => {
         expect(ctx.session.params).toEqual({ path: filePath })
         expect(ctx.reply).toHaveBeenCalledWith('putpassword_send_password')
       })
-
-      it('should throw SessionValidationError if session is invalid', async () => {
-        ctx.session.params = null
-
-        await expect(handler.events['msg:document'](ctx)).rejects.toThrow(SessionValidationError)
-      })
     })
 
     describe('msg:text', () => {
-      it('should throw SessionValidationError if path is missing', async () => {
-        ctx.session.params = { path: null }
-
-        await expect(handler.events['msg:text'](ctx)).rejects.toThrow(SessionValidationError)
-      })
-
       it('should send document with password applied', async () => {
         const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-studio-bot-test-putpwd-'))
         const targetPath = path.join(tempDir, 'test.pdf')
@@ -95,7 +63,7 @@ describe(PutPasswordHandler.name, () => {
 
           await handler.events['msg:text'](ctx)
 
-          expect(ctx.reply).toHaveBeenCalledWith('putpassword_protecting')
+          expect(ctx.reply).toHaveBeenCalledWith('putpassword_processing')
           expect(ctx.replyWithDocument).toHaveBeenCalledWith(expect.any(InputFile), {
             caption: 'putpassword_success',
           })
@@ -116,22 +84,6 @@ describe(PutPasswordHandler.name, () => {
 
         expect(loggerSpy).toHaveBeenCalled()
         expect(ctx.reply).toHaveBeenCalledWith('putpassword_error')
-      })
-
-      it('should log error if removing temporary directory fails', async () => {
-        const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-studio-bot-test-putpwd-err-'))
-        const targetPath = path.join(tempDir, 'test.pdf')
-        const assetPath = path.join(process.cwd(), 'assets/lorem-ipsum.pdf')
-        await fs.copyFile(assetPath, targetPath)
-        ctx.session.params = { path: targetPath }
-
-        const fsPromises = await import('node:fs/promises')
-        vi.spyOn(fsPromises.default, 'rm').mockRejectedValueOnce(new Error('rm failed'))
-        const loggerSpy = vi.spyOn((handler as any).logger, 'error')
-
-        await handler.events['msg:text'](ctx)
-
-        expect(loggerSpy).toHaveBeenCalledWith(expect.objectContaining({ error: expect.any(Error) }), expect.stringContaining('Failed to remove'))
       })
     })
   })

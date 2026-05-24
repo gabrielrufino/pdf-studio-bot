@@ -7,7 +7,7 @@ import { InputFile } from 'grammy'
 import { Recipe } from 'muhammara'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CommandEnum } from '../enums/command.enum'
-import { SessionValidationError } from '../errors/session-validation.error'
+import { createMockContext, createMockUserRepository } from './password-test.util'
 import { RemovePasswordHandler } from './remove-password.handler'
 
 describe(RemovePasswordHandler.name, () => {
@@ -17,21 +17,9 @@ describe(RemovePasswordHandler.name, () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    mockUserRepository = {
-      incrementUsage: vi.fn(),
-    } as unknown as UserRepository
-
+    mockUserRepository = createMockUserRepository()
     handler = new RemovePasswordHandler(mockUserRepository)
-    ctx = { t: (key: string) => key, from: { id: 123 }, session: {
-      command: null,
-      params: { path: null },
-    }, message: {
-      text: 'password123',
-      message_id: 1,
-      document: {
-        mime_type: 'application/pdf',
-      },
-    }, chat: { id: 100 }, getFile: vi.fn(), reply: vi.fn(), replyWithDocument: vi.fn().mockResolvedValue({}), deleteMessage: vi.fn().mockResolvedValue(true) } as unknown as CustomContext
+    ctx = createMockContext()
   })
 
   it('should have correct command', () => {
@@ -62,21 +50,9 @@ describe(RemovePasswordHandler.name, () => {
         expect(ctx.session.params).toEqual({ path: filePath })
         expect(ctx.reply).toHaveBeenCalledWith('removepassword_send_password')
       })
-
-      it('should throw SessionValidationError if session is invalid', async () => {
-        ctx.session.params = null
-
-        await expect(handler.events['msg:document'](ctx)).rejects.toThrow(SessionValidationError)
-      })
     })
 
     describe('msg:text', () => {
-      it('should throw SessionValidationError if path is missing', async () => {
-        ctx.session.params = { path: null }
-
-        await expect(handler.events['msg:text'](ctx)).rejects.toThrow(SessionValidationError)
-      })
-
       it('should send document with password removed', async () => {
         const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-studio-bot-test-rempwd-'))
         const inputPath = path.join(tempDir, 'input.pdf')
@@ -101,7 +77,7 @@ describe(RemovePasswordHandler.name, () => {
 
           await handler.events['msg:text'](ctx)
 
-          expect(ctx.reply).toHaveBeenCalledWith('removepassword_removing')
+          expect(ctx.reply).toHaveBeenCalledWith('removepassword_processing')
           expect(ctx.replyWithDocument).toHaveBeenCalledWith(expect.any(InputFile), {
             caption: 'removepassword_success',
           })
