@@ -22,9 +22,9 @@ export class StartHandler extends BaseHandler {
     await this.resetSession(ctx)
     const user = await this.userRepository.findByTelegramId(ctx.from!.id)
     if (user === null) {
-      const language = (['en', 'pt', 'es'].includes(ctx.from?.language_code || '')
-        ? ctx.from?.language_code
-        : LanguageEnum.English) as LanguageEnum
+      const language = Object.values(LanguageEnum).includes(ctx.from?.language_code as any)
+        ? ctx.from?.language_code as LanguageEnum
+        : LanguageEnum.English
 
       await this.userRepository.create(new UserEntity({
         telegram_user: ctx.from,

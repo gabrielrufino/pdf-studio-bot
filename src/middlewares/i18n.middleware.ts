@@ -6,7 +6,7 @@ import es from '../locales/es.json'
 import pt from '../locales/pt.json'
 import { userRepository } from '../repositories'
 
-const locales: Record<string, Record<string, string>> = {
+export const locales: Record<string, Record<string, string>> = {
   en,
   pt,
   es,

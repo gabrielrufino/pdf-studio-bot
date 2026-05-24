@@ -3,9 +3,7 @@ import type { CustomContext } from '../types/custom-context.type'
 import { InlineKeyboard } from 'grammy'
 import { CommandEnum } from '../enums/command.enum'
 import { LanguageEnum } from '../enums/language.enum'
-import en from '../locales/en.json'
-import es from '../locales/es.json'
-import pt from '../locales/pt.json'
+import { locales } from '../middlewares/i18n.middleware'
 import { BaseHandler } from './base.handler'
 
 export class LanguageHandler extends BaseHandler {
@@ -31,8 +29,7 @@ export class LanguageHandler extends BaseHandler {
 
       ctx.session.language = data as LanguageEnum
 
-      const locales: Record<string, Record<string, string>> = { en, pt, es }
-      const translations = locales[data] || locales.en
+      const translations = locales[data] || locales[LanguageEnum.English]
       const message = translations.language_changed || 'Language changed!'
 
       await ctx.answerCallbackQuery(message)
