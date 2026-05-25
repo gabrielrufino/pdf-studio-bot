@@ -1,8 +1,8 @@
 import type { CommandEnum } from '../enums/command.enum'
 import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
+import type { PasswordBaseHandler } from './password-base.handler'
 import { describe, expect, it, vi } from 'vitest'
-import { PasswordBaseHandler } from './password-base.handler'
 
 export function createMockContext(text = 'password123'): CustomContext {
   return {
