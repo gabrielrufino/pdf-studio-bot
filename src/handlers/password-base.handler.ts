@@ -56,19 +56,15 @@ export abstract class PasswordBaseHandler extends BaseHandler {
         })
 
         await this.userRepository.incrementUsage(ctx.from!.id)
+        await this.resetSession(ctx)
       }
       catch (error) {
         this.logger.error(error)
         await ctx.reply(ctx.t(`${this.prefix}_error`))
       }
       finally {
-        await Promise.all([
-          fs.rm(params.path).catch(error =>
-            this.logger.error({ error, path: params.path }, 'Failed to remove input file.')),
-          fs.rm(outputDir, { force: true, recursive: true }).catch(error =>
-            this.logger.error({ error, path: outputDir }, 'Failed to remove temporary directory.')),
-          this.resetSession(ctx),
-        ])
+        await fs.rm(outputDir, { force: true, recursive: true }).catch(error =>
+          this.logger.error({ error, path: outputDir }, 'Failed to remove temporary directory.'))
       }
     },
   }
