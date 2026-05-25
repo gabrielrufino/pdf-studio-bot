@@ -6,7 +6,7 @@ import { InputFile } from 'grammy'
 import { Recipe } from 'muhammara'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CommandEnum } from '../enums/command.enum'
-import { createMockContext, createMockUserRepository } from './password-test.util'
+import { createMockContext, createMockUserRepository, testPasswordBaseHandlerBehavior } from './password-test.util'
 import { RemovePasswordHandler } from './remove-password.handler'
 
 describe(RemovePasswordHandler.name, () => {
@@ -20,30 +20,9 @@ describe(RemovePasswordHandler.name, () => {
     ctx = createMockContext()
   })
 
-  it('should have correct command', () => {
-    expect(handler.command).toBe(CommandEnum.RemovePassword)
-  })
-
-  describe('onCommand', () => {
-    it('should set session command and ask for file', async () => {
-      await handler.onCommand(ctx)
-      expect(ctx.reply).toHaveBeenCalledWith('removepassword_send_file')
-      expect(ctx.session.command).toBe(CommandEnum.RemovePassword)
-      expect(ctx.session.params).toEqual({ path: null })
-    })
-  })
+  testPasswordBaseHandlerBehavior(() => handler, () => ctx, CommandEnum.RemovePassword, 'removepassword')
 
   describe('events', () => {
-    it('should download file on msg:document', async () => {
-      const filePath = '/tmp/test.pdf'
-      vi.mocked(ctx.getFile).mockResolvedValueOnce({
-        download: vi.fn().mockResolvedValue(filePath),
-      } as any)
-      await handler.events['msg:document'](ctx)
-      expect(ctx.session.params).toEqual({ path: filePath })
-      expect(ctx.reply).toHaveBeenCalledWith('removepassword_send_password')
-    })
-
     it('should remove password on msg:text', async () => {
       const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-studio-bot-test-rempwd-'))
       const inputPath = path.join(tempDir, 'input.pdf')
@@ -51,7 +30,12 @@ describe(RemovePasswordHandler.name, () => {
         await new Promise((resolve, reject) => {
           new Recipe(path.join(process.cwd(), 'assets/lorem-ipsum.pdf'), inputPath)
             .encrypt({ userPassword: 'password123', ownerPassword: 'password123' })
-            .endPDF((err?: Error) => err ? reject(err) : resolve(null))
+            .endPDF((err?: Error) => {
+              if (err) {
+                return reject(err)
+              }
+              resolve(null)
+            })
         })
         ctx.session.params = { path: inputPath }
         await handler.events['msg:text'](ctx)
@@ -63,19 +47,6 @@ describe(RemovePasswordHandler.name, () => {
       }
     })
 
-    it('should handle errors and keep session for retry', async () => {
-      const inputPath = '/invalid'
-      ctx.session.params = { path: inputPath }
-      ctx.session.command = CommandEnum.RemovePassword
-
-      await handler.events['msg:text'](ctx)
-
-      expect(ctx.reply).toHaveBeenCalledWith('removepassword_error')
-      // Session should NOT be reset
-      expect(ctx.session.command).toBe(CommandEnum.RemovePassword)
-      expect(ctx.session.params.path).toBe(inputPath)
-    })
-
     it('should allow successful retry after failure', async () => {
       const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-studio-bot-test-rempwd-retry-'))
       const inputPath = path.join(tempDir, 'input.pdf')
@@ -83,7 +54,12 @@ describe(RemovePasswordHandler.name, () => {
         await new Promise((resolve, reject) => {
           new Recipe(path.join(process.cwd(), 'assets/lorem-ipsum.pdf'), inputPath)
             .encrypt({ userPassword: 'correct_password', ownerPassword: 'correct_password' })
-            .endPDF((err?: Error) => err ? reject(err) : resolve(null))
+            .endPDF((err?: Error) => {
+              if (err) {
+                return reject(err)
+              }
+              resolve(null)
+            })
         })
 
         ctx.session.params = { path: inputPath }
