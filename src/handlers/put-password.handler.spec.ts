@@ -1,11 +1,9 @@
 import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
-import os from 'node:os'
-import path from 'node:path'
 import { InputFile } from 'grammy'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CommandEnum } from '../enums/command.enum'
-import { createMockContext, createMockUserRepository, testPasswordBaseHandlerBehavior } from './password-test.util'
+import { createMockContext, createMockUserRepository, createTestPdf, testPasswordBaseHandlerBehavior } from './password-test.util'
 import { PutPasswordHandler } from './put-password.handler'
 
 describe(PutPasswordHandler.name, () => {
@@ -23,11 +21,9 @@ describe(PutPasswordHandler.name, () => {
 
   describe('events', () => {
     it('should protect PDF on msg:text', async () => {
-      const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-studio-bot-test-putpwd-'))
-      const targetPath = path.join(tempDir, 'test.pdf')
+      const { tempDir, filePath } = await createTestPdf('putpwd')
       try {
-        await fs.copyFile(path.join(process.cwd(), 'assets/lorem-ipsum.pdf'), targetPath)
-        ctx.session.params = { path: targetPath }
+        ctx.session.params = { path: filePath }
         await handler.events['msg:text'](ctx)
         expect(ctx.reply).toHaveBeenCalledWith('putpassword_processing')
         expect(ctx.replyWithDocument).toHaveBeenCalledWith(expect.any(InputFile), { caption: 'putpassword_success' })

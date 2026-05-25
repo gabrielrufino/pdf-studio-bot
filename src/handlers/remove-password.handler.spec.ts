@@ -1,12 +1,9 @@
 import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
-import os from 'node:os'
-import path from 'node:path'
 import { InputFile } from 'grammy'
-import { Recipe } from 'muhammara'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CommandEnum } from '../enums/command.enum'
-import { createMockContext, createMockUserRepository, testPasswordBaseHandlerBehavior } from './password-test.util'
+import { createEncryptedTestPdf, createMockContext, createMockUserRepository, testPasswordBaseHandlerBehavior } from './password-test.util'
 import { RemovePasswordHandler } from './remove-password.handler'
 
 describe(RemovePasswordHandler.name, () => {
@@ -24,20 +21,9 @@ describe(RemovePasswordHandler.name, () => {
 
   describe('events', () => {
     it('should remove password on msg:text', async () => {
-      const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-studio-bot-test-rempwd-'))
-      const inputPath = path.join(tempDir, 'input.pdf')
+      const { tempDir, filePath } = await createEncryptedTestPdf('rempwd')
       try {
-        await new Promise((resolve, reject) => {
-          new Recipe(path.join(process.cwd(), 'assets/lorem-ipsum.pdf'), inputPath)
-            .encrypt({ userPassword: 'password123', ownerPassword: 'password123' })
-            .endPDF((err?: Error) => {
-              if (err) {
-                return reject(err)
-              }
-              resolve(null)
-            })
-        })
-        ctx.session.params = { path: inputPath }
+        ctx.session.params = { path: filePath }
         await handler.events['msg:text'](ctx)
         expect(ctx.reply).toHaveBeenCalledWith('removepassword_processing')
         expect(ctx.replyWithDocument).toHaveBeenCalledWith(expect.any(InputFile), { caption: 'removepassword_success' })
@@ -48,21 +34,9 @@ describe(RemovePasswordHandler.name, () => {
     })
 
     it('should allow successful retry after failure', async () => {
-      const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-studio-bot-test-rempwd-retry-'))
-      const inputPath = path.join(tempDir, 'input.pdf')
+      const { tempDir, filePath } = await createEncryptedTestPdf('rempwd-retry', 'correct_password')
       try {
-        await new Promise((resolve, reject) => {
-          new Recipe(path.join(process.cwd(), 'assets/lorem-ipsum.pdf'), inputPath)
-            .encrypt({ userPassword: 'correct_password', ownerPassword: 'correct_password' })
-            .endPDF((err?: Error) => {
-              if (err) {
-                return reject(err)
-              }
-              resolve(null)
-            })
-        })
-
-        ctx.session.params = { path: inputPath }
+        ctx.session.params = { path: filePath }
         ctx.session.command = CommandEnum.RemovePassword
 
         // 1. First attempt with wrong password

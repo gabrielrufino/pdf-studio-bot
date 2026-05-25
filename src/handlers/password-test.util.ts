@@ -2,6 +2,10 @@ import type { CommandEnum } from '../enums/command.enum'
 import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
 import type { PasswordBaseHandler } from './password-base.handler'
+import fs from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
+import { Recipe } from 'muhammara'
 import { describe, expect, it, vi } from 'vitest'
 
 export function createMockContext(text = 'password123'): CustomContext {
@@ -31,6 +35,29 @@ export function createMockUserRepository(): UserRepository {
   return {
     incrementUsage: vi.fn(),
   } as unknown as UserRepository
+}
+
+export async function createTestPdf(name: string): Promise<{ tempDir: string, filePath: string }> {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), `pdf-studio-bot-test-${name}-`))
+  const filePath = path.join(tempDir, 'input.pdf')
+  await fs.copyFile(path.join(process.cwd(), 'assets/lorem-ipsum.pdf'), filePath)
+  return { tempDir, filePath }
+}
+
+export async function createEncryptedTestPdf(name: string, password = 'password123'): Promise<{ tempDir: string, filePath: string }> {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), `pdf-studio-bot-test-${name}-`))
+  const filePath = path.join(tempDir, 'input.pdf')
+  await new Promise((resolve, reject) => {
+    new Recipe(path.join(process.cwd(), 'assets/lorem-ipsum.pdf'), filePath)
+      .encrypt({ userPassword: password, ownerPassword: password })
+      .endPDF((err?: Error) => {
+        if (err) {
+          return reject(err)
+        }
+        resolve(null)
+      })
+  })
+  return { tempDir, filePath }
 }
 
 export function testPasswordBaseHandlerBehavior(
