@@ -5,6 +5,7 @@ import type { PasswordBaseHandler } from './password-base.handler'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
+import process from 'node:process'
 import { Recipe } from 'muhammara'
 import { describe, expect, it, vi } from 'vitest'
 
