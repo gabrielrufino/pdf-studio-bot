@@ -1,94 +1,24 @@
-import type { UserRepository } from '../repositories/user.repository'
-import type { CustomContext } from '../types/custom-context.type'
-import fs from 'node:fs/promises'
-import os from 'node:os'
-import path from 'node:path'
-import { InputFile } from 'grammy'
 import { Recipe } from 'muhammara'
-import { bot } from '../config/bot'
 import { CommandEnum } from '../enums/command.enum'
-import { SessionValidationError } from '../errors/session-validation.error'
-import { PutPasswordParamsSchema } from '../schemas/put-password-params.schema'
-import { BaseHandler } from './base.handler'
+import { PasswordBaseHandler } from './password-base.handler'
 
-export class PutPasswordHandler extends BaseHandler {
-  constructor(private readonly userRepository: UserRepository) {
-    super()
-  }
-
+export class PutPasswordHandler extends PasswordBaseHandler {
   public readonly command = CommandEnum.PutPassword
   public readonly description = '🔐 Protect a PDF with a password'
-  public readonly events = {
-    'msg:document': async (ctx: CustomContext) => {
-      const params = this.validateParams(PutPasswordParamsSchema, ctx.session.params)
+  protected readonly prefix = 'putpassword'
 
-      await this.validatePDF(ctx)
-
-      const file = await ctx.getFile()
-      const filePath = await file.download()
-
-      ctx.session.params = {
-        ...params,
-        path: filePath,
-      }
-
-      await ctx.reply(ctx.t('putpassword_send_password'))
-    },
-    'msg:text': async (ctx: CustomContext) => {
-      const params = this.validateParams(PutPasswordParamsSchema, ctx.session.params)
-
-      if (!params.path) {
-        throw new SessionValidationError()
-      }
-
-      await ctx.reply(ctx.t('putpassword_protecting'))
-
-      const outputDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-studio-bot-putpwd-'))
-      await fs.chmod(outputDir, 0o700)
-      const output = path.join(outputDir, 'output.pdf')
-
-      const password = ctx.message?.text
-      bot.api.deleteMessage(ctx.chat!.id, ctx.message!.message_id)
-
-      try {
-        await new Promise<void>((resolve, reject) => {
-          new Recipe(params.path!, output)
-            .encrypt({
-              userPassword: password,
-            })
-            .endPDF((err?: Error) => {
-              if (err) {
-                return reject(err)
-              }
-              ctx.replyWithDocument(new InputFile(output), {
-                caption: ctx.t('putpassword_success'),
-              })
-                .then(async () => {
-                  await this.userRepository.incrementUsage(ctx.from!.id)
-                  resolve()
-                })
-                .catch(reject)
-            })
+  protected async processPDF(input: string, output: string, password?: string): Promise<void> {
+    await new Promise<void>((resolve, reject) => {
+      new Recipe(input, output)
+        .encrypt({
+          userPassword: password,
         })
-      }
-      catch (error) {
-        this.logger.error(error)
-        await ctx.reply(ctx.t('putpassword_error'))
-      }
-      finally {
-        await Promise.all([
-          fs.rm(outputDir, { force: true, recursive: true }).catch(error =>
-            this.logger.error({ error, path: outputDir }, 'Failed to remove temporary directory.')),
-          this.resetSession(ctx),
-        ])
-      }
-    },
-  }
-
-  public async onCommand(ctx: CustomContext): Promise<void> {
-    await this.setSessionCommand(ctx)
-    ctx.session.params = { path: null }
-
-    await ctx.reply(ctx.t('putpassword_send_file'))
+        .endPDF((err?: Error) => {
+          if (err) {
+            return reject(err)
+          }
+          resolve()
+        })
+    })
   }
 }

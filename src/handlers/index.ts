@@ -10,6 +10,7 @@ import { LanguageHandler } from './language.handler'
 import { PdfToImagesHandler } from './pdf-to-images.handler'
 import { ProHandler } from './pro.handler'
 import { PutPasswordHandler } from './put-password.handler'
+import { RemovePasswordHandler } from './remove-password.handler'
 import { SplitHandler } from './split.handler'
 import { StartHandler } from './start.handler'
 import { SummaryHandler } from './summary.handler'
@@ -23,6 +24,7 @@ const coreHandlers: Array<BaseHandler> = [
   new PdfToImagesHandler(userRepository),
   new ProHandler(userRepository, paymentRepository),
   new PutPasswordHandler(userRepository),
+  new RemovePasswordHandler(userRepository),
   new SplitHandler(userRepository),
   new StartHandler(userRepository),
   new SummaryHandler(userRepository, ai),

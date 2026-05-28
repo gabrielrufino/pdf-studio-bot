@@ -63,8 +63,8 @@ export abstract class BaseHandler {
     }
 
     await Promise.all(
-      paths.map(path =>
-        fs.rm(path, { force: true, recursive: true }).catch(error =>
+      paths.map((path: string) =>
+        fs.rm(path, { force: true, recursive: true }).catch((error: unknown) =>
           this.logger.error({ error, path }, 'Failed to remove temporary file/folder.'),
         ),
       ),

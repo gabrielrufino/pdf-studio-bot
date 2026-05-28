@@ -1,0 +1,15 @@
+import muhammara from 'muhammara'
+import { CommandEnum } from '../enums/command.enum'
+import { PasswordBaseHandler } from './password-base.handler'
+
+export class RemovePasswordHandler extends PasswordBaseHandler {
+  public readonly command = CommandEnum.RemovePassword
+  public readonly description = '🔓 Remove password from a PDF'
+  protected readonly prefix = 'removepassword'
+
+  protected async processPDF(input: string, output: string, password?: string): Promise<void> {
+    const pdfWriter = muhammara.createWriter(output)
+    pdfWriter.appendPDFPagesFromPDF(input, { password })
+    pdfWriter.end()
+  }
+}
