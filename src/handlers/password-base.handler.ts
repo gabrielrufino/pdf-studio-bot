@@ -36,7 +36,8 @@ export abstract class PasswordBaseHandler extends BaseHandler {
       const params = this.validateParams(PasswordParamsSchema, ctx.session.params)
 
       if (!params.path) {
-        throw new Error('Session validation failed.')
+        await ctx.reply(ctx.t(`${this.prefix}_send_file`))
+        return
       }
 
       await ctx.reply(ctx.t(`${this.prefix}_processing`))

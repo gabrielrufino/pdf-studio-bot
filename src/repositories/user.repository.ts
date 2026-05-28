@@ -26,7 +26,7 @@ export class UserRepository extends BaseRepository<UserEntity> {
               enum: Object.values(PlanTypeEnum),
             },
             plan_started_at: {
-              bsonType: 'date',
+              bsonType: ['date', 'null'],
             },
             daily_usage_count: {
               bsonType: 'int',
