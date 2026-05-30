@@ -154,7 +154,7 @@ export class SummaryHandler extends BaseHandler {
     // Adapt standard Markdown to Telegram Markdown v1.
     // Uses explicit character classes instead of \s* to avoid ReDoS in long strings.
     const telegramMarkdown = text
-      .replace(/(^|\n)[ \t]*\*[ \t]/g, '$1- ') // Replace bullet points (*) with (-)
+      .replace(/(^|\n)([ \t]*)\*[ \t]/g, '$1$2- ') // Replace bullet points (*) with (-), preserving indentation
       .replace(/\*\*/g, '*') // Replace bold (**) with Telegram bold (*)
 
     const fullMessage = `📝 *Summary:*\n\n${telegramMarkdown}`

@@ -48,14 +48,15 @@ export abstract class PasswordBaseHandler extends BaseHandler {
 
       await ctx.reply(ctx.t(`${this.prefix}_processing`))
 
-      const outputDir = await fs.mkdtemp(path.join(os.tmpdir(), `pdf-studio-bot-${this.prefix}-`))
-      await fs.chmod(outputDir, 0o700)
-      const output = path.join(outputDir, 'output.pdf')
-
-      const password = ctx.message?.text
-      await ctx.deleteMessage().catch(error => this.logger.error(error, 'Failed to delete message.'))
-
+      let outputDir: string | undefined
       try {
+        outputDir = await fs.mkdtemp(path.join(os.tmpdir(), `pdf-studio-bot-${this.prefix}-`))
+        await fs.chmod(outputDir, 0o700)
+        const output = path.join(outputDir, 'output.pdf')
+
+        const password = ctx.message?.text
+        await ctx.deleteMessage().catch(error => this.logger.error(error, 'Failed to delete message.'))
+
         await this.processPDF(params.path, output, password)
 
         await ctx.replyWithDocument(new InputFile(output), {
@@ -63,6 +64,9 @@ export abstract class PasswordBaseHandler extends BaseHandler {
         })
 
         await this.userRepository.incrementUsage(ctx.from!.id)
+        await fs.rm(params.path, { force: true, recursive: true }).catch(error =>
+          this.logger.error({ error, path: params.path }, 'Failed to remove temporary input file.'),
+        )
         await this.resetSession(ctx)
       }
       catch (error) {
@@ -70,8 +74,10 @@ export abstract class PasswordBaseHandler extends BaseHandler {
         await ctx.reply(ctx.t(`${this.prefix}_error`))
       }
       finally {
-        await fs.rm(outputDir, { force: true, recursive: true }).catch(error =>
-          this.logger.error({ error, path: outputDir }, 'Failed to remove temporary directory.'))
+        if (outputDir) {
+          await fs.rm(outputDir, { force: true, recursive: true }).catch(error =>
+            this.logger.error({ error, path: outputDir }, 'Failed to remove temporary directory.'))
+        }
       }
     },
   }
