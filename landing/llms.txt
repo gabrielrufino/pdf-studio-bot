@@ -12,8 +12,6 @@ Your personal PDF assistant on Telegram. Fast, secure, and multi-language.
 - **PDF to Images**: Convert PDF pages into high-quality images.
 - **AI Summary**: Get concise summaries of your PDF documents using advanced AI.
 - **Multi-language Support**: Available in English, Spanish, and Portuguese.
-- **Pro Features**: Higher daily limits and exclusive tools for power users.
-- **Direct Feedback**: Communicate directly with the developer to suggest improvements.
 
 ## Get Started
 
