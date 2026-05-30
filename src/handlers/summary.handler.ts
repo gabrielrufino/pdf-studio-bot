@@ -151,9 +151,10 @@ export class SummaryHandler extends BaseHandler {
   }
 
   private async sendSummaryResponse(ctx: CustomContext, messageId: number, text: string): Promise<void> {
-    // Adapt standard Markdown to Telegram Markdown v1
+    // Adapt standard Markdown to Telegram Markdown v1.
+    // Uses explicit character classes instead of \s* to avoid ReDoS in long strings.
     const telegramMarkdown = text
-      .replace(/(^|\n)\s*\*\s/g, '$1- ') // Replace bullet points (*) with (-)
+      .replace(/(^|\n)[ \t]*\*[ \t]/g, '$1- ') // Replace bullet points (*) with (-)
       .replace(/\*\*/g, '*') // Replace bold (**) with Telegram bold (*)
 
     const fullMessage = `📝 *Summary:*\n\n${telegramMarkdown}`
