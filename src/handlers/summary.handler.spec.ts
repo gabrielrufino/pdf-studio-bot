@@ -135,7 +135,7 @@ describe(SummaryHandler.name, () => {
                 role: 'user',
                 parts: [
                   { fileData: { fileUri: 'mock-uri', mimeType: 'application/pdf' } },
-                  { text: 'Create a concise yet informative summary of this PDF, structured with bullet points. Target length: ~2000 characters.' },
+                  { text: 'summary_prompt' },
                 ],
               },
             ],

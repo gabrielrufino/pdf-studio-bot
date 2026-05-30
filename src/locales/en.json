@@ -59,5 +59,6 @@
   "pro_upgrade": "💎 Upgrade to Pro for more daily usage and features!",
   "pro_success": "🎉 Thank you for subscribing to PRO! You now have full access to all features.",
   "version_info": "🤖 <b>PDF Studio Bot</b>\n\nVersion: {version}\nDeveloper: @gabrielrufino",
-  "done": "done"
+  "done": "done",
+  "summary_prompt": "Create a concise yet informative summary of this PDF, structured with bullet points. Target length: ~2000 characters."
 }

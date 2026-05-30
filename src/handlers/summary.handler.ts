@@ -43,7 +43,7 @@ export class SummaryHandler extends BaseHandler {
 
         const processingMessage = await ctx.reply(ctx.t('summary_summarizing'))
 
-        const text = await this.performSummarization(inputPath, (fileName) => {
+        const text = await this.performSummarization(inputPath, ctx.t('summary_prompt'), (fileName) => {
           uploadedFileName = fileName
         })
 
@@ -102,7 +102,7 @@ export class SummaryHandler extends BaseHandler {
     await ctx.reply('⚠️ You have exceeded the limits of the free plan. You need to become pro and it costs 10 $ / month. Talk to @gabrielrufino to buy the pro plan.')
   }
 
-  private async performSummarization(path: string, onUploadComplete: (fileName: string) => void): Promise<string> {
+  private async performSummarization(path: string, prompt: string, onUploadComplete: (fileName: string) => void): Promise<string> {
     const uploadedFile = await this.ai.files.upload({
       file: path,
       config: { mimeType: 'application/pdf' },
@@ -126,7 +126,7 @@ export class SummaryHandler extends BaseHandler {
               role: 'user',
               parts: [
                 { fileData: { fileUri: uploadedFile.uri!, mimeType: uploadedFile.mimeType! } },
-                { text: 'Create a concise yet informative summary of this PDF, structured with bullet points. Target length: ~2000 characters.' },
+                { text: prompt },
               ],
             },
           ],
