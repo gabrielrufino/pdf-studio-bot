@@ -16,7 +16,7 @@ RUN pnpm install --frozen-lockfile
 # Copy source code and build
 COPY tsconfig.json ./
 COPY src/ ./src/
-RUN pnpm run build
+RUN pnpm run build && pnpm prune --prod
 
 # Production stage
 FROM node:24-alpine AS production
