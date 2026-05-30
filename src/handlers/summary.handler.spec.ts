@@ -135,7 +135,7 @@ describe(SummaryHandler.name, () => {
                 role: 'user',
                 parts: [
                   { fileData: { fileUri: 'mock-uri', mimeType: 'application/pdf' } },
-                  { text: 'Create a concise yet informative summary of this PDF, structured with bullet points. Target length: ~2000 characters.' },
+                  { text: 'summary_prompt' },
                 ],
               },
             ],
@@ -143,7 +143,7 @@ describe(SummaryHandler.name, () => {
           expect(ctx.api.editMessageText).toHaveBeenCalledWith(
             456,
             789,
-            '📝 **Summary:**\n\nThis is a mock summary of the PDF.',
+            '📝 *Summary:*\n\nThis is a mock summary of the PDF.',
             { parse_mode: 'Markdown' },
           )
           expect(mockDelete).toHaveBeenCalledWith({ name: 'mock-file-name' })
@@ -271,7 +271,6 @@ describe(SummaryHandler.name, () => {
         try {
           mockUserWithPlan(PlanTypeEnum.Pro)
           mockUpload.mockResolvedValueOnce({ name: '', uri: 'mock-uri', mimeType: 'application/pdf' })
-          mockGenerateContent.mockResolvedValueOnce({ text: 'Summary' })
           const loggerSpy = vi.spyOn((handler as any).logger, 'error')
 
           await handler.events['msg:document'](ctx)
@@ -316,6 +315,76 @@ describe(SummaryHandler.name, () => {
         }
         finally {
           rmSpy.mockRestore()
+          await fs.rm(tempDir, { recursive: true, force: true })
+        }
+      })
+
+      it('should adapt markdown lists and bold formatting', async () => {
+        const { tempDir } = await setupTestFile('pdf-studio-bot-test-summary-adapt-')
+        try {
+          mockUserWithPlan(PlanTypeEnum.Pro)
+          mockGenerateContent.mockResolvedValue({
+            text: '**Bold text**\n* List item 1\n* List item 2',
+          })
+
+          await handler.events['msg:document'](ctx)
+
+          expect(ctx.api.editMessageText).toHaveBeenCalledWith(
+            456,
+            789,
+            '📝 *Summary:*\n\n*Bold text*\n- List item 1\n- List item 2',
+            { parse_mode: 'Markdown' },
+          )
+        }
+        finally {
+          await fs.rm(tempDir, { recursive: true, force: true })
+        }
+      })
+
+      it('should fallback to plain text if editMessageText fails', async () => {
+        const { tempDir } = await setupTestFile('pdf-studio-bot-test-summary-fallback-')
+        try {
+          mockUserWithPlan(PlanTypeEnum.Pro)
+          mockGenerateContent.mockResolvedValue({ text: 'Summary text' })
+
+          vi.mocked(ctx.api.editMessageText).mockRejectedValueOnce(new Error('Markdown error'))
+          const loggerSpy = vi.spyOn((handler as any).logger, 'warn')
+
+          await handler.events['msg:document'](ctx)
+
+          expect(loggerSpy).toHaveBeenCalledWith(expect.anything(), 'Markdown parsing failed, falling back to plain text.')
+          expect(ctx.api.editMessageText).toHaveBeenNthCalledWith(1, 456, 789, '📝 *Summary:*\n\nSummary text', { parse_mode: 'Markdown' })
+          expect(ctx.api.editMessageText).toHaveBeenNthCalledWith(2, 456, 789, '📝 *Summary:*\n\nSummary text')
+        }
+        finally {
+          await fs.rm(tempDir, { recursive: true, force: true })
+        }
+      })
+
+      it('should fallback to plain text if reply fails for long chunks', async () => {
+        const { tempDir } = await setupTestFile('pdf-studio-bot-test-summary-fallback-chunk-')
+        try {
+          mockUserWithPlan(PlanTypeEnum.Pro)
+          mockGenerateContent.mockResolvedValue({ text: 'A'.repeat(5000) })
+
+          vi.mocked(ctx.reply).mockImplementation(async (text: string) => {
+            if (text === 'summary_summarizing')
+              return { message_id: 789 } as any
+            if (text.startsWith('A')) {
+              vi.mocked(ctx.reply).mockResolvedValue({ message_id: 789 } as any) // allow the fallback to succeed
+              throw new Error('Markdown error on chunk')
+            }
+            return { message_id: 789 } as any
+          })
+          const loggerSpy = vi.spyOn((handler as any).logger, 'warn')
+
+          await handler.events['msg:document'](ctx)
+
+          expect(loggerSpy).toHaveBeenCalledWith(expect.anything(), 'Markdown parsing failed for chunk, falling back to plain text.')
+          expect(ctx.reply).toHaveBeenCalledWith('A'.repeat(4000), { parse_mode: 'Markdown' })
+          expect(ctx.reply).toHaveBeenCalledWith('A'.repeat(4000))
+        }
+        finally {
           await fs.rm(tempDir, { recursive: true, force: true })
         }
       })

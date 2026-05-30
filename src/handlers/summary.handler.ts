@@ -43,7 +43,7 @@ export class SummaryHandler extends BaseHandler {
 
         const processingMessage = await ctx.reply(ctx.t('summary_summarizing'))
 
-        const text = await this.performSummarization(inputPath, (fileName) => {
+        const text = await this.performSummarization(inputPath, ctx.t('summary_prompt'), (fileName) => {
           uploadedFileName = fileName
         })
 
@@ -102,7 +102,7 @@ export class SummaryHandler extends BaseHandler {
     await ctx.reply('⚠️ You have exceeded the limits of the free plan. You need to become pro and it costs 10 $ / month. Talk to @gabrielrufino to buy the pro plan.')
   }
 
-  private async performSummarization(path: string, onUploadComplete: (fileName: string) => void): Promise<string> {
+  private async performSummarization(path: string, prompt: string, onUploadComplete: (fileName: string) => void): Promise<string> {
     const uploadedFile = await this.ai.files.upload({
       file: path,
       config: { mimeType: 'application/pdf' },
@@ -126,7 +126,7 @@ export class SummaryHandler extends BaseHandler {
               role: 'user',
               parts: [
                 { fileData: { fileUri: uploadedFile.uri!, mimeType: uploadedFile.mimeType! } },
-                { text: 'Create a concise yet informative summary of this PDF, structured with bullet points. Target length: ~2000 characters.' },
+                { text: prompt },
               ],
             },
           ],
@@ -151,17 +151,35 @@ export class SummaryHandler extends BaseHandler {
   }
 
   private async sendSummaryResponse(ctx: CustomContext, messageId: number, text: string): Promise<void> {
-    const fullMessage = `📝 **Summary:**\n\n${text}`
+    // Adapt standard Markdown to Telegram Markdown v1.
+    // Uses explicit character classes instead of \s* to avoid ReDoS in long strings.
+    const telegramMarkdown = text
+      .replace(/(^|\n)([ \t]*)\*[ \t]/g, '$1$2- ') // Replace bullet points (*) with (-), preserving indentation
+      .replace(/\*\*/g, '*') // Replace bold (**) with Telegram bold (*)
+
+    const fullMessage = `📝 *Summary:*\n\n${telegramMarkdown}`
 
     if (fullMessage.length <= 4096) {
-      await ctx.api.editMessageText(ctx.chat!.id, messageId, fullMessage, { parse_mode: 'Markdown' })
+      try {
+        await ctx.api.editMessageText(ctx.chat!.id, messageId, fullMessage, { parse_mode: 'Markdown' })
+      }
+      catch (error) {
+        this.logger.warn({ error }, 'Markdown parsing failed, falling back to plain text.')
+        await ctx.api.editMessageText(ctx.chat!.id, messageId, fullMessage)
+      }
       return
     }
 
     await ctx.api.editMessageText(ctx.chat!.id, messageId, '✅ Summary complete! It is quite long, sending it in parts below:')
-    const chunks = this.splitMessage(text)
+    const chunks = this.splitMessage(telegramMarkdown)
     for (const chunk of chunks) {
-      await ctx.reply(chunk, { parse_mode: 'Markdown' })
+      try {
+        await ctx.reply(chunk, { parse_mode: 'Markdown' })
+      }
+      catch (error) {
+        this.logger.warn({ error }, 'Markdown parsing failed for chunk, falling back to plain text.')
+        await ctx.reply(chunk)
+      }
     }
   }
 

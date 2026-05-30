@@ -11,6 +11,7 @@
   "operation_pdftoimages": "🖼️ PDF a Imágenes",
   "operation_pro": "💎 Pro",
   "operation_putpassword": "🔐 Poner Contraseña",
+  "operation_removepassword": "🔓 Quitar Contraseña",
   "operation_split": "✂️ Dividir",
   "operation_summary": "📝 Resumen",
   "operation_version": "ℹ️ Versión",
@@ -37,9 +38,14 @@
   "pdftoimages_error": "❌ Ocurrió un error al convertir tu PDF a imágenes. Por favor, inténtalo de nuevo más tarde.",
   "putpassword_send_file": "🔐 Envíame el archivo PDF que quieras proteger con una contraseña.",
   "putpassword_send_password": "🔑 Ahora, envíame la contraseña que quieras establecer para este PDF.",
-  "putpassword_protecting": "🔄 Protegiendo tu archivo PDF...",
+  "putpassword_processing": "🔄 Protegiendo tu archivo PDF...",
   "putpassword_success": "✅ ¡Aquí está tu archivo PDF protegido con contraseña!",
   "putpassword_error": "❌ Ocurrió un error al proteger tu archivo PDF. Por favor, inténtalo de nuevo más tarde.",
+  "removepassword_send_file": "🔓 Envíame el archivo PDF al que quieras quitar la contraseña.",
+  "removepassword_send_password": "🔑 Ahora, envíame la contraseña de este PDF.",
+  "removepassword_processing": "🔄 Quitando la contraseña de tu archivo PDF...",
+  "removepassword_success": "✅ ¡Contraseña quitada con éxito! Aquí está tu archivo PDF.",
+  "removepassword_error": "❌ Ocurrió un error al quitar la contraseña de tu archivo PDF. Por favor, verifica la contraseña e inténtalo de nuevo.",
   "split_send_file": "✂️ Envíame el archivo PDF que quieras dividir.",
   "split_splitting": "🔄 Dividiendo tu archivo PDF...",
   "split_success": "✅ ¡Aquí están las páginas de tu archivo PDF!",
@@ -53,5 +59,6 @@
   "pro_upgrade": "💎 ¡Mejora a Pro para obtener más uso diario y funciones!",
   "pro_success": "🎉 ¡Gracias por suscribirte a PRO! Ahora tienes acceso completo a todas las funciones.",
   "version_info": "🤖 <b>PDF Studio Bot</b>\n\nVersión: {version}\nDesarrollador: @gabrielrufino",
-  "done": "listo"
+  "done": "listo",
+  "summary_prompt": "Crea un resumen conciso e informativo de este PDF, estructurado con viñetas (bullet points). Longitud objetivo: ~2000 caracteres."
 }

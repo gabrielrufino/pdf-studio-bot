@@ -7,6 +7,7 @@ export enum CommandEnum {
   PdfToImages = 'pdftoimages',
   Pro = 'pro',
   PutPassword = 'putpassword',
+  RemovePassword = 'removepassword',
   Split = 'split',
   Start = 'start',
   Summary = 'summary',
