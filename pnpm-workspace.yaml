@@ -1,0 +1,11 @@
+blockExoticSubdeps: true
+minimumReleaseAge: 10080
+onlyBuiltDependencies:
+  - '@google/genai'
+  - '@parcel/watcher'
+  - esbuild
+  - mongodb-memory-server
+  - muhammara
+  - protobufjs
+  - puppeteer
+  - unrs-resolver
