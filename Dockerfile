@@ -8,7 +8,7 @@ RUN apk add --no-cache python3 make g++ chromium && \
 WORKDIR /app
 
 # Copy package files
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # Install all dependencies (needed for building)
 RUN pnpm install --frozen-lockfile
@@ -37,12 +37,11 @@ RUN addgroup -g 1001 -S nodejs && \
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files and pre-built node_modules from builder.
+# We reuse the builder's node_modules to avoid recompiling native addons
+# (e.g. muhammara) in an environment without build tools (python3/make/g++).
 COPY package.json pnpm-lock.yaml ./
-
-# Install only production dependencies
-RUN pnpm install --frozen-lockfile --prod && \
-    pnpm store prune
+COPY --from=builder /app/node_modules ./node_modules
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
