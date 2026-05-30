@@ -22,6 +22,12 @@ export abstract class PasswordBaseHandler extends BaseHandler {
 
       await this.validatePDF(ctx)
 
+      if (params.path) {
+        await fs.rm(params.path, { force: true, recursive: true }).catch(error =>
+          this.logger.error({ error, path: params.path }, 'Failed to remove previous temporary file.'),
+        )
+      }
+
       const file = await ctx.getFile()
       const filePath = await file.download()
 

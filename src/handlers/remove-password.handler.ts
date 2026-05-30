@@ -9,7 +9,16 @@ export class RemovePasswordHandler extends PasswordBaseHandler {
 
   protected async processPDF(input: string, output: string, password?: string): Promise<void> {
     const pdfWriter = muhammara.createWriter(output)
-    pdfWriter.appendPDFPagesFromPDF(input, { password })
-    pdfWriter.end()
+    try {
+      pdfWriter.appendPDFPagesFromPDF(input, { password })
+      pdfWriter.end()
+    }
+    catch (error) {
+      try {
+        pdfWriter.end()
+      }
+      catch { }
+      throw error
+    }
   }
 }
