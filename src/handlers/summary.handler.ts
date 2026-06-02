@@ -120,10 +120,6 @@ export class SummaryHandler extends BaseHandler {
       try {
         response = await this.ai.models.generateContent({
           model: 'gemini-2.0-flash',
-          systemInstruction: {
-            role: 'system',
-            parts: [{ text: prompt }],
-          },
           contents: [
             {
               role: 'user',
@@ -132,6 +128,9 @@ export class SummaryHandler extends BaseHandler {
               ],
             },
           ],
+          config: {
+            systemInstruction: prompt,
+          },
         })
         break
       }

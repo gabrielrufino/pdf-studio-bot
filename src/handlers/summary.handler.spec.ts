@@ -130,10 +130,6 @@ describe(SummaryHandler.name, () => {
           })
           expect(mockGenerateContent).toHaveBeenCalledWith({
             model: 'gemini-2.0-flash',
-            systemInstruction: {
-              role: 'system',
-              parts: [{ text: 'summary_prompt' }],
-            },
             contents: [
               {
                 role: 'user',
@@ -142,6 +138,9 @@ describe(SummaryHandler.name, () => {
                 ],
               },
             ],
+            config: {
+              systemInstruction: 'summary_prompt',
+            },
           })
           expect(ctx.api.editMessageText).toHaveBeenCalledWith(
             456,
