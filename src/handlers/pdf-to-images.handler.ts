@@ -95,7 +95,6 @@ export class PdfToImagesHandler extends BaseHandler {
             })
           }
         }
-
       }
       catch (error) {
         if (error instanceof InvalidFileError || error instanceof LimitExceededError) {

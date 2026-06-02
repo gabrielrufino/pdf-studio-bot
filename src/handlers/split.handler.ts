@@ -81,7 +81,6 @@ export class SplitHandler extends BaseHandler {
             caption: `📄 Page ${pageNumber} of ${pagesCount}`,
           })
         }
-
       }
       catch (error) {
         this.logger.error(error)
