@@ -19,6 +19,7 @@ describe(JoinHandler.name, () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockUserRepository = {
+      findByTelegramId: vi.fn().mockResolvedValue({ plan_type: 'free' }),
       incrementUsage: vi.fn(),
     } as unknown as UserRepository
 
@@ -145,7 +146,7 @@ describe(JoinHandler.name, () => {
         await (handler as any).joinPDFs(ctx)
 
         expect(ctx.reply).toHaveBeenCalledWith('join_merging')
-        expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
+        expect(mockUserRepository.incrementUsage).not.toHaveBeenCalledWith(123)
         expect(ctx.replyWithDocument).toHaveBeenCalledWith(
           expect.objectContaining({
             fileData: expect.stringContaining('merged.pdf'),

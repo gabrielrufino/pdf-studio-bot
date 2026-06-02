@@ -48,7 +48,6 @@ export class SummaryHandler extends BaseHandler {
         })
 
         await this.sendSummaryResponse(ctx, processingMessage.message_id, text)
-        await this.userRepository.incrementUsage(ctx.from!.id)
       }
       catch (error) {
         if (error instanceof LimitExceededError)
@@ -99,7 +98,7 @@ export class SummaryHandler extends BaseHandler {
   }
 
   private async notifyLimitExceeded(ctx: CustomContext): Promise<void> {
-    await ctx.reply('⚠️ You have exceeded the limits of the free plan. You need to become pro and it costs 10 $ / month. Talk to @gabrielrufino to buy the pro plan.')
+    await ctx.reply(ctx.t('free_limit_reached'))
   }
 
   private async performSummarization(path: string, prompt: string, onUploadComplete: (fileName: string) => void): Promise<string> {
@@ -120,13 +119,16 @@ export class SummaryHandler extends BaseHandler {
     for (let i = 0; i < maxRetries; i++) {
       try {
         response = await this.ai.models.generateContent({
-          model: 'gemini-2.5-flash',
+          model: 'gemini-2.0-flash',
+          systemInstruction: {
+            role: 'system',
+            parts: [{ text: prompt }],
+          },
           contents: [
             {
               role: 'user',
               parts: [
                 { fileData: { fileUri: uploadedFile.uri!, mimeType: uploadedFile.mimeType! } },
-                { text: prompt },
               ],
             },
           ],

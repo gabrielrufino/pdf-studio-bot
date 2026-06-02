@@ -6,10 +6,15 @@ import { join } from 'node:path'
 import { InputFile } from 'grammy'
 import muhammara from 'muhammara'
 import { CommandEnum } from '../enums/command.enum'
+import { PlanTypeEnum } from '../enums/plan-type.enum'
+import { LimitExceededError } from '../errors/limit-exceeded.error'
+import { UserNotFoundError } from '../errors/user-not-found.error'
 import { JoinParamsSchema } from '../schemas/join-params.schema'
 import { BaseHandler } from './base.handler'
 
 export class JoinHandler extends BaseHandler {
+  private static readonly MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+
   constructor(private readonly userRepository: UserRepository) {
     super()
   }
@@ -27,6 +32,16 @@ export class JoinHandler extends BaseHandler {
       }
 
       await this.validatePDF(ctx)
+
+      const user = await this.userRepository.findByTelegramId(ctx.from?.id ?? 0)
+      if (!user) {
+        throw new UserNotFoundError()
+      }
+
+      if (user.plan_type !== PlanTypeEnum.Pro && (ctx.message?.document?.file_size ?? 0) > JoinHandler.MAX_FILE_SIZE) {
+        await ctx.reply(ctx.t('free_limit_reached'))
+        throw new LimitExceededError()
+      }
 
       const file = await ctx.getFile()
       const filePath = await file.download()
@@ -87,7 +102,6 @@ export class JoinHandler extends BaseHandler {
       await ctx.replyWithDocument(new InputFile(outputPath, 'merged.pdf'), {
         caption: ctx.t('join_success'),
       })
-      await this.userRepository.incrementUsage(ctx.from!.id)
     }
     catch (error) {
       this.logger.error(error)

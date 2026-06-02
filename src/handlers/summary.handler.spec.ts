@@ -118,7 +118,7 @@ describe(SummaryHandler.name, () => {
 
           await handler.events['msg:document'](ctx)
 
-          expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
+          expect(mockUserRepository.incrementUsage).not.toHaveBeenCalledWith(123)
 
           // Since page-1.pdf has 10 pages and <10MB, it should pass limits.
           expect(ctx.reply).toHaveBeenCalledWith('summary_summarizing')
@@ -129,13 +129,16 @@ describe(SummaryHandler.name, () => {
             },
           })
           expect(mockGenerateContent).toHaveBeenCalledWith({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-2.0-flash',
+            systemInstruction: {
+              role: 'system',
+              parts: [{ text: 'summary_prompt' }],
+            },
             contents: [
               {
                 role: 'user',
                 parts: [
                   { fileData: { fileUri: 'mock-uri', mimeType: 'application/pdf' } },
-                  { text: 'summary_prompt' },
                 ],
               },
             ],

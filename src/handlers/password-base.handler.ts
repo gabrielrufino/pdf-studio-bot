@@ -63,7 +63,6 @@ export abstract class PasswordBaseHandler extends BaseHandler {
           caption: ctx.t(`${this.prefix}_success`),
         })
 
-        await this.userRepository.incrementUsage(ctx.from!.id)
         await fs.rm(params.path, { force: true, recursive: true }).catch(error =>
           this.logger.error({ error, path: params.path }, 'Failed to remove temporary input file.'),
         )

@@ -116,5 +116,6 @@ async function handleHandlerError(ctx: CustomContext, error: unknown) {
     return
   }
 
-  throw error
+  logger.error({ error }, 'Handler error occurred.')
+  await ctx.reply('❌ An unexpected error occurred. Please try again later.')
 }

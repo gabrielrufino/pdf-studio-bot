@@ -96,7 +96,6 @@ export class PdfToImagesHandler extends BaseHandler {
           }
         }
 
-        await this.userRepository.incrementUsage(ctx.from?.id ?? 0)
       }
       catch (error) {
         if (error instanceof InvalidFileError || error instanceof LimitExceededError) {
@@ -126,6 +125,6 @@ export class PdfToImagesHandler extends BaseHandler {
   }
 
   private async notifyLimitExceeded(ctx: CustomContext): Promise<void> {
-    await ctx.reply('⚠️ You have exceeded the limits of the free plan. You need to become pro and it costs 10 $ / month. Talk to @gabrielrufino to buy the pro plan.')
+    await ctx.reply(ctx.t('free_limit_reached'))
   }
 }

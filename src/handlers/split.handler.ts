@@ -6,9 +6,15 @@ import { join } from 'node:path'
 import { InputFile } from 'grammy'
 import muhammara from 'muhammara'
 import { CommandEnum } from '../enums/command.enum'
+import { PlanTypeEnum } from '../enums/plan-type.enum'
+import { LimitExceededError } from '../errors/limit-exceeded.error'
+import { UserNotFoundError } from '../errors/user-not-found.error'
 import { BaseHandler } from './base.handler'
 
 export class SplitHandler extends BaseHandler {
+  private static readonly MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+  private static readonly MAX_PAGES = 50
+
   constructor(private readonly userRepository: UserRepository) {
     super()
   }
@@ -23,6 +29,16 @@ export class SplitHandler extends BaseHandler {
       let inputPath: string | undefined
 
       try {
+        const user = await this.userRepository.findByTelegramId(ctx.from?.id ?? 0)
+        if (!user) {
+          throw new UserNotFoundError()
+        }
+
+        if (user.plan_type !== PlanTypeEnum.Pro && (ctx.message?.document?.file_size ?? 0) > SplitHandler.MAX_FILE_SIZE) {
+          await this.notifyLimitExceeded(ctx)
+          throw new LimitExceededError()
+        }
+
         outputDir = await fs.mkdtemp(join(os.tmpdir(), 'pdf-studio-bot-split-'))
         await fs.chmod(outputDir, 0o700)
 
@@ -35,6 +51,11 @@ export class SplitHandler extends BaseHandler {
 
         const pdfReader = muhammara.createReader(inputPath)
         const pagesCount = pdfReader.getPagesCount()
+
+        if (user.plan_type !== PlanTypeEnum.Pro && pagesCount > SplitHandler.MAX_PAGES) {
+          await this.notifyLimitExceeded(ctx)
+          throw new LimitExceededError()
+        }
 
         await ctx.reply(ctx.t('split_splitting'))
 
@@ -61,7 +82,6 @@ export class SplitHandler extends BaseHandler {
           })
         }
 
-        await this.userRepository.incrementUsage(ctx.from!.id)
       }
       catch (error) {
         this.logger.error(error)
@@ -84,5 +104,9 @@ export class SplitHandler extends BaseHandler {
   async onCommand(ctx: CustomContext): Promise<void> {
     await this.setSessionCommand(ctx)
     await ctx.reply(ctx.t('split_send_file'))
+  }
+
+  private async notifyLimitExceeded(ctx: CustomContext): Promise<void> {
+    await ctx.reply(ctx.t('free_limit_reached'))
   }
 }

@@ -15,6 +15,7 @@ describe(SplitHandler.name, () => {
 
   beforeEach(() => {
     mockUserRepository = {
+      findByTelegramId: vi.fn().mockResolvedValue({ plan_type: 'free' }),
       incrementUsage: vi.fn(),
     } as unknown as UserRepository
     handler = new SplitHandler(mockUserRepository)
@@ -59,7 +60,7 @@ describe(SplitHandler.name, () => {
 
           expect(ctx.getFile).toHaveBeenCalled()
           expect(ctx.reply).toHaveBeenCalledWith('split_splitting')
-          expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
+          expect(mockUserRepository.incrementUsage).not.toHaveBeenCalledWith(123)
 
           for (let i = 0; i < 10; i++) {
             expect(ctx.replyWithDocument).toHaveBeenCalledWith(
