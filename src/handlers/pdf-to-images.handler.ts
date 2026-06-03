@@ -6,6 +6,7 @@ import os from 'node:os'
 import { join } from 'node:path'
 import { InputFile } from 'grammy'
 import { pdf } from 'pdf-to-img'
+import { MAX_FILE_SIZE, MAX_PAGES } from '../config/constants'
 import { CommandEnum } from '../enums/command.enum'
 import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { InvalidFileError } from '../errors/invalid-file.error'
@@ -14,9 +15,6 @@ import { UserNotFoundError } from '../errors/user-not-found.error'
 import { BaseHandler } from './base.handler'
 
 export class PdfToImagesHandler extends BaseHandler {
-  private static readonly MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
-  private static readonly MAX_PAGES = 50
-
   constructor(private readonly userRepository: UserRepository) {
     super()
   }
@@ -40,7 +38,7 @@ export class PdfToImagesHandler extends BaseHandler {
           throw new UserNotFoundError()
         }
 
-        if (user.plan_type !== PlanTypeEnum.Pro && (ctx.message?.document?.file_size ?? 0) > PdfToImagesHandler.MAX_FILE_SIZE) {
+        if (user.plan_type !== PlanTypeEnum.Pro && (ctx.message?.document?.file_size ?? 0) > MAX_FILE_SIZE) {
           await this.notifyLimitExceeded(ctx)
           throw new LimitExceededError()
         }
@@ -55,7 +53,7 @@ export class PdfToImagesHandler extends BaseHandler {
         const document = await pdf(inputPath)
         const totalPages = document.length
 
-        if (user.plan_type !== PlanTypeEnum.Pro && totalPages > PdfToImagesHandler.MAX_PAGES) {
+        if (user.plan_type !== PlanTypeEnum.Pro && totalPages > MAX_PAGES) {
           await this.notifyLimitExceeded(ctx)
           throw new LimitExceededError()
         }
@@ -95,6 +93,8 @@ export class PdfToImagesHandler extends BaseHandler {
             })
           }
         }
+
+        await this.userRepository.incrementUsage(ctx.from!.id)
       }
       catch (error) {
         if (error instanceof InvalidFileError || error instanceof LimitExceededError) {

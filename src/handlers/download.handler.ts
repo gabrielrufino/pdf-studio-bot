@@ -72,6 +72,7 @@ export class DownloadHandler extends BaseHandler {
         const document = new InputFile(filePath, `${sanitizedTitle}.pdf`)
 
         await ctx.replyWithDocument(document)
+        await this.userRepository.incrementUsage(ctx.from!.id)
       }
       catch (error) {
         this.logger.error(error)

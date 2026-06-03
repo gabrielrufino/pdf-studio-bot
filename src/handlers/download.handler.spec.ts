@@ -77,7 +77,7 @@ describe(DownloadHandler.name, () => {
 
         expect(mockBrowser.getInstance).toHaveBeenCalled()
         expect(ctx.replyWithDocument).toHaveBeenCalled()
-        expect(mockUserRepository.incrementUsage).not.toHaveBeenCalledWith(123)
+        expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
         expect(ctx.session.command).toBeNull()
         expect(ctx.session.params).toBeNull()
       })

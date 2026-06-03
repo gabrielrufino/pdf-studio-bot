@@ -90,7 +90,7 @@ describe(PdfToImagesHandler.name, () => {
         expect(pdf).toHaveBeenCalledWith('/tmp/test.pdf')
         expect(ctx.reply).toHaveBeenCalledWith('pdftoimages_converting')
         expect(ctx.api.sendMediaGroup).toHaveBeenCalledWith(456, expect.any(Array))
-        expect(mockUserRepository.incrementUsage).not.toHaveBeenCalledWith(123)
+        expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
       })
 
       it('should convert PDF to images and send them as a photo if only one page', async () => {
@@ -105,7 +105,7 @@ describe(PdfToImagesHandler.name, () => {
         await handler.events['msg:document'](ctx)
 
         expect(ctx.replyWithPhoto).toHaveBeenCalled()
-        expect(mockUserRepository.incrementUsage).not.toHaveBeenCalledWith(123)
+        expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
       })
 
       it('should notify limit exceeded for free users', async () => {

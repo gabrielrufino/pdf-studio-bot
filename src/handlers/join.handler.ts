@@ -5,6 +5,7 @@ import os from 'node:os'
 import { join } from 'node:path'
 import { InputFile } from 'grammy'
 import muhammara from 'muhammara'
+import { MAX_FILE_SIZE } from '../config/constants'
 import { CommandEnum } from '../enums/command.enum'
 import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { LimitExceededError } from '../errors/limit-exceeded.error'
@@ -13,8 +14,6 @@ import { JoinParamsSchema } from '../schemas/join-params.schema'
 import { BaseHandler } from './base.handler'
 
 export class JoinHandler extends BaseHandler {
-  private static readonly MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
-
   constructor(private readonly userRepository: UserRepository) {
     super()
   }
@@ -38,7 +37,7 @@ export class JoinHandler extends BaseHandler {
         throw new UserNotFoundError()
       }
 
-      if (user.plan_type !== PlanTypeEnum.Pro && (ctx.message?.document?.file_size ?? 0) > JoinHandler.MAX_FILE_SIZE) {
+      if (user.plan_type !== PlanTypeEnum.Pro && (ctx.message?.document?.file_size ?? 0) > MAX_FILE_SIZE) {
         await ctx.reply(ctx.t('free_limit_reached'))
         throw new LimitExceededError()
       }
@@ -102,6 +101,7 @@ export class JoinHandler extends BaseHandler {
       await ctx.replyWithDocument(new InputFile(outputPath, 'merged.pdf'), {
         caption: ctx.t('join_success'),
       })
+      await this.userRepository.incrementUsage(ctx.from!.id)
     }
     catch (error) {
       this.logger.error(error)

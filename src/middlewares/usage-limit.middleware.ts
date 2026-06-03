@@ -39,20 +39,15 @@ export function usageLimitMiddleware(handler: BaseHandler) {
 
     const limit = limits[user.plan_type || PlanTypeEnum.Free]
 
-    const updatedUser = await userRepository.incrementUsage(ctx.from!.id, limit)
+    const isWithinLimit = await userRepository.isWithinLimit(ctx.from!.id, limit)
 
-    if (!updatedUser) {
-      const isWithinLimit = await userRepository.isWithinLimit(ctx.from!.id, limit)
-      if (!isWithinLimit) {
-        if (user.plan_type === PlanTypeEnum.Pro) {
-          await ctx.reply(ctx.t('pro_limit_reached'))
-        }
-        else {
-          await ctx.reply(ctx.t('free_limit_reached'))
-        }
-        return
+    if (!isWithinLimit) {
+      if (user.plan_type === PlanTypeEnum.Pro) {
+        await ctx.reply(ctx.t('pro_limit_reached'))
       }
-      // If we are here, it might be because the user is blocked or was deleted in the meantime
+      else {
+        await ctx.reply(ctx.t('free_limit_reached'))
+      }
       return
     }
 

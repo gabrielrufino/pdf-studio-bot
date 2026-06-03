@@ -60,5 +60,6 @@
   "pro_success": "🎉 ¡Gracias por suscribirte a PRO! Ahora tienes acceso completo a todas las funciones.",
   "version_info": "🤖 <b>PDF Studio Bot</b>\n\nVersión: {version}\nDesarrollador: @gabrielrufino",
   "done": "listo",
-  "summary_prompt": "Crea un resumen conciso e informativo de este PDF, estructurado con viñetas (bullet points). Longitud objetivo: ~2000 caracteres."
+  "summary_prompt": "Crea un resumen conciso e informativo de este PDF, estructurado con viñetas (bullet points). Longitud objetivo: ~2000 caracteres.",
+  "unexpected_error": "❌ Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde."
 }

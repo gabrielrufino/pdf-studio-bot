@@ -5,6 +5,7 @@ import os from 'node:os'
 import { join } from 'node:path'
 import { InputFile } from 'grammy'
 import muhammara from 'muhammara'
+import { MAX_FILE_SIZE, MAX_PAGES } from '../config/constants'
 import { CommandEnum } from '../enums/command.enum'
 import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { LimitExceededError } from '../errors/limit-exceeded.error'
@@ -12,9 +13,6 @@ import { UserNotFoundError } from '../errors/user-not-found.error'
 import { BaseHandler } from './base.handler'
 
 export class SplitHandler extends BaseHandler {
-  private static readonly MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
-  private static readonly MAX_PAGES = 50
-
   constructor(private readonly userRepository: UserRepository) {
     super()
   }
@@ -34,7 +32,7 @@ export class SplitHandler extends BaseHandler {
           throw new UserNotFoundError()
         }
 
-        if (user.plan_type !== PlanTypeEnum.Pro && (ctx.message?.document?.file_size ?? 0) > SplitHandler.MAX_FILE_SIZE) {
+        if (user.plan_type !== PlanTypeEnum.Pro && (ctx.message?.document?.file_size ?? 0) > MAX_FILE_SIZE) {
           await this.notifyLimitExceeded(ctx)
           throw new LimitExceededError()
         }
@@ -52,7 +50,7 @@ export class SplitHandler extends BaseHandler {
         const pdfReader = muhammara.createReader(inputPath)
         const pagesCount = pdfReader.getPagesCount()
 
-        if (user.plan_type !== PlanTypeEnum.Pro && pagesCount > SplitHandler.MAX_PAGES) {
+        if (user.plan_type !== PlanTypeEnum.Pro && pagesCount > MAX_PAGES) {
           await this.notifyLimitExceeded(ctx)
           throw new LimitExceededError()
         }
@@ -81,6 +79,8 @@ export class SplitHandler extends BaseHandler {
             caption: `📄 Page ${pageNumber} of ${pagesCount}`,
           })
         }
+
+        await this.userRepository.incrementUsage(ctx.from!.id)
       }
       catch (error) {
         this.logger.error(error)
