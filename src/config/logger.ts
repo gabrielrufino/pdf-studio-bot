@@ -25,7 +25,18 @@ const transport = pino.transport({
 export const logger = pino(
   {
     redact: {
-      paths: ['BOT_TOKEN', 'GOOGLE_GENAI_API_KEY', 'LOKI_HOST', 'process.env.BOT_TOKEN', 'process.env.GOOGLE_GENAI_API_KEY'],
+      paths: [
+        'BOT_TOKEN',
+        'GOOGLE_GENAI_API_KEY',
+        'LOKI_HOST',
+        'process.env.BOT_TOKEN',
+        'process.env.GOOGLE_GENAI_API_KEY',
+        'token',
+        'apiKey',
+        '*.token',
+        '*.apiKey',
+        '*.Authorization',
+      ],
       censor: '[REDACTED]',
     },
   },

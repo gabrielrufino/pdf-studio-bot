@@ -65,8 +65,8 @@ export class UserRepository extends BaseRepository<UserEntity> {
       'telegram_user.id': telegramId,
     })
 
-    if (!user) {
-      return true
+    if (!user || user.is_blocked) {
+      return !user
     }
 
     if (user.last_usage_date !== today) {
