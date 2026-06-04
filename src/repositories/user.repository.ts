@@ -34,6 +34,9 @@ export class UserRepository extends BaseRepository<UserEntity> {
             last_usage_date: {
               bsonType: ['string', 'null'],
             },
+            last_reengagement_at: {
+              bsonType: ['date', 'null'],
+            },
             language: {
               bsonType: 'string',
               enum: Object.values(LanguageEnum),
@@ -55,6 +58,23 @@ export class UserRepository extends BaseRepository<UserEntity> {
   public async findByTelegramId(telegramId: number): Promise<UserEntity | null> {
     const result = await this.collection.findOne({ 'telegram_user.id': telegramId })
     return result ? new UserEntity(result as any) : null
+  }
+
+  @EnsureInitialized
+  public async findInactiveUsers(days: number): Promise<UserEntity[]> {
+    const date = new Date()
+    date.setDate(date.getDate() - days)
+
+    const result = await this.collection.find({
+      updated_at: { $lt: date },
+      is_blocked: false,
+      $or: [
+        { last_reengagement_at: null },
+        { last_reengagement_at: { $lt: date } },
+      ],
+    }).toArray()
+
+    return result.map(user => new UserEntity(user as any))
   }
 
   @EnsureInitialized

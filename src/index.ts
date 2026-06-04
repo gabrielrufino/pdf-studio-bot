@@ -8,6 +8,7 @@ import { browser } from './config/browser'
 import { mongoClient } from './config/database'
 import { logger } from './config/logger'
 import { CommandEnum } from './enums/command.enum'
+import { initReengagementJob } from './jobs/reengagement.job'
 import { InvalidFileError } from './errors/invalid-file.error'
 import { SessionValidationError } from './errors/session-validation.error'
 import { handlers } from './handlers'
@@ -21,6 +22,8 @@ async function main() {
   await Promise.all(
     repositories.map(repo => repo.init()),
   )
+
+  initReengagementJob()
 
   bot.use(i18nMiddleware)
 

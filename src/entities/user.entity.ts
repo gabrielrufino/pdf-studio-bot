@@ -21,5 +21,7 @@ export class UserEntity extends BaseEntity {
 
   last_usage_date?: string = undefined
 
+  last_reengagement_at?: Date | null = null
+
   language: LanguageEnum = LanguageEnum.English
 }
