@@ -9,10 +9,9 @@ export function initReengagementJob() {
   cron.schedule('0 9 * * 1', async () => {
     logger.info('Running re-engagement job...')
     try {
-      const inactiveUsers = await userRepository.findInactiveUsers(30)
-      logger.info({ count: inactiveUsers.length }, 'Found inactive users for re-engagement')
+      const inactiveUsersCursor = userRepository.findInactiveUsers(30)
 
-      for (const user of inactiveUsers) {
+      for await (const user of inactiveUsersCursor) {
         if (!user.telegram_user?.id) {
           continue
         }

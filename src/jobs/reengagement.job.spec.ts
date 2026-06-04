@@ -30,7 +30,7 @@ vi.mock('../repositories', () => ({
   },
 }))
 
-describe('ReengagementJob', () => {
+describe('reengagementJob', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -54,7 +54,13 @@ describe('ReengagementJob', () => {
       },
     ]
 
-    vi.mocked(userRepository.findInactiveUsers).mockResolvedValue(inactiveUsers as any)
+    vi.mocked(userRepository.findInactiveUsers).mockReturnValue({
+      async *[Symbol.asyncIterator]() {
+        for (const user of inactiveUsers) {
+          yield user
+        }
+      },
+    } as any)
 
     initReengagementJob()
     const callback = (globalThis as any).cronCallback
@@ -76,7 +82,13 @@ describe('ReengagementJob', () => {
       },
     ]
 
-    vi.mocked(userRepository.findInactiveUsers).mockResolvedValue(inactiveUsers as any)
+    vi.mocked(userRepository.findInactiveUsers).mockReturnValue({
+      async *[Symbol.asyncIterator]() {
+        for (const user of inactiveUsers) {
+          yield user
+        }
+      },
+    } as any)
     vi.mocked(bot.api.sendMessage).mockRejectedValue({ description: 'Forbidden: bot was blocked by the user' })
 
     initReengagementJob()

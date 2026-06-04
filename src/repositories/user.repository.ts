@@ -1,4 +1,4 @@
-import type { Db } from 'mongodb'
+import type { Db, FindCursor } from 'mongodb'
 import { EnsureInitialized } from '../decorators/ensure-initialized.decorator'
 import { UserEntity } from '../entities/user.entity'
 import { LanguageEnum } from '../enums/language.enum'
@@ -61,20 +61,18 @@ export class UserRepository extends BaseRepository<UserEntity> {
   }
 
   @EnsureInitialized
-  public async findInactiveUsers(days: number): Promise<UserEntity[]> {
+  public findInactiveUsers(days: number): FindCursor<UserEntity> {
     const date = new Date()
     date.setDate(date.getDate() - days)
 
-    const result = await this.collection.find({
+    return this.collection.find({
       updated_at: { $lt: date },
       is_blocked: false,
       $or: [
         { last_reengagement_at: null },
         { last_reengagement_at: { $lt: date } },
       ],
-    }).toArray()
-
-    return result.map(user => new UserEntity(user as any))
+    }).map(user => new UserEntity(user as any))
   }
 
   @EnsureInitialized
