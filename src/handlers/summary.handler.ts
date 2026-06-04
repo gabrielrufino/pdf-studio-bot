@@ -3,6 +3,7 @@ import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
 import muhammara from 'muhammara'
+import { MAX_FILE_SIZE, MAX_PAGES } from '../config/constants'
 import { CommandEnum } from '../enums/command.enum'
 import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { LimitExceededError } from '../errors/limit-exceeded.error'
@@ -12,9 +13,6 @@ import { BaseHandler } from './base.handler'
 export class SummaryHandler extends BaseHandler {
   public readonly command = CommandEnum.Summary
   public readonly description = '⚡ Create a summary of a PDF'
-
-  private static readonly MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
-  private static readonly MAX_PAGES = 50
 
   constructor(
     private readonly userRepository: UserRepository,
@@ -86,20 +84,20 @@ export class SummaryHandler extends BaseHandler {
       return
 
     const stats = await fs.stat(path)
-    if (stats.size > SummaryHandler.MAX_FILE_SIZE) {
+    if (stats.size > MAX_FILE_SIZE) {
       await this.notifyLimitExceeded(ctx)
       throw new LimitExceededError()
     }
 
     const pdfReader = muhammara.createReader(path)
-    if (pdfReader.getPagesCount() > SummaryHandler.MAX_PAGES) {
+    if (pdfReader.getPagesCount() > MAX_PAGES) {
       await this.notifyLimitExceeded(ctx)
       throw new LimitExceededError()
     }
   }
 
   private async notifyLimitExceeded(ctx: CustomContext): Promise<void> {
-    await ctx.reply('⚠️ You have exceeded the limits of the free plan. You need to become pro and it costs 10 $ / month. Talk to @gabrielrufino to buy the pro plan.')
+    await ctx.reply(ctx.t('free_limit_reached'))
   }
 
   private async performSummarization(path: string, prompt: string, onUploadComplete: (fileName: string) => void): Promise<string> {
@@ -126,10 +124,12 @@ export class SummaryHandler extends BaseHandler {
               role: 'user',
               parts: [
                 { fileData: { fileUri: uploadedFile.uri!, mimeType: uploadedFile.mimeType! } },
-                { text: prompt },
               ],
             },
           ],
+          config: {
+            systemInstruction: prompt,
+          },
         })
         break
       }

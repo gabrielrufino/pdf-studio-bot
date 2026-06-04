@@ -65,8 +65,8 @@ export class UserRepository extends BaseRepository<UserEntity> {
       'telegram_user.id': telegramId,
     })
 
-    if (!user) {
-      return true
+    if (!user || user.is_blocked) {
+      return !user
     }
 
     if (user.last_usage_date !== today) {
@@ -80,7 +80,7 @@ export class UserRepository extends BaseRepository<UserEntity> {
   public async incrementUsage(telegramId: number, limit?: number): Promise<UserEntity | null> {
     const today = new Date().toISOString().split('T')[0]
 
-    const filter: any = { 'telegram_user.id': telegramId }
+    const filter: any = { 'telegram_user.id': telegramId, 'is_blocked': false }
 
     if (limit !== undefined) {
       filter.$or = [

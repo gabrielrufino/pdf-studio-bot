@@ -135,10 +135,12 @@ describe(SummaryHandler.name, () => {
                 role: 'user',
                 parts: [
                   { fileData: { fileUri: 'mock-uri', mimeType: 'application/pdf' } },
-                  { text: 'summary_prompt' },
                 ],
               },
             ],
+            config: {
+              systemInstruction: 'summary_prompt',
+            },
           })
           expect(ctx.api.editMessageText).toHaveBeenCalledWith(
             456,
@@ -187,7 +189,7 @@ describe(SummaryHandler.name, () => {
 
           await handler.events['msg:document'](ctx)
 
-          expect(ctx.reply).toHaveBeenCalledWith('⚠️ You have exceeded the limits of the free plan. You need to become pro and it costs 10 $ / month. Talk to @gabrielrufino to buy the pro plan.')
+          expect(ctx.reply).toHaveBeenCalledWith('free_limit_reached')
           expect(mockGenerateContent).not.toHaveBeenCalled()
         }
         finally {
@@ -210,7 +212,7 @@ describe(SummaryHandler.name, () => {
 
           await handler.events['msg:document'](ctx)
 
-          expect(ctx.reply).toHaveBeenCalledWith('⚠️ You have exceeded the limits of the free plan. You need to become pro and it costs 10 $ / month. Talk to @gabrielrufino to buy the pro plan.')
+          expect(ctx.reply).toHaveBeenCalledWith('free_limit_reached')
           expect(mockGenerateContent).not.toHaveBeenCalled()
         }
         finally {

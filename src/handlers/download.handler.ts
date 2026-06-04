@@ -68,7 +68,8 @@ export class DownloadHandler extends BaseHandler {
         })
 
         const title = await page.title()
-        const document = new InputFile(filePath, `${title}.pdf`)
+        const sanitizedTitle = title.replace(/[/\\[\]{}()<>:;|=,*?"']/g, '').trim() || 'document'
+        const document = new InputFile(filePath, `${sanitizedTitle}.pdf`)
 
         await ctx.replyWithDocument(document)
         await this.userRepository.incrementUsage(ctx.from!.id)

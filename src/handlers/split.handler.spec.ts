@@ -15,6 +15,7 @@ describe(SplitHandler.name, () => {
 
   beforeEach(() => {
     mockUserRepository = {
+      findByTelegramId: vi.fn().mockResolvedValue({ plan_type: 'free' }),
       incrementUsage: vi.fn(),
     } as unknown as UserRepository
     handler = new SplitHandler(mockUserRepository)
