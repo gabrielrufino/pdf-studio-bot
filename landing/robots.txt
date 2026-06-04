@@ -1,2 +1,4 @@
 User-agent: *
 Allow: /
+
+Sitemap: https://gabrielrufino.github.io/pdf-studio-bot/landing/sitemap.xml
