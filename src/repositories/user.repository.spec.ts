@@ -1,7 +1,7 @@
 import { MongoClient, ObjectId } from 'mongodb'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { UserEntity } from '../entities/user.entity'
 import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { UserRepository } from './user.repository'
@@ -9,17 +9,20 @@ import { UserRepository } from './user.repository'
 describe(UserRepository.name, () => {
   let userRepository: UserRepository
   let mongod: MongoMemoryServer
+  let client: MongoClient
 
   beforeAll(async () => {
     mongod = await MongoMemoryServer.create()
 
     process.env.MONGODB_CONNECTION_STRING = mongod.getUri()
-    const database = new MongoClient(mongod.getUri()).db('pdf_studio_test')
+    client = new MongoClient(mongod.getUri())
+    const database = client.db('pdf_studio_test')
 
     userRepository = new UserRepository(database)
   })
 
   afterAll(async () => {
+    await client.close()
     await mongod!.stop()
   })
 
@@ -36,7 +39,6 @@ describe(UserRepository.name, () => {
       plan_started_at: expect.any(Date),
       daily_usage_count: 0,
       last_usage_date: undefined,
-      last_reengagement_at: null,
       language: 'en',
       created_at: expect.any(Date),
       updated_at: expect.any(Date),
@@ -71,7 +73,7 @@ describe(UserRepository.name, () => {
         telegram_user: { id: 10, is_bot: false, first_name: 'Test' },
       })) // Ensure collection is initialized
 
-      const db = new MongoClient(process.env.MONGODB_CONNECTION_STRING!).db('pdf_studio_test')
+      const db = client.db('pdf_studio_test')
       const collection = db.collection('users')
 
       await expect(collection.insertOne({ telegram_user: { id: 1 }, is_blocked: 'string', created_at: new Date(), updated_at: new Date() })).rejects.toThrow()
@@ -86,7 +88,7 @@ describe(UserRepository.name, () => {
         telegram_user: { id: 11, is_bot: false, first_name: 'Test' },
       }))
 
-      const db = new MongoClient(process.env.MONGODB_CONNECTION_STRING!).db('pdf_studio_test')
+      const db = client.db('pdf_studio_test')
       const indexes = await db.collection('users').indexes()
 
       expect(indexes.some(idx => idx.key['telegram_user.id'] === 1)).toBe(true)
@@ -189,6 +191,162 @@ describe(UserRepository.name, () => {
 
       const isWithin = await userRepository.isWithinLimit(42, 3)
       expect(isWithin).toBe(false)
+    })
+  })
+
+  describe('findInactiveUsers', () => {
+    beforeEach(async () => {
+      const db = client.db('pdf_studio_test')
+      await db.collection('users').deleteMany({})
+      await db.collection('messages').deleteMany({})
+    })
+
+    it('should return inactive users', async () => {
+      const db = client.db('pdf_studio_test')
+      const messagesCollection = db.collection('messages')
+
+      await userRepository.create(new UserEntity({
+        telegram_user: { id: 101, is_bot: false, first_name: 'Inactive' } as any,
+      }))
+      await userRepository.create(new UserEntity({
+        telegram_user: { id: 102, is_bot: false, first_name: 'Active' } as any,
+      }))
+
+      const oldDate = new Date()
+      oldDate.setDate(oldDate.getDate() - 35)
+
+      // User 1 last message was 35 days ago
+      await messagesCollection.insertOne({
+        telegram_user: { id: 101 },
+        text: 'hello',
+        from_bot: false,
+        is_reengagement: false,
+        created_at: oldDate,
+        updated_at: oldDate,
+      })
+
+      // User 2 last message was today
+      await messagesCollection.insertOne({
+        telegram_user: { id: 102 },
+        text: 'hi',
+        from_bot: false,
+        is_reengagement: false,
+        created_at: new Date(),
+        updated_at: new Date(),
+      })
+
+      const cursor = await userRepository.findInactiveUsers(30)
+      const inactiveUsers = await cursor.toArray()
+
+      expect(inactiveUsers).toHaveLength(1)
+      expect(inactiveUsers[0].telegram_user?.id).toBe(101)
+    })
+
+    it('should return inactive user even if bot sent a non-reengagement message recently', async () => {
+      const db = client.db('pdf_studio_test')
+      const messagesCollection = db.collection('messages')
+
+      await userRepository.create(new UserEntity({
+        telegram_user: { id: 104, is_bot: false, first_name: 'Bot Replied' } as any,
+      }))
+
+      const oldDate = new Date()
+      oldDate.setDate(oldDate.getDate() - 35)
+
+      // User 104 last message was 35 days ago
+      await messagesCollection.insertOne({
+        telegram_user: { id: 104 },
+        text: 'hello',
+        from_bot: false,
+        is_reengagement: false,
+        created_at: oldDate,
+        updated_at: oldDate,
+      })
+
+      // Bot replied today (standard reply, not re-engagement)
+      await messagesCollection.insertOne({
+        telegram_user: { id: 104 },
+        text: 'how can I help?',
+        from_bot: true,
+        is_reengagement: false,
+        created_at: new Date(),
+        updated_at: new Date(),
+      })
+
+      const cursor = await userRepository.findInactiveUsers(30)
+      const inactiveUsers = await cursor.toArray()
+
+      expect(inactiveUsers).toHaveLength(1)
+      expect(inactiveUsers[0].telegram_user?.id).toBe(104)
+    })
+
+    it('should not return users who received re-engagement message recently', async () => {
+      const db = client.db('pdf_studio_test')
+      const messagesCollection = db.collection('messages')
+
+      await userRepository.create(new UserEntity({
+        telegram_user: { id: 103, is_bot: false, first_name: 'Already Invited' } as any,
+      }))
+
+      const oldDate = new Date()
+      oldDate.setDate(oldDate.getDate() - 35)
+
+      const recentDate = new Date()
+      recentDate.setDate(recentDate.getDate() - 5)
+
+      // User 103 last interaction was 35 days ago
+      await messagesCollection.insertOne({
+        telegram_user: { id: 103 },
+        text: 'hello',
+        from_bot: false,
+        is_reengagement: false,
+        created_at: oldDate,
+        updated_at: oldDate,
+      })
+
+      // But received re-engagement 5 days ago
+      await messagesCollection.insertOne({
+        telegram_user: { id: 103 },
+        text: 'miss you',
+        from_bot: true,
+        is_reengagement: true,
+        created_at: recentDate,
+        updated_at: recentDate,
+      })
+
+      const cursor = await userRepository.findInactiveUsers(30)
+      const inactiveUsers = await cursor.toArray()
+
+      expect(inactiveUsers).toHaveLength(0)
+    })
+
+    it('should not return new users who have no messages', async () => {
+      await userRepository.create(new UserEntity({
+        telegram_user: { id: 105, is_bot: false, first_name: 'New User' } as any,
+      }))
+
+      // No messages for User 105, and created_at is today
+
+      const cursor = await userRepository.findInactiveUsers(30)
+      const inactiveUsers = await cursor.toArray()
+
+      expect(inactiveUsers).toHaveLength(0)
+    })
+
+    it('should return old users who have no messages', async () => {
+      const oldDate = new Date()
+      oldDate.setDate(oldDate.getDate() - 35)
+
+      await userRepository.create(new UserEntity({
+        telegram_user: { id: 106, is_bot: false, first_name: 'Old User' } as any,
+        created_at: oldDate,
+      }))
+
+      const cursor = await userRepository.findInactiveUsers(30)
+      const inactiveUsers = await cursor.toArray()
+
+      expect(inactiveUsers).toHaveLength(1)
+      expect(inactiveUsers[0].telegram_user?.id).toBe(106)
     })
   })
 })

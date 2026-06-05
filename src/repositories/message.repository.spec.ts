@@ -32,6 +32,8 @@ describe(MessageRepository.name, () => {
       _id: expect.any(ObjectId),
       telegram_user: { id: 1, is_bot: false, first_name: 'Test' },
       text: 'Hello, world!',
+      from_bot: false,
+      is_reengagement: false,
       created_at: expect.any(Date),
       updated_at: expect.any(Date),
     })

@@ -1,4 +1,4 @@
-import type { Db, FindCursor } from 'mongodb'
+import type { Db } from 'mongodb'
 import { EnsureInitialized } from '../decorators/ensure-initialized.decorator'
 import { UserEntity } from '../entities/user.entity'
 import { LanguageEnum } from '../enums/language.enum'
@@ -34,9 +34,6 @@ export class UserRepository extends BaseRepository<UserEntity> {
             last_usage_date: {
               bsonType: ['string', 'null'],
             },
-            last_reengagement_at: {
-              bsonType: ['date', 'null'],
-            },
             language: {
               bsonType: 'string',
               enum: Object.values(LanguageEnum),
@@ -60,19 +57,97 @@ export class UserRepository extends BaseRepository<UserEntity> {
     return result ? new UserEntity(result as any) : null
   }
 
-  @EnsureInitialized
-  public findInactiveUsers(days: number): FindCursor<UserEntity> {
+  public async findInactiveUsers(days: number): Promise<any> {
+    if (!this.initialized) {
+      await this.init()
+    }
     const date = new Date()
     date.setDate(date.getDate() - days)
 
-    return this.collection.find({
-      updated_at: { $lt: date },
-      is_blocked: false,
-      $or: [
-        { last_reengagement_at: null },
-        { last_reengagement_at: { $lt: date } },
-      ],
-    }).map(user => new UserEntity(user as any))
+    const cursor = this.collection.aggregate([
+      {
+        $match: {
+          is_blocked: false,
+        },
+      },
+      {
+        $lookup: {
+          from: 'messages',
+          let: { userId: '$telegram_user.id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$telegram_user.id', '$$userId'] },
+                    { $ne: ['$from_bot', true] },
+                  ],
+                },
+              },
+            },
+            { $sort: { created_at: -1 } },
+            { $limit: 1 },
+          ],
+          as: 'last_user_message',
+        },
+      },
+      { $unwind: { path: '$last_user_message', preserveNullAndEmptyArrays: true } },
+      {
+        $match: {
+          $or: [
+            // User has no recorded messages and registration is older than X days
+            {
+              last_user_message: { $exists: false },
+              created_at: { $lt: date },
+            },
+            // Last user message was older than X days
+            {
+              'last_user_message.created_at': { $lt: date },
+            },
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: 'messages',
+          let: { userId: '$telegram_user.id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$telegram_user.id', '$$userId'] },
+                    { $eq: ['$from_bot', true] },
+                    { $eq: ['$is_reengagement', true] },
+                    { $gt: ['$created_at', date] },
+                  ],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: 'recent_reengagement',
+        },
+      },
+      { $match: { recent_reengagement: { $size: 0 } } },
+      {
+        $project: {
+          recent_reengagement: 0,
+        },
+      },
+    ])
+
+    return {
+      async *[Symbol.asyncIterator]() {
+        for await (const user of cursor) {
+          yield new UserEntity(user as any)
+        }
+      },
+      async toArray() {
+        const users = await cursor.toArray()
+        return users.map(user => new UserEntity(user as any))
+      },
+    }
   }
 
   @EnsureInitialized

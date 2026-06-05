@@ -18,12 +18,22 @@ export class MessageRepository extends BaseRepository<MessageEntity> {
             text: {
               bsonType: 'string',
             },
+            from_bot: {
+              bsonType: 'bool',
+            },
+            is_reengagement: {
+              bsonType: 'bool',
+            },
             created_at: {
+              bsonType: 'date',
+            },
+            updated_at: {
               bsonType: 'date',
             },
           } as Record<keyof MessageEntity, any>,
         },
       },
+      indexes: ['telegram_user.id', 'created_at', 'from_bot', 'is_reengagement'],
     })
   }
 }

@@ -28,6 +28,9 @@ vi.mock('../repositories', () => ({
     findInactiveUsers: vi.fn(),
     updateById: vi.fn(),
   },
+  messageRepository: {
+    create: vi.fn(),
+  },
 }))
 
 describe('reengagementJob', () => {
@@ -54,7 +57,7 @@ describe('reengagementJob', () => {
       },
     ]
 
-    vi.mocked(userRepository.findInactiveUsers).mockReturnValue({
+    vi.mocked(userRepository.findInactiveUsers).mockResolvedValue({
       async *[Symbol.asyncIterator]() {
         for (const user of inactiveUsers) {
           yield user
@@ -70,7 +73,8 @@ describe('reengagementJob', () => {
     expect(bot.api.sendMessage).toHaveBeenCalledTimes(2)
     expect(bot.api.sendMessage).toHaveBeenCalledWith(123, locales.en.reengagement_message, { parse_mode: 'HTML' })
     expect(bot.api.sendMessage).toHaveBeenCalledWith(456, locales.pt.reengagement_message, { parse_mode: 'HTML' })
-    expect(userRepository.updateById).toHaveBeenCalledTimes(2)
+    const { messageRepository } = await import('../repositories')
+    expect(messageRepository.create).toHaveBeenCalledTimes(2)
   })
 
   it('should mark user as blocked if bot was blocked', async () => {
@@ -82,7 +86,7 @@ describe('reengagementJob', () => {
       },
     ]
 
-    vi.mocked(userRepository.findInactiveUsers).mockReturnValue({
+    vi.mocked(userRepository.findInactiveUsers).mockResolvedValue({
       async *[Symbol.asyncIterator]() {
         for (const user of inactiveUsers) {
           yield user
