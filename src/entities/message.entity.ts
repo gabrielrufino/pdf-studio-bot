@@ -11,8 +11,4 @@ export class MessageEntity extends BaseEntity {
   telegram_user!: TelegramUser
 
   text: string = ''
-
-  from_bot: boolean = false
-
-  is_reengagement: boolean = false
 }

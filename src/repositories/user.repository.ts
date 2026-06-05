@@ -61,8 +61,11 @@ export class UserRepository extends BaseRepository<UserEntity> {
     if (!this.initialized) {
       await this.init()
     }
-    const date = new Date()
-    date.setDate(date.getDate() - days)
+    const startWindow = new Date()
+    startWindow.setDate(startWindow.getDate() - days - 7) // 37 days ago
+
+    const endWindow = new Date()
+    endWindow.setDate(endWindow.getDate() - days) // 30 days ago
 
     const cursor = this.collection.aggregate([
       {
@@ -77,62 +80,29 @@ export class UserRepository extends BaseRepository<UserEntity> {
           pipeline: [
             {
               $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ['$telegram_user.id', '$$userId'] },
-                    { $ne: ['$from_bot', true] },
-                  ],
-                },
+                $expr: { $eq: ['$telegram_user.id', '$$userId'] },
               },
             },
             { $sort: { created_at: -1 } },
             { $limit: 1 },
           ],
-          as: 'last_user_message',
+          as: 'last_message',
         },
       },
-      { $unwind: { path: '$last_user_message', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$last_message', preserveNullAndEmptyArrays: true } },
       {
         $match: {
           $or: [
-            // User has no recorded messages and registration is older than X days
+            // No messages, registration in window
             {
-              last_user_message: { $exists: false },
-              created_at: { $lt: date },
+              last_message: { $exists: false },
+              created_at: { $gte: startWindow, $lt: endWindow },
             },
-            // Last user message was older than X days
+            // Last message in window
             {
-              'last_user_message.created_at': { $lt: date },
+              'last_message.created_at': { $gte: startWindow, $lt: endWindow },
             },
           ],
-        },
-      },
-      {
-        $lookup: {
-          from: 'messages',
-          let: { userId: '$telegram_user.id' },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ['$telegram_user.id', '$$userId'] },
-                    { $eq: ['$from_bot', true] },
-                    { $eq: ['$is_reengagement', true] },
-                    { $gt: ['$created_at', date] },
-                  ],
-                },
-              },
-            },
-            { $limit: 1 },
-          ],
-          as: 'recent_reengagement',
-        },
-      },
-      { $match: { recent_reengagement: { $size: 0 } } },
-      {
-        $project: {
-          recent_reengagement: 0,
         },
       },
     ])

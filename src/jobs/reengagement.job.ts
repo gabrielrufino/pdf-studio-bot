@@ -1,9 +1,8 @@
 import cron from 'node-cron'
 import { bot } from '../config/bot'
 import { logger } from '../config/logger'
-import { MessageEntity } from '../entities/message.entity'
 import { locales } from '../middlewares/i18n.middleware'
-import { messageRepository, userRepository } from '../repositories'
+import { userRepository } from '../repositories'
 
 export function initReengagementJob() {
   // Weekly on Monday at 9 AM
@@ -22,13 +21,6 @@ export function initReengagementJob() {
 
         try {
           await bot.api.sendMessage(user.telegram_user.id, message, { parse_mode: 'HTML' })
-
-          await messageRepository.create(new MessageEntity({
-            telegram_user: user.telegram_user,
-            text: message,
-            from_bot: true,
-            is_reengagement: true,
-          }))
 
           // Sleep for 50ms to respect rate limits (max 30 messages per second)
           await new Promise(resolve => setTimeout(resolve, 50))
