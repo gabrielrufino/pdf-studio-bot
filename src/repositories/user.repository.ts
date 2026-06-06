@@ -57,13 +57,8 @@ export class UserRepository extends BaseRepository<UserEntity> {
     return result ? new UserEntity(result as any) : null
   }
 
-  public async findInactiveUsers(days: number): Promise<any> {
-    if (!this.initialized) {
-      await this.init()
-    }
-    const startWindow = new Date()
-    startWindow.setDate(startWindow.getDate() - days - 7) // 37 days ago
-
+  @EnsureInitialized
+  public async findInactiveUsers(days: number): Promise<AsyncIterableIterator<UserEntity>> {
     const endWindow = new Date()
     endWindow.setDate(endWindow.getDate() - days) // 30 days ago
 
@@ -89,35 +84,19 @@ export class UserRepository extends BaseRepository<UserEntity> {
           as: 'last_message',
         },
       },
-      { $unwind: { path: '$last_message', preserveNullAndEmptyArrays: true } },
+      { $unwind: '$last_message' },
       {
         $match: {
-          $or: [
-            // No messages, registration in window
-            {
-              last_message: { $exists: false },
-              created_at: { $gte: startWindow, $lt: endWindow },
-            },
-            // Last message in window
-            {
-              'last_message.created_at': { $gte: startWindow, $lt: endWindow },
-            },
-          ],
+          'last_message.created_at': { $lt: endWindow },
         },
       },
     ])
 
-    return {
-      async *[Symbol.asyncIterator]() {
-        for await (const user of cursor) {
-          yield new UserEntity(user as any)
-        }
-      },
-      async toArray() {
-        const users = await cursor.toArray()
-        return users.map(user => new UserEntity(user as any))
-      },
-    }
+    return (async function* () {
+      for await (const user of cursor) {
+        yield new UserEntity(user as any)
+      }
+    })()
   }
 
   @EnsureInitialized

@@ -201,18 +201,18 @@ describe(UserRepository.name, () => {
       await db.collection('messages').deleteMany({})
     })
 
-    it('should return inactive users in 30-37 days window', async () => {
+    it('should return users inactive for more than 30 days', async () => {
       const db = client.db('pdf_studio_test')
       const messagesCollection = db.collection('messages')
 
       await userRepository.create(new UserEntity({
-        telegram_user: { id: 101, is_bot: false, first_name: 'Inactive In Window' } as any,
+        telegram_user: { id: 101, is_bot: false, first_name: 'Inactive' } as any,
       }))
       await userRepository.create(new UserEntity({
         telegram_user: { id: 102, is_bot: false, first_name: 'Active' } as any,
       }))
       await userRepository.create(new UserEntity({
-        telegram_user: { id: 103, is_bot: false, first_name: 'Too Inactive' } as any,
+        telegram_user: { id: 103, is_bot: false, first_name: 'Also Inactive' } as any,
       }))
 
       const inWindowDate = new Date()
@@ -237,7 +237,7 @@ describe(UserRepository.name, () => {
         updated_at: new Date(),
       })
 
-      // User 103 last message was 40 days ago (OUT - already re-engaged or lost)
+      // User 103 last message was 40 days ago (ALSO INACTIVE)
       await messagesCollection.insertOne({
         telegram_user: { id: 103 },
         text: 'bye',
@@ -246,39 +246,35 @@ describe(UserRepository.name, () => {
       })
 
       const cursor = await userRepository.findInactiveUsers(30)
-      const inactiveUsers = await cursor.toArray()
+      const inactiveUsers: UserEntity[] = []
+      for await (const user of cursor) inactiveUsers.push(user)
 
-      expect(inactiveUsers).toHaveLength(1)
-      expect(inactiveUsers[0].telegram_user?.id).toBe(101)
+      expect(inactiveUsers).toHaveLength(2)
+      expect(inactiveUsers.some(u => u.telegram_user?.id === 101)).toBe(true)
+      expect(inactiveUsers.some(u => u.telegram_user?.id === 103)).toBe(true)
     })
 
-    it('should not return new users who have no messages', async () => {
+    it('should not return users with recent messages', async () => {
+      const db = client.db('pdf_studio_test')
+      const messagesCollection = db.collection('messages')
+
       await userRepository.create(new UserEntity({
-        telegram_user: { id: 105, is_bot: false, first_name: 'New User' } as any,
+        telegram_user: { id: 107, is_bot: false, first_name: 'Active User' } as any,
       }))
 
-      // No messages for User 105, and created_at is today
+      // User 107 last message was today (active)
+      await messagesCollection.insertOne({
+        telegram_user: { id: 107 },
+        text: 'hi',
+        created_at: new Date(),
+        updated_at: new Date(),
+      })
 
       const cursor = await userRepository.findInactiveUsers(30)
-      const inactiveUsers = await cursor.toArray()
+      const inactiveUsers: UserEntity[] = []
+      for await (const user of cursor) inactiveUsers.push(user)
 
       expect(inactiveUsers).toHaveLength(0)
-    })
-
-    it('should return old users who have no messages', async () => {
-      const oldDate = new Date()
-      oldDate.setDate(oldDate.getDate() - 35)
-
-      await userRepository.create(new UserEntity({
-        telegram_user: { id: 106, is_bot: false, first_name: 'Old User' } as any,
-        created_at: oldDate,
-      }))
-
-      const cursor = await userRepository.findInactiveUsers(30)
-      const inactiveUsers = await cursor.toArray()
-
-      expect(inactiveUsers).toHaveLength(1)
-      expect(inactiveUsers[0].telegram_user?.id).toBe(106)
     })
   })
 })

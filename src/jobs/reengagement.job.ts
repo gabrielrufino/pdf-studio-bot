@@ -28,6 +28,8 @@ export function initReengagementJob() {
         catch (error: any) {
           if (error.description === 'Forbidden: bot was blocked by the user') {
             await userRepository.updateById(user._id, { is_blocked: true })
+              .catch((error) => { logger.error({ error, userId: user.telegram_user?.id }, 'Failed to mark user as blocked') })
+
             logger.info({ userId: user.telegram_user.id }, 'User blocked the bot, marking as blocked')
           }
           else {
