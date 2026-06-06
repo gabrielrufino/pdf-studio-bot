@@ -21,9 +21,13 @@ export class MessageRepository extends BaseRepository<MessageEntity> {
             created_at: {
               bsonType: 'date',
             },
+            updated_at: {
+              bsonType: 'date',
+            },
           } as Record<keyof MessageEntity, any>,
         },
       },
+      indexes: ['telegram_user.id', 'created_at'],
     })
   }
 }

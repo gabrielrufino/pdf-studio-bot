@@ -1,7 +1,7 @@
 import { MongoClient, ObjectId } from 'mongodb'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { UserEntity } from '../entities/user.entity'
 import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { UserRepository } from './user.repository'
@@ -9,17 +9,20 @@ import { UserRepository } from './user.repository'
 describe(UserRepository.name, () => {
   let userRepository: UserRepository
   let mongod: MongoMemoryServer
+  let client: MongoClient
 
   beforeAll(async () => {
     mongod = await MongoMemoryServer.create()
 
     process.env.MONGODB_CONNECTION_STRING = mongod.getUri()
-    const database = new MongoClient(mongod.getUri()).db('pdf_studio_test')
+    client = new MongoClient(mongod.getUri())
+    const database = client.db('pdf_studio_test')
 
     userRepository = new UserRepository(database)
   })
 
   afterAll(async () => {
+    await client.close()
     await mongod!.stop()
   })
 
@@ -70,7 +73,7 @@ describe(UserRepository.name, () => {
         telegram_user: { id: 10, is_bot: false, first_name: 'Test' },
       })) // Ensure collection is initialized
 
-      const db = new MongoClient(process.env.MONGODB_CONNECTION_STRING!).db('pdf_studio_test')
+      const db = client.db('pdf_studio_test')
       const collection = db.collection('users')
 
       await expect(collection.insertOne({ telegram_user: { id: 1 }, is_blocked: 'string', created_at: new Date(), updated_at: new Date() })).rejects.toThrow()
@@ -85,7 +88,7 @@ describe(UserRepository.name, () => {
         telegram_user: { id: 11, is_bot: false, first_name: 'Test' },
       }))
 
-      const db = new MongoClient(process.env.MONGODB_CONNECTION_STRING!).db('pdf_studio_test')
+      const db = client.db('pdf_studio_test')
       const indexes = await db.collection('users').indexes()
 
       expect(indexes.some(idx => idx.key['telegram_user.id'] === 1)).toBe(true)
@@ -188,6 +191,90 @@ describe(UserRepository.name, () => {
 
       const isWithin = await userRepository.isWithinLimit(42, 3)
       expect(isWithin).toBe(false)
+    })
+  })
+
+  describe('findInactiveUsers', () => {
+    beforeEach(async () => {
+      const db = client.db('pdf_studio_test')
+      await db.collection('users').deleteMany({})
+      await db.collection('messages').deleteMany({})
+    })
+
+    it('should return users inactive for more than 30 days', async () => {
+      const db = client.db('pdf_studio_test')
+      const messagesCollection = db.collection('messages')
+
+      await userRepository.create(new UserEntity({
+        telegram_user: { id: 101, is_bot: false, first_name: 'Inactive' } as any,
+      }))
+      await userRepository.create(new UserEntity({
+        telegram_user: { id: 102, is_bot: false, first_name: 'Active' } as any,
+      }))
+      await userRepository.create(new UserEntity({
+        telegram_user: { id: 103, is_bot: false, first_name: 'Also Inactive' } as any,
+      }))
+
+      const inWindowDate = new Date()
+      inWindowDate.setDate(inWindowDate.getDate() - 33)
+
+      const tooOldDate = new Date()
+      tooOldDate.setDate(tooOldDate.getDate() - 40)
+
+      // User 101 last message was 33 days ago (IN WINDOW)
+      await messagesCollection.insertOne({
+        telegram_user: { id: 101 },
+        text: 'hello',
+        created_at: inWindowDate,
+        updated_at: inWindowDate,
+      })
+
+      // User 102 last message was today (OUT)
+      await messagesCollection.insertOne({
+        telegram_user: { id: 102 },
+        text: 'hi',
+        created_at: new Date(),
+        updated_at: new Date(),
+      })
+
+      // User 103 last message was 40 days ago (ALSO INACTIVE)
+      await messagesCollection.insertOne({
+        telegram_user: { id: 103 },
+        text: 'bye',
+        created_at: tooOldDate,
+        updated_at: tooOldDate,
+      })
+
+      const cursor = await userRepository.findInactiveUsers(30)
+      const inactiveUsers: UserEntity[] = []
+      for await (const user of cursor) inactiveUsers.push(user)
+
+      expect(inactiveUsers).toHaveLength(2)
+      expect(inactiveUsers.some(u => u.telegram_user?.id === 101)).toBe(true)
+      expect(inactiveUsers.some(u => u.telegram_user?.id === 103)).toBe(true)
+    })
+
+    it('should not return users with recent messages', async () => {
+      const db = client.db('pdf_studio_test')
+      const messagesCollection = db.collection('messages')
+
+      await userRepository.create(new UserEntity({
+        telegram_user: { id: 107, is_bot: false, first_name: 'Active User' } as any,
+      }))
+
+      // User 107 last message was today (active)
+      await messagesCollection.insertOne({
+        telegram_user: { id: 107 },
+        text: 'hi',
+        created_at: new Date(),
+        updated_at: new Date(),
+      })
+
+      const cursor = await userRepository.findInactiveUsers(30)
+      const inactiveUsers: UserEntity[] = []
+      for await (const user of cursor) inactiveUsers.push(user)
+
+      expect(inactiveUsers).toHaveLength(0)
     })
   })
 })

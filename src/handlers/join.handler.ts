@@ -5,7 +5,11 @@ import os from 'node:os'
 import { join } from 'node:path'
 import { InputFile } from 'grammy'
 import muhammara from 'muhammara'
+import { MAX_FILE_SIZE } from '../config/constants'
 import { CommandEnum } from '../enums/command.enum'
+import { PlanTypeEnum } from '../enums/plan-type.enum'
+import { LimitExceededError } from '../errors/limit-exceeded.error'
+import { UserNotFoundError } from '../errors/user-not-found.error'
 import { JoinParamsSchema } from '../schemas/join-params.schema'
 import { BaseHandler } from './base.handler'
 
@@ -27,6 +31,16 @@ export class JoinHandler extends BaseHandler {
       }
 
       await this.validatePDF(ctx)
+
+      const user = await this.userRepository.findByTelegramId(ctx.from?.id ?? 0)
+      if (!user) {
+        throw new UserNotFoundError()
+      }
+
+      if (user.plan_type !== PlanTypeEnum.Pro && (ctx.message?.document?.file_size ?? 0) > MAX_FILE_SIZE) {
+        await ctx.reply(ctx.t('free_limit_reached'))
+        throw new LimitExceededError()
+      }
 
       const file = await ctx.getFile()
       const filePath = await file.download()

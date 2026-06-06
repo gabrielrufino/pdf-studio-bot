@@ -115,7 +115,7 @@ describe(PdfToImagesHandler.name, () => {
 
         await handler.events['msg:document'](ctx)
 
-        expect(ctx.reply).toHaveBeenCalledWith(expect.stringContaining('exceeded the limits of the free plan'))
+        expect(ctx.reply).toHaveBeenCalledWith('free_limit_reached')
       })
 
       it('should log error if removing temporary files fails', async () => {
