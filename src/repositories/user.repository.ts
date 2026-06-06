@@ -58,6 +58,48 @@ export class UserRepository extends BaseRepository<UserEntity> {
   }
 
   @EnsureInitialized
+  public async findInactiveUsers(days: number): Promise<AsyncIterableIterator<UserEntity>> {
+    const endWindow = new Date()
+    endWindow.setDate(endWindow.getDate() - days) // 30 days ago
+
+    const cursor = this.collection.aggregate([
+      {
+        $match: {
+          is_blocked: false,
+        },
+      },
+      {
+        $lookup: {
+          from: 'messages',
+          let: { userId: '$telegram_user.id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ['$telegram_user.id', '$$userId'] },
+              },
+            },
+            { $sort: { created_at: -1 } },
+            { $limit: 1 },
+          ],
+          as: 'last_message',
+        },
+      },
+      { $unwind: '$last_message' },
+      {
+        $match: {
+          'last_message.created_at': { $lt: endWindow },
+        },
+      },
+    ])
+
+    return (async function* () {
+      for await (const user of cursor) {
+        yield new UserEntity(user as any)
+      }
+    })()
+  }
+
+  @EnsureInitialized
   public async isWithinLimit(telegramId: number, limit: number): Promise<boolean> {
     const today = new Date().toISOString().split('T')[0]
 

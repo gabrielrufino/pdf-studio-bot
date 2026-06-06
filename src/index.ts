@@ -11,6 +11,7 @@ import { CommandEnum } from './enums/command.enum'
 import { InvalidFileError } from './errors/invalid-file.error'
 import { SessionValidationError } from './errors/session-validation.error'
 import { handlers } from './handlers'
+import { initReengagementJob } from './jobs/reengagement.job'
 import { HelpMessage } from './messages/help.message'
 import { UnknownMessage } from './messages/unknown.message'
 import { i18nMiddleware } from './middlewares/i18n.middleware'
@@ -21,6 +22,8 @@ async function main() {
   await Promise.all(
     repositories.map(repo => repo.init()),
   )
+
+  initReengagementJob()
 
   bot.use(i18nMiddleware)
 

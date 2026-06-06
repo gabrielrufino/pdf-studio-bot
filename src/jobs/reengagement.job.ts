@@ -1,0 +1,46 @@
+import cron from 'node-cron'
+import { bot } from '../config/bot'
+import { logger } from '../config/logger'
+import { locales } from '../middlewares/i18n.middleware'
+import { userRepository } from '../repositories'
+
+export function initReengagementJob() {
+  // Weekly on Monday at 9 AM
+  cron.schedule('0 9 * * 1', async () => {
+    logger.info('Running re-engagement job...')
+    try {
+      const inactiveUsersCursor = await userRepository.findInactiveUsers(30)
+
+      for await (const user of inactiveUsersCursor) {
+        if (!user.telegram_user?.id) {
+          continue
+        }
+
+        const translations = locales[user.language] || locales.en
+        const message = translations.reengagement_message
+
+        try {
+          await bot.api.sendMessage(user.telegram_user.id, message, { parse_mode: 'HTML' })
+
+          // Sleep for 50ms to respect rate limits (max 30 messages per second)
+          await new Promise(resolve => setTimeout(resolve, 50))
+        }
+        catch (error: any) {
+          if (error.description === 'Forbidden: bot was blocked by the user') {
+            await userRepository.updateById(user._id, { is_blocked: true })
+              .catch((error) => { logger.error({ error, userId: user.telegram_user?.id }, 'Failed to mark user as blocked') })
+
+            logger.info({ userId: user.telegram_user.id }, 'User blocked the bot, marking as blocked')
+          }
+          else {
+            logger.error({ error, userId: user.telegram_user.id }, 'Failed to send re-engagement message')
+          }
+        }
+      }
+      logger.info('Re-engagement job finished')
+    }
+    catch (error) {
+      logger.error({ error }, 'Error in re-engagement job')
+    }
+  })
+}
