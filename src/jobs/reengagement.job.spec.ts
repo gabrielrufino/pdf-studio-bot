@@ -10,7 +10,7 @@ import { initReengagementJob } from './reengagement.job'
 vi.mock('node-cron', () => ({
   default: {
     schedule: vi.fn((_cronExp, callback) => {
-      ;(globalThis as any).cronCallback = callback
+      ; (globalThis as any).cronCallback = callback
     }),
   },
 }))
@@ -26,7 +26,6 @@ vi.mock('../config/bot', () => ({
 vi.mock('../repositories', () => ({
   userRepository: {
     findInactiveUsers: vi.fn(),
-    updateById: vi.fn(),
   },
 }))
 
@@ -70,30 +69,5 @@ describe('reengagementJob', () => {
     expect(bot.api.sendMessage).toHaveBeenCalledTimes(2)
     expect(bot.api.sendMessage).toHaveBeenCalledWith(123, locales.en.reengagement_message, { parse_mode: 'HTML' })
     expect(bot.api.sendMessage).toHaveBeenCalledWith(456, locales.pt.reengagement_message, { parse_mode: 'HTML' })
-  })
-
-  it('should mark user as blocked if bot was blocked', async () => {
-    const inactiveUsers: Partial<UserEntity>[] = [
-      {
-        _id: 'user1' as any,
-        telegram_user: { id: 123 } as any,
-        language: LanguageEnum.English,
-      },
-    ]
-
-    vi.mocked(userRepository.findInactiveUsers).mockResolvedValue({
-      async *[Symbol.asyncIterator]() {
-        for (const user of inactiveUsers) {
-          yield user
-        }
-      },
-    } as any)
-    vi.mocked(bot.api.sendMessage).mockRejectedValue({ description: 'Forbidden: bot was blocked by the user' })
-
-    initReengagementJob()
-    const callback = (globalThis as any).cronCallback
-    await callback()
-
-    expect(userRepository.updateById).toHaveBeenCalledWith('user1', { is_blocked: true })
   })
 })

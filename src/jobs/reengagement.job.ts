@@ -26,15 +26,7 @@ export function initReengagementJob() {
           await new Promise(resolve => setTimeout(resolve, 50))
         }
         catch (error: any) {
-          if (error.description === 'Forbidden: bot was blocked by the user') {
-            await userRepository.updateById(user._id, { is_blocked: true })
-              .catch((error) => { logger.error({ error, userId: user.telegram_user?.id }, 'Failed to mark user as blocked') })
-
-            logger.info({ userId: user.telegram_user.id }, 'User blocked the bot, marking as blocked')
-          }
-          else {
-            logger.error({ error, userId: user.telegram_user.id }, 'Failed to send re-engagement message')
-          }
+          logger.error({ error, userId: user.telegram_user.id }, 'Failed to send re-engagement message')
         }
       }
       logger.info('Re-engagement job finished')

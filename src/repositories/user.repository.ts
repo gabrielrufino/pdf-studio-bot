@@ -65,7 +65,7 @@ export class UserRepository extends BaseRepository<UserEntity> {
     const cursor = this.collection.aggregate([
       {
         $match: {
-          is_blocked: false,
+          is_blocked: { $ne: true },
         },
       },
       {
@@ -122,7 +122,7 @@ export class UserRepository extends BaseRepository<UserEntity> {
   public async incrementUsage(telegramId: number, limit?: number): Promise<UserEntity | null> {
     const today = new Date().toISOString().split('T')[0]
 
-    const filter: any = { 'telegram_user.id': telegramId, 'is_blocked': false }
+    const filter: any = { 'telegram_user.id': telegramId, 'is_blocked': { $ne: true } }
 
     if (limit !== undefined) {
       filter.$or = [
