@@ -9,6 +9,30 @@ on:
       - main
 
 jobs:
+  publish:
+    name: Publish Image
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - uses: actalog/check-ci@main
+      - uses: actions/checkout@v4
+      - id: package-version
+        run: echo "version=$(jq -r .version package.json)" >> $GITHUB_OUTPUT
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ steps.package-version.outputs.version }}
+
   start:
     name: Start
     runs-on: ubuntu-latest
