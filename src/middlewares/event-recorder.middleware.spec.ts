@@ -23,7 +23,7 @@ describe('eventRecorderMiddleware', () => {
     expect(eventRepository.create).not.toHaveBeenCalled()
   })
 
-  it('should record CommandSent if message text starts with /', async () => {
+  it('should record specific CommandStart if message text starts with /start', async () => {
     const ctx: any = {
       from: { id: 123 },
       message: { text: '/start' },
@@ -31,23 +31,21 @@ describe('eventRecorderMiddleware', () => {
     await eventRecorderMiddleware(ctx, next)
     expect(next).toHaveBeenCalled()
     expect(eventRepository.create).toHaveBeenCalledWith(expect.objectContaining({
-      event: EventEnum.CommandSent,
+      event: EventEnum.CommandStart,
       telegram_user: { id: 123 },
-      metadata: { command: '/start' },
     }))
   })
 
-  it('should record ButtonClicked if callbackQuery exists', async () => {
+  it('should record specific ButtonPro if callbackQuery data is pro', async () => {
     const ctx: any = {
       from: { id: 123 },
-      callbackQuery: { data: 'some_data' },
+      callbackQuery: { data: 'pro' },
     }
     await eventRecorderMiddleware(ctx, next)
     expect(next).toHaveBeenCalled()
     expect(eventRepository.create).toHaveBeenCalledWith(expect.objectContaining({
-      event: EventEnum.ButtonClicked,
+      event: EventEnum.ButtonPro,
       telegram_user: { id: 123 },
-      metadata: { data: 'some_data' },
     }))
   })
 
@@ -63,6 +61,16 @@ describe('eventRecorderMiddleware', () => {
       telegram_user: { id: 123 },
       metadata: { mime_type: 'application/pdf' },
     }))
+  })
+
+  it('should not record anything for unknown command', async () => {
+    const ctx: any = {
+      from: { id: 123 },
+      message: { text: '/unknown' },
+    }
+    await eventRecorderMiddleware(ctx, next)
+    expect(next).toHaveBeenCalled()
+    expect(eventRepository.create).not.toHaveBeenCalled()
   })
 
   it('should not record anything if no relevant update', async () => {

@@ -1,6 +1,7 @@
 import type { NextFunction } from 'grammy'
 import type { CustomContext } from '../types/custom-context.type'
 import { EventEntity } from '../entities/event.entity'
+import { CommandEnum } from '../enums/command.enum'
 import { EventEnum } from '../enums/event.enum'
 import { eventRepository } from '../repositories'
 
@@ -13,20 +14,36 @@ export async function eventRecorderMiddleware(ctx: CustomContext, next: NextFunc
 
   // Check for command
   if (ctx.message?.text?.startsWith('/')) {
-    events.push(new EventEntity({
-      event: EventEnum.CommandSent,
-      telegram_user: ctx.from,
-      metadata: { command: ctx.message.text },
-    }))
+    const rawCommand = ctx.message.text.split(' ')[0]!.substring(1)
+    const match = Object.entries(CommandEnum).find(([, value]) => value === rawCommand)
+
+    if (match) {
+      const enumKey = match[0] as keyof typeof CommandEnum
+      const eventValue = EventEnum[`Command${enumKey}` as keyof typeof EventEnum]
+      if (eventValue) {
+        events.push(new EventEntity({
+          event: eventValue,
+          telegram_user: ctx.from,
+        }))
+      }
+    }
   }
 
   // Check for callback query (button click)
-  if (ctx.callbackQuery) {
-    events.push(new EventEntity({
-      event: EventEnum.ButtonClicked,
-      telegram_user: ctx.from,
-      metadata: { data: ctx.callbackQuery.data },
-    }))
+  if (ctx.callbackQuery?.data) {
+    const rawData = ctx.callbackQuery.data
+    const match = Object.entries(CommandEnum).find(([, value]) => value === rawData)
+
+    if (match) {
+      const enumKey = match[0] as keyof typeof CommandEnum
+      const eventValue = EventEnum[`Button${enumKey}` as keyof typeof EventEnum]
+      if (eventValue) {
+        events.push(new EventEntity({
+          event: eventValue,
+          telegram_user: ctx.from,
+        }))
+      }
+    }
   }
 
   // Check for file document received

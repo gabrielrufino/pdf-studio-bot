@@ -27,12 +27,12 @@ describe('eventRepository', () => {
 
   it('should insert event successfully', async () => {
     const returned = await eventRepository.create(new EventEntity({
-      event: EventEnum.CommandSent,
+      event: EventEnum.CommandStart,
       telegram_user: { id: 123, is_bot: false, first_name: 'John' },
     }))
 
     expect(returned).toBeDefined()
-    expect(returned.event).toBe(EventEnum.CommandSent)
+    expect(returned.event).toBe(EventEnum.CommandStart)
   })
 
   it('should fail schema validation if event is invalid', async () => {
