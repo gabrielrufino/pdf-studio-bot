@@ -7,6 +7,7 @@ import { limit } from '@grammyjs/ratelimiter'
 import { MongoDBAdapter } from '@grammyjs/storage-mongodb'
 import { Bot, session } from 'grammy'
 import { authMiddleware } from '../middlewares/auth.middleware'
+import { eventRecorderMiddleware } from '../middlewares/event-recorder.middleware'
 import { loggerMiddleware } from '../middlewares/logger.middleware'
 import { messageRecorderMiddleware } from '../middlewares/message-recorder.middleware'
 import { database } from './database'
@@ -46,6 +47,7 @@ bot.use(
 bot.use(loggerMiddleware)
 
 bot.use(messageRecorderMiddleware)
+bot.use(eventRecorderMiddleware)
 bot.use(authMiddleware)
 
 bot
