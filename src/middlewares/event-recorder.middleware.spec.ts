@@ -9,7 +9,7 @@ vi.mock('../repositories', () => ({
   },
 }))
 
-describe('eventRecorderMiddleware', () => {
+describe(eventRecorderMiddleware.name, () => {
   const next = vi.fn()
 
   beforeEach(() => {
