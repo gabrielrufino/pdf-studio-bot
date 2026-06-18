@@ -7,20 +7,34 @@
     <title>PDF Studio Bot - Your PDF Assistant on Telegram</title>
     <meta name="description"
         content="PDF Studio Bot is a free Telegram bot for PDF operations: download, protect, split, merge, summarize, and more.">
-    <meta name="keywords" content="PDF, Telegram Bot, PDF Tools, Merge PDF, Split PDF, PDF Summary, AI PDF, PDF to Images">
+    <meta name="keywords"
+        content="PDF, Telegram Bot, PDF Tools, Merge PDF, Split PDF, PDF Summary, AI PDF, PDF to Images">
     <link rel="canonical" href="https://pdfstudio.gabrielrufino.com/" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://pdfstudio.gabrielrufino.com/">
     <meta property="og:title" content="PDF Studio Bot - Your PDF Assistant on Telegram">
-    <meta property="og:description" content="Download, protect, split, merge, and summarize PDF files directly from your Telegram. Fast, secure, and multi-language.">
+    <meta property="og:description"
+        content="Download, protect, split, merge, and summarize PDF files directly from your Telegram. Fast, secure, and multi-language.">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="https://pdfstudio.gabrielrufino.com/">
     <meta name="twitter:title" content="PDF Studio Bot - Your PDF Assistant on Telegram">
-    <meta name="twitter:description" content="Download, protect, split, merge, and summarize PDF files directly from your Telegram. Fast, secure, and multi-language.">
+    <meta name="twitter:description"
+        content="Download, protect, split, merge, and summarize PDF files directly from your Telegram. Fast, secure, and multi-language.">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-79BPSX5GRD"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-79BPSX5GRD');
+    </script>
+    <!-- End Google tag (gtag.js) -->
 
     <script type="application/ld+json">
     {
@@ -264,22 +278,6 @@
             }
         }
     </style>
-
-    <!-- Matomo -->
-    <script>
-        var _paq = window._paq = window._paq || [];
-        /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
-        _paq.push(['trackPageView']);
-        _paq.push(['enableLinkTracking']);
-        (function () {
-            var u = "//matomo.gabrielrufino.com/";
-            _paq.push(['setTrackerUrl', u + 'matomo.php']);
-            _paq.push(['setSiteId', '3']);
-            var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
-            g.async = true; g.src = u + 'matomo.js'; s.parentNode.insertBefore(g, s);
-        })();
-    </script>
-    <!-- End Matomo Code -->
 </head>
 
 <body>
@@ -298,7 +296,8 @@
     <header class="py-16 bg-white">
         <div class="max-w-7xl px-4 text-center">
             <h1>The easiest way to <span class="text-blue-600">manage your PDFs with our Telegram Bot</span></h1>
-            <p>Download, protect, split, merge, and summarize PDF files directly from your Telegram. Fast, secure, and multi-language.</p>
+            <p>Download, protect, split, merge, and summarize PDF files directly from your Telegram. Fast, secure, and
+                multi-language.</p>
             <div class="flex justify-center" style="gap: 1rem;">
                 <a href="https://t.me/PDFStudio_bot" target="_blank" rel="noopener noreferrer" class="btn btn-primary"
                     style="padding: 1rem 2rem; font-size: 1.125rem;">Get Started Now</a>
@@ -318,7 +317,8 @@
                         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"
                             viewBox="0 0 24 24" role="img" aria-labelledby="title-download desc-download">
                             <title id="title-download">Download from URL</title>
-                            <desc id="desc-download">Cloud icon with down arrow indicating download from a web address</desc>
+                            <desc id="desc-download">Cloud icon with down arrow indicating download from a web address
+                            </desc>
                             <path
                                 d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10">
                             </path>
@@ -333,7 +333,8 @@
                         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"
                             viewBox="0 0 24 24" role="img" aria-labelledby="title-add-password desc-add-password">
                             <title id="title-add-password">Add Password</title>
-                            <desc id="desc-add-password">Lock icon representing security and password protection for PDFs</desc>
+                            <desc id="desc-add-password">Lock icon representing security and password protection for
+                                PDFs</desc>
                             <path
                                 d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
                             </path>
@@ -378,56 +379,64 @@
                         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"
                             viewBox="0 0 24 24" role="img" aria-labelledby="title-remove-password desc-remove-password">
                             <title id="title-remove-password">Remove Password</title>
-                            <desc id="desc-remove-password">Open lock icon representing decrypting or unlocking protected PDFs</desc>
+                            <desc id="desc-remove-password">Open lock icon representing decrypting or unlocking
+                                protected PDFs</desc>
                             <path
                                 d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z">
                             </path>
                         </svg>
                     </div>
                     <h3 class="font-bold text-xl" style="margin-bottom: 0.75rem;">Remove Password</h3>
-                    <p style="color: var(--slate-600); font-size: 0.875rem;">Unlock password-protected PDFs easily if you have the password.</p>
+                    <p style="color: var(--slate-600); font-size: 0.875rem;">Unlock password-protected PDFs easily if
+                        you have the password.</p>
                 </div>
                 <div class="feature-card">
                     <div class="icon-box">
                         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"
                             viewBox="0 0 24 24" role="img" aria-labelledby="title-pdf-to-images desc-pdf-to-images">
                             <title id="title-pdf-to-images">PDF to Images</title>
-                            <desc id="desc-pdf-to-images">Image/Gallery icon representing converting PDF pages to image formats</desc>
+                            <desc id="desc-pdf-to-images">Image/Gallery icon representing converting PDF pages to image
+                                formats</desc>
                             <path
                                 d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
                             </path>
                         </svg>
                     </div>
                     <h3 class="font-bold text-xl" style="margin-bottom: 0.75rem;">PDF to Images</h3>
-                    <p style="color: var(--slate-600); font-size: 0.875rem;">Convert PDF pages into high-quality images in seconds.</p>
+                    <p style="color: var(--slate-600); font-size: 0.875rem;">Convert PDF pages into high-quality images
+                        in seconds.</p>
                 </div>
                 <div class="feature-card">
                     <div class="icon-box">
                         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"
                             viewBox="0 0 24 24" role="img" aria-labelledby="title-ai-summary desc-ai-summary">
                             <title id="title-ai-summary">AI Summary</title>
-                            <desc id="desc-ai-summary">Lightbulb icon representing AI-powered summarization of PDF content</desc>
+                            <desc id="desc-ai-summary">Lightbulb icon representing AI-powered summarization of PDF
+                                content</desc>
                             <path
                                 d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
                             </path>
                         </svg>
                     </div>
                     <h3 class="font-bold text-xl" style="margin-bottom: 0.75rem;">AI Summary</h3>
-                    <p style="color: var(--slate-600); font-size: 0.875rem;">Get concise summaries of your PDF documents using advanced AI.</p>
+                    <p style="color: var(--slate-600); font-size: 0.875rem;">Get concise summaries of your PDF documents
+                        using advanced AI.</p>
                 </div>
                 <div class="feature-card">
                     <div class="icon-box">
                         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"
                             viewBox="0 0 24 24" role="img" aria-labelledby="title-multi-language desc-multi-language">
                             <title id="title-multi-language">Multi-language</title>
-                            <desc id="desc-multi-language">Globe icon representing support for English, Spanish, and Portuguese</desc>
+                            <desc id="desc-multi-language">Globe icon representing support for English, Spanish, and
+                                Portuguese</desc>
                             <path
                                 d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
                             </path>
                         </svg>
                     </div>
                     <h3 class="font-bold text-xl" style="margin-bottom: 0.75rem;">Multi-language</h3>
-                    <p style="color: var(--slate-600); font-size: 0.875rem;">Available in English, Spanish, and Portuguese for your convenience.</p>
+                    <p style="color: var(--slate-600); font-size: 0.875rem;">Available in English, Spanish, and
+                        Portuguese for your convenience.</p>
                 </div>
             </div>
         </div>
