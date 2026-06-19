@@ -135,6 +135,32 @@ describe(DownloadHandler.name, () => {
 
         expect(ctx.reply).toHaveBeenCalledWith('download_error')
       })
+
+      it('should block IPv6 private IP hostname', async () => {
+        ctx.message!.text = 'http://[fc00::1]'
+
+        await handler.events['msg:text'](ctx)
+
+        expect(ctx.reply).toHaveBeenCalledWith('download_error')
+      })
+
+      it('should block localhost IPv6 hostname', async () => {
+        ctx.message!.text = 'http://[::1]'
+
+        await handler.events['msg:text'](ctx)
+
+        expect(ctx.reply).toHaveBeenCalledWith('download_error')
+      })
+
+      it('should block URL that resolves to an IPv6 private IP', async () => {
+        ctx.message!.text = 'http://private-host.com'
+        const dns = await import('node:dns/promises')
+        vi.mocked(dns.default.lookup).mockResolvedValueOnce([{ address: 'fd00::1', family: 6 }] as any)
+
+        await handler.events['msg:text'](ctx)
+
+        expect(ctx.reply).toHaveBeenCalledWith('download_error')
+      })
     })
   })
 })

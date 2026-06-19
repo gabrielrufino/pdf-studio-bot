@@ -119,11 +119,14 @@ export class DownloadHandler extends BaseHandler {
   }
 
   private isPrivateIP(ip: string): boolean {
-    if (!isIP(ip)) {
+    const cleanIp = ip.startsWith('[') && ip.endsWith(']') ? ip.slice(1, -1) : ip
+
+    if (!isIP(cleanIp)) {
       return false
     }
 
     const ipv4PrivateRegex = /^(?:10\.|127\.|169\.254\.|172\.(?:1[6-9]|2\d|3[01])\.|192\.168\.)/
-    return ipv4PrivateRegex.test(ip) || ip === '::1' || ip === '0.0.0.0'
+    const ipv6PrivateRegex = /^(?:fc00|fd00|fe80|::1)/i
+    return ipv4PrivateRegex.test(cleanIp) || ipv6PrivateRegex.test(cleanIp) || cleanIp === '0.0.0.0'
   }
 }
