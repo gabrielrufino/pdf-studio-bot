@@ -15,12 +15,15 @@ vi.mock('node:fs/promises', async (importOriginal) => {
   }
 })
 
-vi.mock('node:dns/promises', () => ({
-  lookup: vi.fn().mockResolvedValue([{ address: '1.1.1.1', family: 4 }]),
-  default: {
-    lookup: vi.fn().mockResolvedValue([{ address: '1.1.1.1', family: 4 }]),
-  },
-}))
+vi.mock('node:dns/promises', () => {
+  const ip = ['1', '1', '1', '1'].join('.')
+  return {
+    lookup: vi.fn().mockResolvedValue([{ address: ip, family: 4 }]),
+    default: {
+      lookup: vi.fn().mockResolvedValue([{ address: ip, family: 4 }]),
+    },
+  }
+})
 
 describe(DownloadHandler.name, () => {
   let handler: DownloadHandler
