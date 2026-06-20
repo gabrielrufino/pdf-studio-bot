@@ -101,7 +101,7 @@ describe(BaseRepository.name, () => {
     const created = await repo.insertMany(entities)
 
     expect(created.length).toBe(2)
-    expect(created[0]?._id).toBeDefined()
-    expect(created[1]?._id).toBeDefined()
+    expect((created[0] as any)?._id).toBeDefined()
+    expect((created[1] as any)?._id).toBeDefined()
   })
 })
