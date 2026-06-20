@@ -137,3 +137,7 @@ package-lock.json
 .stryker-tmp
 reports
 
+# Merge/Conflict backup files
+*.orig
+
+

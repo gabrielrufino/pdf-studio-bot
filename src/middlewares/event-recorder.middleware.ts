@@ -58,7 +58,7 @@ export async function eventRecorderMiddleware(ctx: CustomContext, next: NextFunc
 
   if (events.length > 0) {
     // Fire and forget to not block the request
-    Promise.all(events.map(event => eventRepository.create(event))).catch((error) => {
+    eventRepository.insertMany(events).catch((error) => {
       logger.error({ error }, 'Failed to record events')
     })
   }

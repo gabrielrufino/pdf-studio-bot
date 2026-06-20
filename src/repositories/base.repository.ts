@@ -48,6 +48,18 @@ export abstract class BaseRepository<T extends Document & { updated_at: Date }> 
   }
 
   @EnsureInitialized
+  public async insertMany(entities: T[]): Promise<T[]> {
+    if (entities.length === 0) {
+      return []
+    }
+    const result = await this.collection.insertMany(entities as any)
+    return entities.map((entity, index) => ({
+      ...entity,
+      _id: result.insertedIds[index],
+    }))
+  }
+
+  @EnsureInitialized
   public async updateById(id: ObjectId, entity: Partial<T>): Promise<T | null> {
     entity.updated_at = new Date()
 
