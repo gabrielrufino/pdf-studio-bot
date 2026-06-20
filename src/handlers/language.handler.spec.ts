@@ -46,7 +46,7 @@ describe(LanguageHandler.name, () => {
 
   describe(LanguageHandler.prototype.onCommand.name, () => {
     it('should set session command and reply with language options', async () => {
-      const ctx: any = {
+      const ctx = {
         t: (key: string) => key,
         session: {
           command: null,
@@ -75,7 +75,7 @@ describe(LanguageHandler.name, () => {
 
   describe('events.callback_query', () => {
     it('should do nothing if data is missing', async () => {
-      const ctx: any = {
+      const ctx = {
         callbackQuery: {},
       } as unknown as CustomContext
 
@@ -85,7 +85,7 @@ describe(LanguageHandler.name, () => {
     })
 
     it('should do nothing if data is not a valid LanguageEnum', async () => {
-      const ctx: any = {
+      const ctx = {
         callbackQuery: { data: 'invalid' },
       } as unknown as CustomContext
 
@@ -99,9 +99,9 @@ describe(LanguageHandler.name, () => {
         _id: 'user_123',
         language: LanguageEnum.English,
       }
-      vi.spyOn(userRepository, 'findByTelegramId').mockResolvedValue(mockUser as any)
+      vi.mocked(userRepository.findByTelegramId).mockResolvedValue(mockUser as any)
 
-      const ctx: any = {
+      const ctx = {
         callbackQuery: { data: LanguageEnum.Spanish },
         from: { id: 12345 },
         session: { language: LanguageEnum.English, command: CommandEnum.Language, params: {} },
@@ -117,9 +117,9 @@ describe(LanguageHandler.name, () => {
     })
 
     it('should set session language, send responses and reset session', async () => {
-      vi.spyOn(userRepository, 'findByTelegramId').mockResolvedValue(null)
+      vi.mocked(userRepository.findByTelegramId).mockResolvedValue(null)
 
-      const ctx: any = {
+      const ctx = {
         callbackQuery: { data: LanguageEnum.Portuguese },
         from: { id: 12345 },
         session: { language: LanguageEnum.English, command: CommandEnum.Language, params: { foo: 'bar' } },
