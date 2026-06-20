@@ -5,6 +5,7 @@ import type { CustomContext } from '../types/custom-context.type'
 import dns from 'node:dns/promises'
 import fs from 'node:fs/promises'
 import { isIP } from 'node:net'
+import ipaddr from 'ipaddr.js'
 import os from 'node:os'
 import path from 'node:path'
 import { InputFile } from 'grammy'
@@ -125,8 +126,13 @@ export class DownloadHandler extends BaseHandler {
       return false
     }
 
-    const ipv4PrivateRegex = /^(?:10\.|127\.|169\.254\.|172\.(?:1[6-9]|2\d|3[01])\.|192\.168\.)/
-    const ipv6PrivateRegex = /^(?:fc00|fd00|fe80|::1)/i
-    return ipv4PrivateRegex.test(cleanIp) || ipv6PrivateRegex.test(cleanIp) || cleanIp === '0.0.0.0'
+    try {
+      const addr = ipaddr.parse(cleanIp)
+      const range = addr.range()
+      return ['uniqueLocal', 'linkLocal', 'loopback', 'private', 'unspecified'].includes(range)
+    }
+    catch {
+      return false
+    }
   }
 }
