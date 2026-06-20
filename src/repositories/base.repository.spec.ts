@@ -104,4 +104,13 @@ describe(BaseRepository.name, () => {
     expect((created[0] as any)?._id).toBeDefined()
     expect((created[1] as any)?._id).toBeDefined()
   })
+
+  it('should return empty array if no entities are passed to insertMany', async () => {
+    const db = client.db('test_db_7')
+    const repo = new TestRepository(db)
+
+    const created = await repo.insertMany([])
+
+    expect(created).toEqual([])
+  })
 })
