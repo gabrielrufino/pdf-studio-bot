@@ -89,19 +89,4 @@ describe(BaseRepository.name, () => {
     const found = await db.collection('test').findOne({ _id: (created as any)._id })
     expect(found?.name).toBe('updated')
   })
-
-  it('should insert multiple entities', async () => {
-    const db = client.db('test_db_6')
-    const repo = new TestRepository(db)
-    const entities = [
-      { name: 'entity1', updated_at: new Date() },
-      { name: 'entity2', updated_at: new Date() },
-    ]
-
-    const created = await repo.insertMany(entities)
-
-    expect(created.length).toBe(2)
-    expect(created[0]?._id).toBeDefined()
-    expect(created[1]?._id).toBeDefined()
-  })
 })
