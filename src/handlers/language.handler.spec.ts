@@ -6,6 +6,14 @@ import { CommandEnum } from '../enums/command.enum'
 import { LanguageEnum } from '../enums/language.enum'
 import { LanguageHandler } from './language.handler'
 
+vi.mock('../config/database', () => ({
+  database: {
+    collection: vi.fn(),
+  },
+  mongoClient: {},
+}))
+vi.mock('../repositories')
+
 describe(LanguageHandler.name, () => {
   let handler: LanguageHandler
   let userRepository: UserRepository
