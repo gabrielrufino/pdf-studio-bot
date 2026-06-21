@@ -8,6 +8,7 @@ import { isIP } from 'node:net'
 import os from 'node:os'
 import path from 'node:path'
 import { InputFile } from 'grammy'
+import ipaddr from 'ipaddr.js'
 import { z } from 'zod'
 import { CommandEnum } from '../enums/command.enum'
 import { SessionValidationError } from '../errors/session-validation.error'
@@ -119,11 +120,22 @@ export class DownloadHandler extends BaseHandler {
   }
 
   private isPrivateIP(ip: string): boolean {
-    if (!isIP(ip)) {
+    const cleanIp = ip.startsWith('[') && ip.endsWith(']') ? ip.slice(1, -1) : ip
+
+    if (!isIP(cleanIp)) {
       return false
     }
 
-    const ipv4PrivateRegex = /^(?:10\.|127\.|169\.254\.|172\.(?:1[6-9]|2\d|3[01])\.|192\.168\.)/
-    return ipv4PrivateRegex.test(ip) || ip === '::1' || ip === '0.0.0.0'
+    try {
+      let addr = ipaddr.parse(cleanIp)
+      if (addr.kind() === 'ipv6' && (addr as ipaddr.IPv6).isIPv4MappedAddress()) {
+        addr = (addr as ipaddr.IPv6).toIPv4Address()
+      }
+      const range = addr.range()
+      return ['uniqueLocal', 'linkLocal', 'loopback', 'private', 'unspecified'].includes(range)
+    }
+    catch {
+      return false
+    }
   }
 }

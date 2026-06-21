@@ -26,6 +26,9 @@ importers:
       grammy:
         specifier: 1.43.0
         version: 1.43.0
+      ipaddr.js:
+        specifier: ^2.4.0
+        version: 2.4.0
       mongodb:
         specifier: 6.21.0
         version: 6.21.0(socks@2.8.9)
@@ -2578,6 +2581,10 @@ packages:
   ip-address@10.2.0:
     resolution: {integrity: sha512-/+S6j4E9AHvW9SWMSEY9Xfy66O5PWvVEJ08O0y5JGyEKQpojb0K0GKpz/v5HJ/G0vi3D2sjGK78119oXZeE0qA==}
     engines: {node: '>= 12'}
+
+  ipaddr.js@2.4.0:
+    resolution: {integrity: sha512-9VGk3HGanVE6JoZXHiCpnGy5X0jYDnN4EA4lntFPj+1vIWlFhIylq2CrrCOJH9EAhc5CYhq18F2Av2tgoAPsYQ==}
+    engines: {node: '>= 10'}
 
   is-arrayish@0.2.1:
     resolution: {integrity: sha512-zz06S8t0ozoDXMG+ube26zeCTNXcKIPJZJi8hBrF4idCLms4CG9QtK7qBl1boi5ODzFpjswb5JPmHCbMpjaYzg==}
@@ -6548,6 +6555,8 @@ snapshots:
   ini@4.1.1: {}
 
   ip-address@10.2.0: {}
+
+  ipaddr.js@2.4.0: {}
 
   is-arrayish@0.2.1: {}
 

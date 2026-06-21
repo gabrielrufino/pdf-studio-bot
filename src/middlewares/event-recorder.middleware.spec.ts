@@ -6,6 +6,7 @@ import { eventRecorderMiddleware } from './event-recorder.middleware'
 vi.mock('../repositories', () => ({
   eventRepository: {
     create: vi.fn(),
+    insertMany: vi.fn().mockResolvedValue([]),
   },
 }))
 
@@ -20,7 +21,7 @@ describe(eventRecorderMiddleware.name, () => {
     const ctx: any = {}
     await eventRecorderMiddleware(ctx, next)
     expect(next).toHaveBeenCalled()
-    expect(eventRepository.create).not.toHaveBeenCalled()
+    expect(eventRepository.insertMany).not.toHaveBeenCalled()
   })
 
   it('should record specific CommandStart if message text starts with /start', async () => {
@@ -30,10 +31,10 @@ describe(eventRecorderMiddleware.name, () => {
     }
     await eventRecorderMiddleware(ctx, next)
     expect(next).toHaveBeenCalled()
-    expect(eventRepository.create).toHaveBeenCalledWith(expect.objectContaining({
+    expect(eventRepository.insertMany).toHaveBeenCalledWith([expect.objectContaining({
       event: EventEnum.CommandStart,
       telegram_user: { id: 123 },
-    }))
+    })])
   })
 
   it('should record specific ButtonPro if callbackQuery data is pro', async () => {
@@ -43,10 +44,10 @@ describe(eventRecorderMiddleware.name, () => {
     }
     await eventRecorderMiddleware(ctx, next)
     expect(next).toHaveBeenCalled()
-    expect(eventRepository.create).toHaveBeenCalledWith(expect.objectContaining({
+    expect(eventRepository.insertMany).toHaveBeenCalledWith([expect.objectContaining({
       event: EventEnum.ButtonPro,
       telegram_user: { id: 123 },
-    }))
+    })])
   })
 
   it('should record FileReceived if document is present', async () => {
@@ -56,11 +57,11 @@ describe(eventRecorderMiddleware.name, () => {
     }
     await eventRecorderMiddleware(ctx, next)
     expect(next).toHaveBeenCalled()
-    expect(eventRepository.create).toHaveBeenCalledWith(expect.objectContaining({
+    expect(eventRepository.insertMany).toHaveBeenCalledWith([expect.objectContaining({
       event: EventEnum.FileReceived,
       telegram_user: { id: 123 },
       metadata: { mime_type: 'application/pdf' },
-    }))
+    })])
   })
 
   it('should not record anything for unknown command', async () => {
@@ -70,7 +71,7 @@ describe(eventRecorderMiddleware.name, () => {
     }
     await eventRecorderMiddleware(ctx, next)
     expect(next).toHaveBeenCalled()
-    expect(eventRepository.create).not.toHaveBeenCalled()
+    expect(eventRepository.insertMany).not.toHaveBeenCalled()
   })
 
   it('should not record anything if no relevant update', async () => {
@@ -80,6 +81,6 @@ describe(eventRecorderMiddleware.name, () => {
     }
     await eventRecorderMiddleware(ctx, next)
     expect(next).toHaveBeenCalled()
-    expect(eventRepository.create).not.toHaveBeenCalled()
+    expect(eventRepository.insertMany).not.toHaveBeenCalled()
   })
 })

@@ -42,6 +42,19 @@ describe(messageRecorderMiddleware.name, () => {
     expect(next).toHaveBeenCalled()
   })
 
+  it('should mask password text if command is RemovePassword', async () => {
+    ctx.session.command = CommandEnum.RemovePassword
+    ctx.message.text = 'secret123'
+
+    await messageRecorderMiddleware(ctx, next)
+
+    expect(messageRepository.create).toHaveBeenCalledWith(expect.objectContaining({
+      text: '***',
+      telegram_user: ctx.from,
+    }))
+    expect(next).toHaveBeenCalled()
+  })
+
   it('should handle missing message text', async () => {
     ctx.message.text = undefined
 
