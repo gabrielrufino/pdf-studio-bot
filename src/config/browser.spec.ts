@@ -86,25 +86,4 @@ describe('browser config', () => {
 
     expect(mockBrowser.close).not.toHaveBeenCalled()
   })
-
-  it('should not cache the promise if launch fails', async () => {
-    vi.mocked(puppeteer.launch).mockRejectedValueOnce(new Error('Launch failed'))
-
-    await expect(browserInstance.getInstance()).rejects.toThrow('Launch failed')
-
-    vi.mocked(puppeteer.launch).mockResolvedValueOnce(mockBrowser as any)
-    const instance = await browserInstance.getInstance()
-    expect(instance).toBe(mockBrowser)
-    expect(puppeteer.launch).toHaveBeenCalledTimes(2)
-  })
-
-  it('should reset the instance even if close throws an error', async () => {
-    await browserInstance.getInstance()
-    mockBrowser.close.mockRejectedValueOnce(new Error('Close failed'))
-
-    await expect(browserInstance.close()).rejects.toThrow('Close failed')
-
-    await browserInstance.getInstance()
-    expect(puppeteer.launch).toHaveBeenCalledTimes(2)
-  })
 })

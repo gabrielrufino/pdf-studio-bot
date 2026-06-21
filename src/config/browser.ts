@@ -33,22 +33,16 @@ export class Browser {
 
   async getInstance(): Promise<PuppeteerBrowser> {
     if (!this.browserPromise) {
-      this.browserPromise = puppeteer.launch(this.getBrowserConfig()).catch((error) => {
-        this.browserPromise = null
-        throw error
-      })
+      this.browserPromise = puppeteer.launch(this.getBrowserConfig())
     }
     return this.browserPromise
   }
 
   async close(): Promise<void> {
     if (this.browserPromise) {
-      try {
-        const browser = await this.browserPromise
-        await browser.close()
-      } finally {
-        this.browserPromise = null
-      }
+      const browser = await this.browserPromise
+      await browser.close()
+      this.browserPromise = null
     }
   }
 }
