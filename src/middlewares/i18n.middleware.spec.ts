@@ -30,7 +30,7 @@ describe(i18nMiddleware.name, () => {
 
     expect(userRepository.findByTelegramId).not.toHaveBeenCalled()
     expect(ctx.session.language).toBe(LanguageEnum.Spanish)
-    expect(ctx.t).toBeDefined()
+    expect(ctx.t('operation_help')).toBe(locales.es.operation_help)
     expect(next).toHaveBeenCalled()
   })
 
@@ -43,6 +43,7 @@ describe(i18nMiddleware.name, () => {
 
     expect(userRepository.findByTelegramId).toHaveBeenCalledWith(12345)
     expect(ctx.session.language).toBe(LanguageEnum.Portuguese)
+    expect(ctx.t('operation_help')).toBe(locales.pt.operation_help)
     expect(next).toHaveBeenCalled()
   })
 
@@ -55,6 +56,7 @@ describe(i18nMiddleware.name, () => {
     await i18nMiddleware(ctx, next)
 
     expect(ctx.session.language).toBe(LanguageEnum.Spanish)
+    expect(ctx.t('operation_help')).toBe(locales.es.operation_help)
     expect(next).toHaveBeenCalled()
   })
 
@@ -67,6 +69,7 @@ describe(i18nMiddleware.name, () => {
     await i18nMiddleware(ctx, next)
 
     expect(ctx.session.language).toBe(LanguageEnum.English)
+    expect(ctx.t('operation_help')).toBe(locales.en.operation_help)
     expect(next).toHaveBeenCalled()
   })
 
@@ -76,6 +79,7 @@ describe(i18nMiddleware.name, () => {
     await i18nMiddleware(ctx, next)
 
     expect(ctx.session.language).toBe(LanguageEnum.English)
+    expect(ctx.t('operation_help')).toBe(locales.en.operation_help)
     expect(next).toHaveBeenCalled()
   })
 
