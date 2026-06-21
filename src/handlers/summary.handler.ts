@@ -8,6 +8,7 @@ import { CommandEnum } from '../enums/command.enum'
 import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { LimitExceededError } from '../errors/limit-exceeded.error'
 import { UserNotFoundError } from '../errors/user-not-found.error'
+import { splitMessage } from '../utils/message.util'
 import { BaseHandler } from './base.handler'
 
 export class SummaryHandler extends BaseHandler {
@@ -171,7 +172,7 @@ export class SummaryHandler extends BaseHandler {
     }
 
     await ctx.api.editMessageText(ctx.chat!.id, messageId, '✅ Summary complete! It is quite long, sending it in parts below:')
-    const chunks = this.splitMessage(telegramMarkdown)
+    const chunks = splitMessage(telegramMarkdown)
     for (const chunk of chunks) {
       try {
         await ctx.reply(chunk, { parse_mode: 'Markdown' })
@@ -181,43 +182,5 @@ export class SummaryHandler extends BaseHandler {
         await ctx.reply(chunk)
       }
     }
-  }
-
-  private splitMessage(text: string, maxLength = 4000): string[] {
-    const chunks: string[] = []
-    let currentChunk = ''
-
-    const lines = text.split('\n')
-    for (const line of lines) {
-      if (line.length > maxLength) {
-        if (currentChunk) {
-          chunks.push(currentChunk)
-          currentChunk = ''
-        }
-        let remainingLine = line
-        while (remainingLine.length > maxLength) {
-          chunks.push(remainingLine.slice(0, maxLength))
-          remainingLine = remainingLine.slice(maxLength)
-        }
-        currentChunk = remainingLine
-        continue
-      }
-
-      if (currentChunk.length + line.length + 1 > maxLength) {
-        if (currentChunk) {
-          chunks.push(currentChunk)
-        }
-        currentChunk = line
-      }
-      else {
-        currentChunk += (currentChunk ? '\n' : '') + line
-      }
-    }
-
-    if (currentChunk) {
-      chunks.push(currentChunk)
-    }
-
-    return chunks
   }
 }
