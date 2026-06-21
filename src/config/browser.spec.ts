@@ -1,5 +1,5 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import puppeteer from 'puppeteer'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Browser } from './browser'
 
 vi.mock('puppeteer', () => ({
