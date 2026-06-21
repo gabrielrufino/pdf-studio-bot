@@ -6,7 +6,7 @@ import { messageRepository } from '../repositories'
 
 export async function messageRecorderMiddleware(ctx: CustomContext, next: NextFunction) {
   if (ctx.message) {
-    const isPassword = ctx.session.command === CommandEnum.PutPassword
+    const isPassword = ctx.session.command === CommandEnum.PutPassword || ctx.session.command === CommandEnum.RemovePassword
 
     const message = new MessageEntity({
       text: isPassword ? '***' : (ctx.message.text || ''),
