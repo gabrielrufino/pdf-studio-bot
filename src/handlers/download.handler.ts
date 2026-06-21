@@ -127,7 +127,10 @@ export class DownloadHandler extends BaseHandler {
     }
 
     try {
-      const addr = ipaddr.parse(cleanIp)
+      let addr = ipaddr.parse(cleanIp)
+      if (addr.kind() === 'ipv6' && (addr as ipaddr.IPv6).isIPv4MappedAddress()) {
+        addr = (addr as ipaddr.IPv6).toIPv4Address()
+      }
       const range = addr.range()
       return ['uniqueLocal', 'linkLocal', 'loopback', 'private', 'unspecified'].includes(range)
     }
