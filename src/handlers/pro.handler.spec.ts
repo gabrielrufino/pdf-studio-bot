@@ -159,6 +159,7 @@ describe(ProHandler.name, () => {
 
         const ctx = createMockContext({
           session: { command: CommandEnum.Pro, params: null },
+          message: { successful_payment: { total_amount: 350, currency: CurrencyEnum.XTR } },
         })
 
         await handler.events['message:successful_payment'](ctx)
