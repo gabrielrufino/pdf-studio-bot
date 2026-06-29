@@ -41,8 +41,8 @@ export class ProHandler extends BaseHandler {
           }),
           this.paymentRepository.create(new PaymentEntity({
             user_id: user._id,
-            amount: ctx.message?.successful_payment?.total_amount,
-            currency: ctx.message?.successful_payment?.currency as any,
+            amount: ctx.message!.successful_payment!.total_amount,
+            currency: ctx.message!.successful_payment!.currency as CurrencyEnum,
           })),
         ])
 
