@@ -17,7 +17,9 @@ export class RemovePasswordHandler extends PasswordBaseHandler {
       try {
         pdfWriter.end()
       }
-      catch { }
+      catch (cleanupError) {
+        this.logger.error({ error: cleanupError }, 'Failed to close PDF writer during cleanup.')
+      }
       throw error
     }
   }
