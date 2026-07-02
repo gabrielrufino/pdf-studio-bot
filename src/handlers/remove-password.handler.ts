@@ -11,14 +11,16 @@ export class RemovePasswordHandler extends PasswordBaseHandler {
     const pdfWriter = muhammara.createWriter(output)
     try {
       pdfWriter.appendPDFPagesFromPDF(input, { password })
-      pdfWriter.end()
     }
     catch (error) {
       try {
         pdfWriter.end()
       }
-      catch { }
+      catch (cleanupError) {
+        this.logger.error({ error: cleanupError }, 'Failed to close PDF writer during cleanup.')
+      }
       throw error
     }
+    pdfWriter.end()
   }
 }

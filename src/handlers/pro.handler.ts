@@ -1,3 +1,4 @@
+import type { ConfigurationRepository } from '../repositories/configuration.repository'
 import type { PaymentRepository } from '../repositories/payment.repository'
 import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
@@ -15,6 +16,7 @@ export class ProHandler extends BaseHandler {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly paymentRepository: PaymentRepository,
+    private readonly configurationRepository: ConfigurationRepository,
   ) {
     super()
   }
@@ -41,8 +43,8 @@ export class ProHandler extends BaseHandler {
           }),
           this.paymentRepository.create(new PaymentEntity({
             user_id: user._id,
-            amount: ctx.message?.successful_payment?.total_amount,
-            currency: ctx.message?.successful_payment?.currency as any,
+            amount: ctx.message!.successful_payment!.total_amount,
+            currency: ctx.message!.successful_payment!.currency as CurrencyEnum,
           })),
         ])
 
@@ -69,9 +71,11 @@ export class ProHandler extends BaseHandler {
 
     await this.setSessionCommand(ctx)
 
-    const amount = process.env.NODE_ENV === 'production'
+    const config = await this.configurationRepository.findByKey('pro_stars_amount')
+    const fallback = process.env.NODE_ENV === 'production'
       ? ProHandler.STARS_AMOUNT_PROD
       : ProHandler.STARS_AMOUNT_DEV
+    const amount = config ? Number(config.value) : fallback
 
     await ctx.replyWithInvoice(
       'PDF Studio PRO',

@@ -1,7 +1,7 @@
 import type { BaseHandler } from './base.handler'
 import { ai } from '../config/ai'
 import { browser } from '../config/browser'
-import { feedbackRepository, paymentRepository, userRepository } from '../repositories'
+import { configurationRepository, feedbackRepository, paymentRepository, userRepository } from '../repositories'
 import { DownloadHandler } from './download.handler'
 import { FeedbackHandler } from './feedback.handler'
 import { HelpHandler } from './help.handler'
@@ -22,7 +22,7 @@ const coreHandlers: Array<BaseHandler> = [
   new JoinHandler(userRepository),
   new LanguageHandler(userRepository),
   new PdfToImagesHandler(userRepository),
-  new ProHandler(userRepository, paymentRepository),
+  new ProHandler(userRepository, paymentRepository, configurationRepository),
   new PutPasswordHandler(userRepository),
   new RemovePasswordHandler(userRepository),
   new SplitHandler(userRepository),

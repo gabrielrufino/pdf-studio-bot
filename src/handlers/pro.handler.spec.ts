@@ -1,4 +1,5 @@
 import type { UserEntity } from '../entities/user.entity'
+import type { ConfigurationRepository } from '../repositories/configuration.repository'
 import type { PaymentRepository } from '../repositories/payment.repository'
 import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
@@ -13,6 +14,7 @@ describe(ProHandler.name, () => {
   let handler: ProHandler
   let userRepository: UserRepository
   let paymentRepository: PaymentRepository
+  let configurationRepository: ConfigurationRepository
 
   const createMockUser = (overrides?: Partial<UserEntity>): UserEntity => ({
     _id: 'user-id',
@@ -33,7 +35,11 @@ describe(ProHandler.name, () => {
       create: vi.fn(),
     } as unknown as PaymentRepository
 
-    handler = new ProHandler(userRepository, paymentRepository)
+    configurationRepository = {
+      findByKey: vi.fn().mockResolvedValue(null),
+    } as unknown as ConfigurationRepository
+
+    handler = new ProHandler(userRepository, paymentRepository, configurationRepository)
     process.env.PROVIDER_TOKEN = 'test-token'
   })
 
@@ -84,10 +90,11 @@ describe(ProHandler.name, () => {
       )
     })
 
-    it('should use 350 stars in production', async () => {
+    it('should use 350 stars in production when no DB config exists', async () => {
       process.env.NODE_ENV = 'production'
       const existingUser = createMockUser()
       vi.spyOn(userRepository, 'findByTelegramId').mockResolvedValueOnce(existingUser)
+      vi.spyOn(configurationRepository, 'findByKey').mockResolvedValueOnce(null)
 
       const ctx = createMockContext()
 
@@ -99,6 +106,30 @@ describe(ProHandler.name, () => {
         expect.any(String),
         expect.any(String),
         [{ label: 'PRO Subscription', amount: 350 }],
+        expect.any(Object),
+      )
+    })
+
+    it('should use the amount from DB when pro_stars_amount config exists', async () => {
+      process.env.NODE_ENV = 'production'
+      const existingUser = createMockUser()
+      vi.spyOn(userRepository, 'findByTelegramId').mockResolvedValueOnce(existingUser)
+      vi.spyOn(configurationRepository, 'findByKey').mockResolvedValueOnce({
+        key: 'pro_stars_amount',
+        value: '500',
+      } as any)
+
+      const ctx = createMockContext()
+
+      await handler.onCommand(ctx)
+
+      expect(configurationRepository.findByKey).toHaveBeenCalledWith('pro_stars_amount')
+      expect(ctx.replyWithInvoice).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
+        [{ label: 'PRO Subscription', amount: 500 }],
         expect.any(Object),
       )
     })
@@ -131,6 +162,7 @@ describe(ProHandler.name, () => {
 
         const ctx = createMockContext({
           session: { command: CommandEnum.Pro, params: null },
+          message: { successful_payment: { total_amount: 350, currency: CurrencyEnum.XTR } },
         })
 
         await handler.events['message:successful_payment'](ctx)
@@ -158,6 +190,7 @@ describe(ProHandler.name, () => {
 
         const ctx = createMockContext({
           session: { command: CommandEnum.Pro, params: null },
+          message: { successful_payment: { total_amount: 350, currency: CurrencyEnum.XTR } },
         })
 
         await handler.events['message:successful_payment'](ctx)
