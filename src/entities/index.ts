@@ -1,4 +1,5 @@
 export * from './base.entity'
+export * from './configuration.entity'
 export * from './event.entity'
 export * from './feedback.entity'
 export * from './message.entity'
