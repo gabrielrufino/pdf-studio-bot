@@ -11,7 +11,6 @@ export class RemovePasswordHandler extends PasswordBaseHandler {
     const pdfWriter = muhammara.createWriter(output)
     try {
       pdfWriter.appendPDFPagesFromPDF(input, { password })
-      pdfWriter.end()
     }
     catch (error) {
       try {
@@ -22,5 +21,6 @@ export class RemovePasswordHandler extends PasswordBaseHandler {
       }
       throw error
     }
+    pdfWriter.end()
   }
 }
