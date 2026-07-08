@@ -2,7 +2,6 @@ import type { ConfigurationRepository } from '../repositories/configuration.repo
 import type { PaymentRepository } from '../repositories/payment.repository'
 import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
-import process from 'node:process'
 import { PaymentEntity } from '../entities/payment.entity'
 import { CommandEnum } from '../enums/command.enum'
 import { CurrencyEnum } from '../enums/currency.enum'
@@ -10,9 +9,6 @@ import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { BaseHandler } from './base.handler'
 
 export class ProHandler extends BaseHandler {
-  private static readonly STARS_AMOUNT_PROD = 350
-  private static readonly STARS_AMOUNT_DEV = 1
-
   constructor(
     private readonly userRepository: UserRepository,
     private readonly paymentRepository: PaymentRepository,
@@ -71,18 +67,14 @@ export class ProHandler extends BaseHandler {
 
     await this.setSessionCommand(ctx)
 
-    const config = await this.configurationRepository.findByKey('pro_stars_amount')
-    const fallback = process.env.NODE_ENV === 'production'
-      ? ProHandler.STARS_AMOUNT_PROD
-      : ProHandler.STARS_AMOUNT_DEV
-    const amount = config ? Number(config.value) : fallback
+    const { pro_price } = await this.configurationRepository.findGlobalConfig()
 
     await ctx.replyWithInvoice(
       'PDF Studio PRO',
       ctx.t('pro_upgrade'),
       'pdf-studio-pro-subscription',
       CurrencyEnum.XTR,
-      [{ label: 'PRO Subscription', amount }],
+      [{ label: 'PRO Subscription', amount: pro_price }],
       {
         provider_token: '',
       },

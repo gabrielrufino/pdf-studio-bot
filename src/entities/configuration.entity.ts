@@ -1,12 +1,6 @@
-import { BaseEntity } from './base.entity'
-
-export class ConfigurationEntity extends BaseEntity {
-  constructor(input?: Partial<ConfigurationEntity>) {
-    super()
-    this.assign(input)
-  }
-
-  key!: string
-
-  value!: string
+export interface ConfigurationEntity {
+  _id: 'global_config'
+  pro_price: number
+  created_at: Date
+  updated_at: Date
 }
