@@ -1,8 +1,8 @@
 import type { UserEntity } from '../entities/user.entity'
+import type { ConfigurationRepository } from '../repositories/configuration.repository'
 import type { PaymentRepository } from '../repositories/payment.repository'
 import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
-import process from 'node:process'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CommandEnum } from '../enums/command.enum'
 import { CurrencyEnum } from '../enums/currency.enum'
@@ -13,6 +13,7 @@ describe(ProHandler.name, () => {
   let handler: ProHandler
   let userRepository: UserRepository
   let paymentRepository: PaymentRepository
+  let configurationRepository: ConfigurationRepository
 
   const createMockUser = (overrides?: Partial<UserEntity>): UserEntity => ({
     _id: 'user-id',
@@ -33,8 +34,16 @@ describe(ProHandler.name, () => {
       create: vi.fn(),
     } as unknown as PaymentRepository
 
-    handler = new ProHandler(userRepository, paymentRepository)
-    process.env.PROVIDER_TOKEN = 'test-token'
+    configurationRepository = {
+      findGlobalConfig: vi.fn().mockResolvedValue({
+        _id: 'global_config',
+        pro_price: 350,
+        created_at: new Date(),
+        updated_at: new Date(),
+      }),
+    } as unknown as ConfigurationRepository
+
+    handler = new ProHandler(userRepository, paymentRepository, configurationRepository)
   })
 
   it('should be defined', () => {
@@ -62,8 +71,7 @@ describe(ProHandler.name, () => {
       expect(ctx.session.command).toBeNull()
     })
 
-    it('should set session command and send invoice if user is not PRO using Stars (development)', async () => {
-      process.env.NODE_ENV = 'development'
+    it('should set session command and send invoice with pro_price from config', async () => {
       const existingUser = createMockUser()
       vi.spyOn(userRepository, 'findByTelegramId').mockResolvedValueOnce(existingUser)
 
@@ -77,28 +85,34 @@ describe(ProHandler.name, () => {
         'pro_upgrade',
         'pdf-studio-pro-subscription',
         CurrencyEnum.XTR,
-        [{ label: 'PRO Subscription', amount: 1 }],
+        [{ label: 'PRO Subscription', amount: 350 }],
         {
           provider_token: '',
         },
       )
     })
 
-    it('should use 350 stars in production', async () => {
-      process.env.NODE_ENV = 'production'
+    it('should use the pro_price from global config', async () => {
       const existingUser = createMockUser()
       vi.spyOn(userRepository, 'findByTelegramId').mockResolvedValueOnce(existingUser)
+      vi.spyOn(configurationRepository, 'findGlobalConfig').mockResolvedValueOnce({
+        _id: 'global_config',
+        pro_price: 500,
+        created_at: new Date(),
+        updated_at: new Date(),
+      })
 
       const ctx = createMockContext()
 
       await handler.onCommand(ctx)
 
+      expect(configurationRepository.findGlobalConfig).toHaveBeenCalled()
       expect(ctx.replyWithInvoice).toHaveBeenCalledWith(
         expect.any(String),
         expect.any(String),
         expect.any(String),
         expect.any(String),
-        [{ label: 'PRO Subscription', amount: 350 }],
+        [{ label: 'PRO Subscription', amount: 500 }],
         expect.any(Object),
       )
     })
@@ -131,6 +145,7 @@ describe(ProHandler.name, () => {
 
         const ctx = createMockContext({
           session: { command: CommandEnum.Pro, params: null },
+          message: { successful_payment: { total_amount: 350, currency: CurrencyEnum.XTR } },
         })
 
         await handler.events['message:successful_payment'](ctx)
@@ -158,6 +173,7 @@ describe(ProHandler.name, () => {
 
         const ctx = createMockContext({
           session: { command: CommandEnum.Pro, params: null },
+          message: { successful_payment: { total_amount: 350, currency: CurrencyEnum.XTR } },
         })
 
         await handler.events['message:successful_payment'](ctx)
