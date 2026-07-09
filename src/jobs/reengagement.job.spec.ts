@@ -109,6 +109,9 @@ describe('reengagementJob', () => {
     await callback()
 
     expect(bot.api.sendMessage).toHaveBeenCalledTimes(2)
+    expect(bot.api.sendMessage).toHaveBeenNthCalledWith(1, 123, locales.en.reengagement_message, { parse_mode: 'HTML' })
+    expect(bot.api.sendMessage).toHaveBeenNthCalledWith(2, 456, locales.pt.reengagement_message, { parse_mode: 'HTML' })
+    expect(logger.error).toHaveBeenCalledTimes(1)
     expect(logger.error).toHaveBeenCalledWith(
       { error, userId: 123 },
       'Failed to send re-engagement message',
