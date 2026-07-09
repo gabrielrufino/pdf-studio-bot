@@ -145,6 +145,31 @@ describe(PdfToImagesHandler.name, () => {
         expect(ctx.reply).toHaveBeenCalledWith('pdftoimages_error')
       })
 
+      it('should handle writeFile failure and still clean up temp dir (no race condition)', async () => {
+        ctx.session.command = CommandEnum.PdfToImages
+        const mockImages = [Buffer.from([1, 2, 3]), Buffer.from([4, 5, 6])]
+        const mockDocument = {
+          length: 2,
+          [Symbol.asyncIterator]: vi.fn().mockReturnValue(mockImages[Symbol.iterator]()),
+        }
+        vi.mocked(pdf).mockResolvedValue(mockDocument as any)
+
+        const fs = await import('node:fs/promises')
+        vi.mocked(fs.default.writeFile).mockRejectedValue(new Error('Disk full'))
+
+        await handler.events['msg:document'](ctx)
+
+        // Should report generic error to user
+        expect(ctx.reply).toHaveBeenCalledWith('pdftoimages_error')
+        // Cleanup must still have happened
+        expect(fs.default.rm).toHaveBeenCalledWith(
+          '/tmp/pdf-studio-bot-pdf-to-images-test',
+          expect.objectContaining({ recursive: true }),
+        )
+        // Usage must NOT have been incremented
+        expect(mockUserRepository.incrementUsage).not.toHaveBeenCalled()
+      })
+
       it('should not reply with generic error if file is not a PDF (InvalidFileError)', async () => {
         ctx.session.command = CommandEnum.PdfToImages
         ctx.message!.document!.mime_type = 'image/png'
