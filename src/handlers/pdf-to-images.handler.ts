@@ -72,7 +72,11 @@ export class PdfToImagesHandler extends BaseHandler {
           images.push(imagePath)
           pageNumber++
         }
-        await Promise.all(writePromises)
+        const writeResults = await Promise.allSettled(writePromises)
+        const failedWrite = writeResults.find((result): result is PromiseRejectedResult => result.status === 'rejected')
+        if (failedWrite) {
+          throw failedWrite.reason
+        }
 
         const CHUNK_SIZE = 10
         for (let i = 0; i < images.length; i += CHUNK_SIZE) {
