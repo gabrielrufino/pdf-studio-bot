@@ -64,12 +64,18 @@ export class PdfToImagesHandler extends BaseHandler {
         await fs.chmod(outputDir, 0o700)
 
         const images: string[] = []
+        const writePromises: Promise<void>[] = []
         let pageNumber = 1
         for await (const image of document) {
           const imagePath = join(outputDir, `page-${pageNumber}.png`)
-          await fs.writeFile(imagePath, image)
+          writePromises.push(fs.writeFile(imagePath, image))
           images.push(imagePath)
           pageNumber++
+        }
+        const writeResults = await Promise.allSettled(writePromises)
+        const failedWrite = writeResults.find((result): result is PromiseRejectedResult => result.status === 'rejected')
+        if (failedWrite) {
+          throw failedWrite.reason
         }
 
         const CHUNK_SIZE = 10

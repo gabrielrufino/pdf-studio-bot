@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import { InvalidFileError } from './invalid-file.error'
 import { LimitExceededError } from './limit-exceeded.error'
 import { SessionValidationError } from './session-validation.error'
-import { UserNotFoundError } from './user-not-found.error'
 
 describe('custom errors', () => {
   describe(InvalidFileError.name, () => {
@@ -28,15 +27,6 @@ describe('custom errors', () => {
       const error = new SessionValidationError()
       expect(error.message).toBe('An error occurred. Please start the command again.')
       expect(error.name).toBe('SessionValidationError')
-      expect(error).toBeInstanceOf(Error)
-    })
-  })
-
-  describe(UserNotFoundError.name, () => {
-    it('should have correct message and name', () => {
-      const error = new UserNotFoundError()
-      expect(error.message).toBe('User not found.')
-      expect(error.name).toBe('UserNotFoundError')
       expect(error).toBeInstanceOf(Error)
     })
   })

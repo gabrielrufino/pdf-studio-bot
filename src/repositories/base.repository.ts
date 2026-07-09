@@ -34,8 +34,10 @@ export abstract class BaseRepository<T extends Document & { updated_at: Date }> 
       validator: this.validator,
     })
 
-    for (const index of this.indexes) {
-      await this.collection.createIndex(index as string)
+    if (this.indexes.length > 0) {
+      await this.collection.createIndexes(
+        this.indexes.map(index => ({ key: { [index as string]: 1 } })),
+      )
     }
 
     this.initialized = true
