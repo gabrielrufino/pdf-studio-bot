@@ -18,6 +18,16 @@ describe(BaseRepository.name, () => {
     }
   }
 
+  class TestRepositoryNoIndexes extends BaseRepository<{ name: string, updated_at: Date }> {
+    constructor(database: any) {
+      super({
+        collectionName: 'test',
+        database,
+        validator: { $jsonSchema: { bsonType: 'object', required: ['name'] } },
+      })
+    }
+  }
+
   beforeAll(async () => {
     mongod = await MongoMemoryServer.create()
     client = new MongoClient(mongod.getUri())
@@ -112,5 +122,26 @@ describe(BaseRepository.name, () => {
     const created = await repo.insertMany([])
 
     expect(created).toEqual([])
+  })
+
+  it('should call createIndexes with all indexes on init', async () => {
+    const db = client.db('test_db_8')
+    const repo = new TestRepository(db)
+    const createIndexesSpy = vi.spyOn((repo as any).collection, 'createIndexes')
+
+    await repo.init()
+
+    expect(createIndexesSpy).toHaveBeenCalledOnce()
+    expect(createIndexesSpy).toHaveBeenCalledWith([{ key: { name: 1 } }])
+  })
+
+  it('should not call createIndexes when no indexes are defined', async () => {
+    const db = client.db('test_db_9')
+    const repo = new TestRepositoryNoIndexes(db)
+    const createIndexesSpy = vi.spyOn((repo as any).collection, 'createIndexes')
+
+    await repo.init()
+
+    expect(createIndexesSpy).not.toHaveBeenCalled()
   })
 })
