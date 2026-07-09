@@ -32,19 +32,7 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ steps.package-version.outputs.version }}
-
-  start:
-    name: Start
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actalog/check-ci@main
-      - uses: appleboy/ssh-action@2ead5e36573f08b82fbfce1504f1a4b05a647c6f
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          port: ${{ secrets.SSH_PORT }}
-          script: |
-            cd /root/pdf-studio-bot
-            git pull
-            docker compose up -d --build
+      - env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          gh workflow run cd.yml --repo ${{ secrets.CD_TARGET_REPO }} --ref main
