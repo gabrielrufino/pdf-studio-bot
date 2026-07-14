@@ -35,6 +35,8 @@ async function main() {
     )
   }
 
+  const handlersMap = new Map(handlers.map(h => [h.command, h]))
+
   const events = new Set(handlers.flatMap(handler => Object.keys(handler.events) as FilterQuery[]))
   for (const event of events) {
     bot.on(event, async (ctx, next) => {
@@ -44,11 +46,11 @@ async function main() {
       }
 
       let command = ctx.session.command
-      if (event === 'callback_query' && (!command || handlers.some(h => h.command === ctx.callbackQuery?.data))) {
+      if (event === 'callback_query' && (!command || handlersMap.has(ctx.callbackQuery?.data as CommandEnum))) {
         command = CommandEnum.Help
       }
 
-      const handler = handlers.find(h => h.command === command)
+      const handler = command ? handlersMap.get(command as CommandEnum) : undefined
       const eventHandler = handler?.events[event]
 
       if (!handler || !eventHandler) {
