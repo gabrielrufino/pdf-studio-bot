@@ -45,6 +45,10 @@ export abstract class BaseHandler {
     ctx.session.params = null
   }
 
+  protected async notifyLimitExceeded(ctx: CustomContext): Promise<void> {
+    await ctx.reply(ctx.t('free_limit_reached'))
+  }
+
   private async removeTemporaryFiles(ctx: CustomContext) {
     const params = ctx.session.params
 

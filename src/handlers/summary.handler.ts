@@ -96,10 +96,6 @@ export class SummaryHandler extends BaseHandler {
     }
   }
 
-  private async notifyLimitExceeded(ctx: CustomContext): Promise<void> {
-    await ctx.reply(ctx.t('free_limit_reached'))
-  }
-
   private async performSummarization(path: string, prompt: string, onUploadComplete: (fileName: string) => void): Promise<string> {
     const uploadedFile = await this.ai.files.upload({
       file: path,
