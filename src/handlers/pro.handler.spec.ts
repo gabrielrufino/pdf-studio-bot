@@ -38,6 +38,8 @@ describe(ProHandler.name, () => {
       findGlobalConfig: vi.fn().mockResolvedValue({
         _id: 'global_config',
         pro_price: 350,
+        maintenance_mode: false,
+        maintenance_timeout_minutes: 30,
         created_at: new Date(),
         updated_at: new Date(),
       }),
@@ -98,6 +100,8 @@ describe(ProHandler.name, () => {
       vi.spyOn(configurationRepository, 'findGlobalConfig').mockResolvedValueOnce({
         _id: 'global_config',
         pro_price: 500,
+        maintenance_mode: false,
+        maintenance_timeout_minutes: 30,
         created_at: new Date(),
         updated_at: new Date(),
       })
