@@ -53,7 +53,7 @@ describe(ConfigurationRepository.name, () => {
       // Remove the validator temporarily to insert an incomplete document
       await db.command({ collMod: 'configurations', validator: {} })
 
-      await coll.deleteOne({ _id: 'global_config' })
+      await coll.deleteOne({ _id: 'global_config' } as any)
       await coll.insertOne({
         _id: 'global_config',
         pro_price: 400,
