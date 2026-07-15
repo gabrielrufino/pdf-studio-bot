@@ -29,6 +29,8 @@ describe(ConfigurationRepository.name, () => {
       expect(result).toMatchObject({
         _id: 'global_config',
         pro_price: 350,
+        maintenance_mode: false,
+        maintenance_timeout_minutes: 30,
       })
     })
 
@@ -42,6 +44,33 @@ describe(ConfigurationRepository.name, () => {
         .toArray()
 
       expect(docs).toHaveLength(1)
+    })
+
+    it('should migrate existing configuration missing maintenance fields', async () => {
+      const db = client.db('pdf_studio_test')
+      const coll = db.collection('configurations')
+
+      // Remove the validator temporarily to insert an incomplete document
+      await db.command({ collMod: 'configurations', validator: {} })
+
+      await coll.deleteOne({ _id: 'global_config' })
+      await coll.insertOne({
+        _id: 'global_config',
+        pro_price: 400,
+        created_at: new Date(),
+        updated_at: new Date(),
+      } as any)
+
+      // Re-apply validator via init
+      await configurationRepository.init()
+
+      const result = await configurationRepository.findGlobalConfig()
+      expect(result).toMatchObject({
+        _id: 'global_config',
+        pro_price: 400,
+        maintenance_mode: false,
+        maintenance_timeout_minutes: 30,
+      })
     })
   })
 

@@ -62,5 +62,7 @@
   "done": "listo",
   "summary_prompt": "Crea un resumen conciso e informativo de este PDF, estructurado con viñetas (bullet points). Longitud objetivo: ~2000 caracteres.",
   "unexpected_error": "❌ Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.",
-  "reengagement_message": "¡Te extrañamos en <b>PDF Studio</b>! 🎉\n\nRegresa y descubre nuestras últimas herramientas para PDF. Si necesitas ayuda, ¡escribe /help!"
+  "reengagement_message": "¡Te extrañamos en <b>PDF Studio</b>! 🎉\n\nRegresa y descubre nuestras últimas herramientas para PDF. Si necesitas ayuda, ¡escribe /help!",
+  "maintenance_mode_active": "🛠️ El bot está actualmente en mantenimiento. ¡Volveremos pronto!",
+  "maintenance_timeout": "⏳ Tu operación actual ha expirado debido a mantenimiento. Por favor, inténtalo de nuevo más tarde."
 }

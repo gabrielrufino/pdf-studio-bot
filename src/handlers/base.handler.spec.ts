@@ -40,18 +40,21 @@ describe(BaseHandler.name, () => {
     await handler.setSessionCommand(ctx)
 
     expect(ctx.session.command).toBe(CommandEnum.Test)
+    expect(ctx.session.command_started_at).toBeTypeOf('number')
   })
 
   it('should reset session correctly', async () => {
     const handler = new TestHandler()
     const ctx: any = { t: (key: string) => key, session: {
       command: CommandEnum.Test,
+      command_started_at: Date.now(),
       params: { someParam: 'value' },
     } } as unknown as CustomContext
 
     await handler.resetSession(ctx)
 
     expect(ctx.session.command).toBeNull()
+    expect(ctx.session.command_started_at).toBeUndefined()
     expect(ctx.session.params).toBeNull()
   })
 

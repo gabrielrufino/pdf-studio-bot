@@ -62,5 +62,7 @@
   "done": "done",
   "summary_prompt": "Create a concise yet informative summary of this PDF, structured with bullet points. Target length: ~2000 characters.",
   "unexpected_error": "❌ An unexpected error occurred. Please try again later.",
-  "reengagement_message": "We miss you at <b>PDF Studio</b>! 🎉\n\nCome back and check out our latest PDF tools. If you need any help, just type /help!"
+  "reengagement_message": "We miss you at <b>PDF Studio</b>! 🎉\n\nCome back and check out our latest PDF tools. If you need any help, just type /help!",
+  "maintenance_mode_active": "🛠️ The bot is currently under maintenance. We'll be back soon!",
+  "maintenance_timeout": "⏳ Your current operation has timed out due to maintenance. Please try again later."
 }

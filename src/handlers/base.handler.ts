@@ -37,11 +37,13 @@ export abstract class BaseHandler {
   protected async setSessionCommand(ctx: CustomContext) {
     await this.removeTemporaryFiles(ctx)
     ctx.session.command = this.command
+    ctx.session.command_started_at = Date.now()
   }
 
   protected async resetSession(ctx: CustomContext) {
     await this.removeTemporaryFiles(ctx)
     ctx.session.command = null
+    ctx.session.command_started_at = undefined
     ctx.session.params = null
   }
 

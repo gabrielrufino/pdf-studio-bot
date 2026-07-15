@@ -62,5 +62,7 @@
   "done": "feito",
   "summary_prompt": "Crie um resumo conciso e informativo deste PDF, estruturado com marcadores (bullet points). Tamanho alvo: ~2000 caracteres.",
   "unexpected_error": "❌ Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
-  "reengagement_message": "Sentimos sua falta no <b>PDF Studio</b>! 🎉\n\nVolte e confira nossas ferramentas de PDF mais recentes. Se precisar de ajuda, digite /help!"
+  "reengagement_message": "Sentimos sua falta no <b>PDF Studio</b>! 🎉\n\nVolte e confira nossas ferramentas de PDF mais recentes. Se precisar de ajuda, digite /help!",
+  "maintenance_mode_active": "🛠️ O bot está atualmente em manutenção. Voltaremos em breve!",
+  "maintenance_timeout": "⏳ Sua operação atual expirou devido a manutenção. Por favor, tente novamente mais tarde."
 }
