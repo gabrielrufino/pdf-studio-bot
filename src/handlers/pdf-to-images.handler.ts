@@ -128,8 +128,4 @@ export class PdfToImagesHandler extends BaseHandler {
     await this.setSessionCommand(ctx)
     await ctx.reply(ctx.t('pdftoimages_send_file'))
   }
-
-  private async notifyLimitExceeded(ctx: CustomContext): Promise<void> {
-    await ctx.reply(ctx.t('free_limit_reached'))
-  }
 }
