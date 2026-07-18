@@ -46,11 +46,12 @@ async function main() {
       }
 
       let command = ctx.session.command
-      if (event === 'callback_query' && (!command || handlersMap.has(ctx.callbackQuery?.data as CommandEnum))) {
+      const callbackData = ctx.callbackQuery?.data
+      if (event === 'callback_query' && (!command || (callbackData && handlersMap.has(callbackData)))) {
         command = CommandEnum.Help
       }
 
-      const handler = command ? handlersMap.get(command as CommandEnum) : undefined
+      const handler = command ? handlersMap.get(command) : undefined
       const eventHandler = handler?.events[event]
 
       if (!handler || !eventHandler) {
