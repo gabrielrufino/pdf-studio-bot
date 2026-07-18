@@ -35,7 +35,7 @@ async function main() {
     )
   }
 
-  const handlersMap = new Map(handlers.map(h => [h.command, h]))
+  const handlersMap = new Map<string, (typeof handlers)[number]>(handlers.map(h => [h.command, h]))
 
   const events = new Set(handlers.flatMap(handler => Object.keys(handler.events) as FilterQuery[]))
   for (const event of events) {
