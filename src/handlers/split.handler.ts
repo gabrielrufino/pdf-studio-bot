@@ -104,8 +104,4 @@ export class SplitHandler extends BaseHandler {
     await this.setSessionCommand(ctx)
     await ctx.reply(ctx.t('split_send_file'))
   }
-
-  private async notifyLimitExceeded(ctx: CustomContext): Promise<void> {
-    await ctx.reply(ctx.t('free_limit_reached'))
-  }
 }
