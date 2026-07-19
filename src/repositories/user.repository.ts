@@ -100,25 +100,6 @@ export class UserRepository extends BaseRepository<UserEntity> {
   }
 
   @EnsureInitialized
-  public async isWithinLimit(telegramId: number, limit: number): Promise<boolean> {
-    const today = new Date().toISOString().split('T')[0]
-
-    const user = await this.collection.findOne({
-      'telegram_user.id': telegramId,
-    })
-
-    if (!user || user.is_blocked) {
-      return !user
-    }
-
-    if (user.last_usage_date !== today) {
-      return true
-    }
-
-    return (user.daily_usage_count || 0) < limit
-  }
-
-  @EnsureInitialized
   public async incrementUsage(telegramId: number, limit?: number): Promise<UserEntity | null> {
     const today = new Date().toISOString().split('T')[0]
 

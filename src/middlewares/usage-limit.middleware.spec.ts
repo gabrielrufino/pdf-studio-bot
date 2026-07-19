@@ -8,7 +8,6 @@ vi.mock('../repositories', () => ({
     findByTelegramId: vi.fn(),
     create: vi.fn(),
     incrementUsage: vi.fn(),
-    isWithinLimit: vi.fn(),
     updateById: vi.fn(),
   },
 }))
@@ -52,15 +51,16 @@ describe(usageLimitMiddleware.name, () => {
     const newUser = {
       _id: 'new-id',
       plan_type: PlanTypeEnum.Free,
+      is_blocked: false,
+      daily_usage_count: 0,
+      last_usage_date: new Date().toISOString().split('T')[0],
     }
     vi.mocked(userRepository.create).mockResolvedValueOnce(newUser as any)
-    vi.mocked(userRepository.isWithinLimit).mockResolvedValueOnce(true)
 
     const middleware = usageLimitMiddleware(handler)
     await middleware(ctx, next)
 
     expect(userRepository.create).toHaveBeenCalled()
-    expect(userRepository.isWithinLimit).toHaveBeenCalledWith(12345, 3)
     expect(next).toHaveBeenCalled()
   })
 
@@ -68,9 +68,11 @@ describe(usageLimitMiddleware.name, () => {
     const user = {
       _id: 'user-id',
       plan_type: PlanTypeEnum.Free,
+      is_blocked: false,
+      daily_usage_count: 3,
+      last_usage_date: new Date().toISOString().split('T')[0],
     }
     vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
-    vi.mocked(userRepository.isWithinLimit).mockResolvedValueOnce(false)
 
     const middleware = usageLimitMiddleware(handler)
     await middleware(ctx, next)
@@ -83,9 +85,11 @@ describe(usageLimitMiddleware.name, () => {
     const user = {
       _id: 'user-id',
       plan_type: PlanTypeEnum.Pro,
+      is_blocked: false,
+      daily_usage_count: 50,
+      last_usage_date: new Date().toISOString().split('T')[0],
     }
     vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
-    vi.mocked(userRepository.isWithinLimit).mockResolvedValueOnce(false)
 
     const middleware = usageLimitMiddleware(handler)
     await middleware(ctx, next)
@@ -98,15 +102,16 @@ describe(usageLimitMiddleware.name, () => {
     const user = {
       _id: 'user-id',
       plan_type: PlanTypeEnum.Pro,
+      is_blocked: false,
+      daily_usage_count: 49,
+      last_usage_date: new Date().toISOString().split('T')[0],
     }
     vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
-    vi.mocked(userRepository.isWithinLimit).mockResolvedValueOnce(true)
 
     const middleware = usageLimitMiddleware(handler)
     await middleware(ctx, next)
 
     expect(next).toHaveBeenCalled()
-    expect(userRepository.isWithinLimit).toHaveBeenCalledWith(12345, 50)
   })
 
   it('should revert to Free if Pro plan has expired', async () => {
@@ -117,9 +122,11 @@ describe(usageLimitMiddleware.name, () => {
       _id: 'user-id',
       plan_type: PlanTypeEnum.Pro,
       plan_started_at: expiredDate,
+      is_blocked: false,
+      daily_usage_count: 0,
+      last_usage_date: new Date().toISOString().split('T')[0],
     }
     vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
-    vi.mocked(userRepository.isWithinLimit).mockResolvedValueOnce(true)
 
     const middleware = usageLimitMiddleware(handler)
     await middleware(ctx, next)
@@ -128,7 +135,6 @@ describe(usageLimitMiddleware.name, () => {
       plan_type: PlanTypeEnum.Free,
       plan_started_at: null,
     })
-    expect(userRepository.isWithinLimit).toHaveBeenCalledWith(12345, 3)
     expect(next).toHaveBeenCalled()
   })
 
@@ -140,15 +146,16 @@ describe(usageLimitMiddleware.name, () => {
       _id: 'user-id',
       plan_type: PlanTypeEnum.Pro,
       plan_started_at: recentDate,
+      is_blocked: false,
+      daily_usage_count: 0,
+      last_usage_date: new Date().toISOString().split('T')[0],
     }
     vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
-    vi.mocked(userRepository.isWithinLimit).mockResolvedValueOnce(true)
 
     const middleware = usageLimitMiddleware(handler)
     await middleware(ctx, next)
 
     expect(userRepository.updateById).not.toHaveBeenCalled()
-    expect(userRepository.isWithinLimit).toHaveBeenCalledWith(12345, 50)
     expect(next).toHaveBeenCalled()
   })
 })
