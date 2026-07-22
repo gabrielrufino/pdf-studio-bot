@@ -194,7 +194,7 @@ describe(ProHandler.name, () => {
           callbackQuery: { data: 'pro_start_trial' },
         })
 
-        await handler.events['callback_query'](ctx)
+        await handler.events.callback_query(ctx)
 
         expect(userRepository.updateById).toHaveBeenCalledWith('user-id', {
           plan_type: PlanTypeEnum.ProTrial,
@@ -214,7 +214,7 @@ describe(ProHandler.name, () => {
           callbackQuery: { data: 'pro_start_trial' },
         })
 
-        await handler.events['callback_query'](ctx)
+        await handler.events.callback_query(ctx)
 
         expect(userRepository.updateById).not.toHaveBeenCalled()
         expect(ctx.answerCallbackQuery).not.toHaveBeenCalled()
@@ -225,7 +225,7 @@ describe(ProHandler.name, () => {
           callbackQuery: { data: 'pro_send_invoice' },
         })
 
-        await handler.events['callback_query'](ctx)
+        await handler.events.callback_query(ctx)
 
         expect(configurationRepository.findGlobalConfig).toHaveBeenCalled()
         expect(ctx.answerCallbackQuery).toHaveBeenCalled()
@@ -251,7 +251,7 @@ describe(ProHandler.name, () => {
           callbackQuery: { data: 'pro_send_invoice' },
         })
 
-        await handler.events['callback_query'](ctx)
+        await handler.events.callback_query(ctx)
 
         expect(ctx.replyWithInvoice).toHaveBeenCalledWith(
           expect.any(String),
@@ -265,13 +265,13 @@ describe(ProHandler.name, () => {
 
       it('should do nothing if ctx.from is missing', async () => {
         const ctx = createMockContext({ from: undefined, callbackQuery: { data: 'pro_start_trial' } })
-        await handler.events['callback_query'](ctx)
+        await handler.events.callback_query(ctx)
         expect(userRepository.findByTelegramId).not.toHaveBeenCalled()
       })
 
       it('should do nothing if callback data is missing', async () => {
         const ctx = createMockContext({ callbackQuery: { data: undefined } })
-        await handler.events['callback_query'](ctx)
+        await handler.events.callback_query(ctx)
         expect(userRepository.findByTelegramId).not.toHaveBeenCalled()
       })
     })

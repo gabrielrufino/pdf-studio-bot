@@ -69,7 +69,8 @@ export class ProHandler extends BaseHandler {
           await ctx.editMessageText(ctx.t('pro_trial_started'))
           await this.resetSession(ctx)
         }
-      } else if (data === 'pro_send_invoice') {
+      }
+      else if (data === 'pro_send_invoice') {
         const { pro_price } = await this.configurationRepository.findGlobalConfig()
         await ctx.answerCallbackQuery()
         await ctx.replyWithInvoice(
