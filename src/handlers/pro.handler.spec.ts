@@ -22,7 +22,7 @@ describe(ProHandler.name, () => {
     ...overrides,
   } as unknown as UserEntity)
 
-  const createMockContext = (overrides?: any): CustomContext => ({ t: (key: string) => key, from: { id: 12345 }, session: { command: null, params: null }, reply: vi.fn(), replyWithInvoice: vi.fn(), answerPreCheckoutQuery: vi.fn(), ...overrides } as unknown as CustomContext)
+  const createMockContext = (overrides?: any): CustomContext => ({ t: (key: string) => key, from: { id: 12345 }, session: { command: null, params: null }, reply: vi.fn(), replyWithInvoice: vi.fn(), answerPreCheckoutQuery: vi.fn(), answerCallbackQuery: vi.fn(), editMessageText: vi.fn(), ...overrides } as unknown as CustomContext)
 
   beforeEach(() => {
     userRepository = {
@@ -71,8 +71,8 @@ describe(ProHandler.name, () => {
       expect(ctx.session.command).toBeNull()
     })
 
-    it('should set session command and send invoice with pro_price from config', async () => {
-      const existingUser = createMockUser()
+    it('should set session command and send inline keyboard with trial and buy buttons', async () => {
+      const existingUser = createMockUser({ has_used_trial: false })
       vi.spyOn(userRepository, 'findByTelegramId').mockResolvedValueOnce(existingUser)
 
       const ctx = createMockContext()
@@ -80,41 +80,43 @@ describe(ProHandler.name, () => {
       await handler.onCommand(ctx)
 
       expect(ctx.session.command).toBe(CommandEnum.Pro)
-      expect(ctx.replyWithInvoice).toHaveBeenCalledWith(
-        'PDF Studio PRO',
-        'pro_upgrade',
-        'pdf-studio-pro-subscription',
-        CurrencyEnum.XTR,
-        [{ label: 'PRO Subscription', amount: 350 }],
-        {
-          provider_token: '',
-        },
-      )
+      expect(ctx.reply).toHaveBeenCalledWith('pro_upgrade', expect.objectContaining({
+        reply_markup: expect.any(Object),
+      }))
+      const replyCall = vi.mocked(ctx.reply).mock.calls[0]
+      const replyMarkup = replyCall[1]?.reply_markup as any
+      expect(replyMarkup.inline_keyboard[0][0].callback_data).toBe('pro_start_trial')
+      expect(replyMarkup.inline_keyboard[1][0].callback_data).toBe('pro_send_invoice')
     })
 
-    it('should use the pro_price from global config', async () => {
-      const existingUser = createMockUser()
+    it('should not show trial button if has_used_trial is true', async () => {
+      const existingUser = createMockUser({ has_used_trial: true })
       vi.spyOn(userRepository, 'findByTelegramId').mockResolvedValueOnce(existingUser)
-      vi.spyOn(configurationRepository, 'findGlobalConfig').mockResolvedValueOnce({
-        _id: 'global_config',
-        pro_price: 500,
-        created_at: new Date(),
-        updated_at: new Date(),
-      })
 
       const ctx = createMockContext()
 
       await handler.onCommand(ctx)
 
-      expect(configurationRepository.findGlobalConfig).toHaveBeenCalled()
-      expect(ctx.replyWithInvoice).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.any(String),
-        expect.any(String),
-        expect.any(String),
-        [{ label: 'PRO Subscription', amount: 500 }],
-        expect.any(Object),
-      )
+      expect(ctx.session.command).toBe(CommandEnum.Pro)
+      expect(ctx.reply).toHaveBeenCalledWith('pro_upgrade', expect.objectContaining({
+        reply_markup: expect.any(Object),
+      }))
+      const replyCall = vi.mocked(ctx.reply).mock.calls[0]
+      const replyMarkup = replyCall[1]?.reply_markup as any
+      expect(replyMarkup.inline_keyboard[0][0].callback_data).toBe('pro_send_invoice')
+      expect(replyMarkup.inline_keyboard).toHaveLength(1)
+    })
+
+    it('should tell the user if they are on ProTrial', async () => {
+      const existingUser = createMockUser({ plan_type: PlanTypeEnum.ProTrial })
+      vi.spyOn(userRepository, 'findByTelegramId').mockResolvedValueOnce(existingUser)
+
+      const ctx = createMockContext()
+
+      await handler.onCommand(ctx)
+
+      expect(ctx.reply).toHaveBeenCalledWith('pro_trial_active')
+      expect(ctx.session.command).toBeNull()
     })
 
     it('should do nothing if ctx.from is missing', async () => {
@@ -180,6 +182,97 @@ describe(ProHandler.name, () => {
 
         expect(userRepository.updateById).not.toHaveBeenCalled()
         expect(ctx.reply).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('callback_query', () => {
+      it('should start trial if data is pro_start_trial', async () => {
+        const existingUser = createMockUser({ has_used_trial: false })
+        vi.spyOn(userRepository, 'findByTelegramId').mockResolvedValueOnce(existingUser)
+
+        const ctx = createMockContext({
+          callbackQuery: { data: 'pro_start_trial' },
+        })
+
+        await handler.events.callback_query(ctx)
+
+        expect(userRepository.updateById).toHaveBeenCalledWith('user-id', {
+          plan_type: PlanTypeEnum.ProTrial,
+          plan_started_at: expect.any(Date),
+          has_used_trial: true,
+        })
+        expect(ctx.answerCallbackQuery).toHaveBeenCalled()
+        expect(ctx.editMessageText).toHaveBeenCalledWith('pro_trial_started')
+        expect(ctx.session.command).toBeNull()
+      })
+
+      it('should not start trial if has_used_trial is true', async () => {
+        const existingUser = createMockUser({ has_used_trial: true })
+        vi.spyOn(userRepository, 'findByTelegramId').mockResolvedValueOnce(existingUser)
+
+        const ctx = createMockContext({
+          callbackQuery: { data: 'pro_start_trial' },
+        })
+
+        await handler.events.callback_query(ctx)
+
+        expect(userRepository.updateById).not.toHaveBeenCalled()
+        expect(ctx.answerCallbackQuery).not.toHaveBeenCalled()
+      })
+
+      it('should send invoice if data is pro_send_invoice', async () => {
+        const ctx = createMockContext({
+          callbackQuery: { data: 'pro_send_invoice' },
+        })
+
+        await handler.events.callback_query(ctx)
+
+        expect(configurationRepository.findGlobalConfig).toHaveBeenCalled()
+        expect(ctx.answerCallbackQuery).toHaveBeenCalled()
+        expect(ctx.replyWithInvoice).toHaveBeenCalledWith(
+          'PDF Studio PRO',
+          'pro_upgrade',
+          'pdf-studio-pro-subscription',
+          CurrencyEnum.XTR,
+          [{ label: 'PRO Subscription', amount: 350 }],
+          { provider_token: '' },
+        )
+      })
+
+      it('should use pro_price from config when sending invoice', async () => {
+        vi.spyOn(configurationRepository, 'findGlobalConfig').mockResolvedValueOnce({
+          _id: 'global_config',
+          pro_price: 500,
+          created_at: new Date(),
+          updated_at: new Date(),
+        } as any)
+
+        const ctx = createMockContext({
+          callbackQuery: { data: 'pro_send_invoice' },
+        })
+
+        await handler.events.callback_query(ctx)
+
+        expect(ctx.replyWithInvoice).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.any(String),
+          expect.any(String),
+          expect.any(String),
+          [{ label: 'PRO Subscription', amount: 500 }],
+          expect.any(Object),
+        )
+      })
+
+      it('should do nothing if ctx.from is missing', async () => {
+        const ctx = createMockContext({ from: undefined, callbackQuery: { data: 'pro_start_trial' } })
+        await handler.events.callback_query(ctx)
+        expect(userRepository.findByTelegramId).not.toHaveBeenCalled()
+      })
+
+      it('should do nothing if callback data is missing', async () => {
+        const ctx = createMockContext({ callbackQuery: { data: undefined } })
+        await handler.events.callback_query(ctx)
+        expect(userRepository.findByTelegramId).not.toHaveBeenCalled()
       })
     })
   })

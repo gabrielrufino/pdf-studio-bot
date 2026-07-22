@@ -62,5 +62,9 @@
   "done": "done",
   "summary_prompt": "Create a concise yet informative summary of this PDF, structured with bullet points. Target length: ~2000 characters.",
   "unexpected_error": "❌ An unexpected error occurred. Please try again later.",
-  "reengagement_message": "We miss you at <b>PDF Studio</b>! 🎉\n\nCome back and check out our latest PDF tools. If you need any help, just type /help!"
+  "reengagement_message": "We miss you at <b>PDF Studio</b>! 🎉\n\nCome back and check out our latest PDF tools. If you need any help, just type /help!",
+  "pro_trial_active": "⏱️ You are currently on a 3-Day PRO Trial!",
+  "pro_trial_started": "🎉 Your 3-Day PRO Trial has started! Enjoy full access.",
+  "pro_trial_button": "🚀 Start 3-Day Free Trial",
+  "pro_buy_button": "💎 Subscribe to PRO"
 }

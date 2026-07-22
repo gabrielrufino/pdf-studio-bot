@@ -21,5 +21,7 @@ export class UserEntity extends BaseEntity {
 
   last_usage_date?: string = undefined
 
+  has_used_trial: boolean = false
+
   language: LanguageEnum = LanguageEnum.English
 }

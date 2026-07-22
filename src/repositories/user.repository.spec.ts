@@ -42,6 +42,7 @@ describe(UserRepository.name, () => {
       language: 'en',
       created_at: expect.any(Date),
       updated_at: expect.any(Date),
+      has_used_trial: false,
     })
   })
 
