@@ -94,10 +94,68 @@ describe(usageLimitMiddleware.name, () => {
     expect(next).not.toHaveBeenCalled()
   })
 
+  it('should block if ProTrial user reaches limit (50)', async () => {
+    const user = {
+      _id: 'user-id',
+      plan_type: PlanTypeEnum.ProTrial,
+    }
+    vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
+    vi.mocked(userRepository.isWithinLimit).mockResolvedValueOnce(false)
+
+    const middleware = usageLimitMiddleware(handler)
+    await middleware(ctx, next)
+
+    expect(ctx.reply).toHaveBeenCalledWith(expect.stringContaining('pro_limit_reached'))
+    expect(next).not.toHaveBeenCalled()
+  })
+
   it('should allow if Pro user is within limit', async () => {
     const user = {
       _id: 'user-id',
       plan_type: PlanTypeEnum.Pro,
+    }
+    vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
+    vi.mocked(userRepository.isWithinLimit).mockResolvedValueOnce(true)
+
+    const middleware = usageLimitMiddleware(handler)
+    await middleware(ctx, next)
+
+    expect(userRepository.updateById).not.toHaveBeenCalled()
+    expect(userRepository.isWithinLimit).toHaveBeenCalledWith(12345, 50)
+    expect(next).toHaveBeenCalled()
+  })
+
+  it('should revert to Free if ProTrial plan has expired (3 days)', async () => {
+    const expiredDate = new Date()
+    expiredDate.setDate(expiredDate.getDate() - 4)
+
+    const user = {
+      _id: 'user-id',
+      plan_type: PlanTypeEnum.ProTrial,
+      plan_started_at: expiredDate,
+    }
+    vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
+    vi.mocked(userRepository.isWithinLimit).mockResolvedValueOnce(true)
+
+    const middleware = usageLimitMiddleware(handler)
+    await middleware(ctx, next)
+
+    expect(userRepository.updateById).toHaveBeenCalledWith('user-id', {
+      plan_type: PlanTypeEnum.Free,
+      plan_started_at: null,
+    })
+    expect(userRepository.isWithinLimit).toHaveBeenCalledWith(12345, 3)
+    expect(next).toHaveBeenCalled()
+  })
+
+  it('should not revert to Free if ProTrial plan has not expired', async () => {
+    const recentDate = new Date()
+    recentDate.setDate(recentDate.getDate() - 2)
+
+    const user = {
+      _id: 'user-id',
+      plan_type: PlanTypeEnum.ProTrial,
+      plan_started_at: recentDate,
     }
     vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
     vi.mocked(userRepository.isWithinLimit).mockResolvedValueOnce(true)

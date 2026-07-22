@@ -62,5 +62,9 @@
   "done": "feito",
   "summary_prompt": "Crie um resumo conciso e informativo deste PDF, estruturado com marcadores (bullet points). Tamanho alvo: ~2000 caracteres.",
   "unexpected_error": "❌ Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
-  "reengagement_message": "Sentimos sua falta no <b>PDF Studio</b>! 🎉\n\nVolte e confira nossas ferramentas de PDF mais recentes. Se precisar de ajuda, digite /help!"
+  "reengagement_message": "Sentimos sua falta no <b>PDF Studio</b>! 🎉\n\nVolte e confira nossas ferramentas de PDF mais recentes. Se precisar de ajuda, digite /help!",
+  "pro_trial_active": "⏱️ Você está atualmente em um teste PRO de 3 dias!",
+  "pro_trial_started": "🎉 Seu teste PRO de 3 dias começou! Aproveite o acesso total.",
+  "pro_trial_button": "🚀 Iniciar teste gratuito de 3 dias",
+  "pro_buy_button": "💎 Assinar PRO"
 }

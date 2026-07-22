@@ -44,6 +44,9 @@ export class UserRepository extends BaseRepository<UserEntity> {
             updated_at: {
               bsonType: 'date',
             },
+            has_used_trial: {
+              bsonType: 'bool',
+            },
           },
         },
       },
