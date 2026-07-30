@@ -10,9 +10,10 @@ export async function maintenanceMiddleware(ctx: CustomContext, next: NextFuncti
   }
 
   const hasOngoingCommand = !!ctx.session.command
-  const isNewInteraction = ctx.message?.text?.startsWith('/') || (!hasOngoingCommand && ctx.callbackQuery)
+  const isNewCommand = !!ctx.message?.text?.startsWith('/')
+  const isNewInteraction = !hasOngoingCommand || isNewCommand
 
-  if (!hasOngoingCommand || isNewInteraction) {
+  if (isNewInteraction) {
     await ctx.reply(ctx.t('maintenance_mode_active'))
     return
   }

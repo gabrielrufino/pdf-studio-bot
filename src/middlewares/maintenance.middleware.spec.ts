@@ -15,6 +15,7 @@ describe(maintenanceMiddleware.name, () => {
   beforeEach(() => {
     next = vi.fn()
     ctx = {
+      // ctx.t returns the i18n key itself — assertions can use the key directly
       t: (key: string) => key,
       reply: vi.fn(),
       session: {
@@ -51,7 +52,7 @@ describe(maintenanceMiddleware.name, () => {
     expect(next).not.toHaveBeenCalled()
   })
 
-  it('should deny new interaction (callbackQuery) if maintenance mode is on', async () => {
+  it('should deny callbackQuery with no ongoing command if maintenance mode is on', async () => {
     vi.mocked(configurationRepository.findGlobalConfig).mockResolvedValueOnce({
       maintenance_mode: true,
       maintenance_timeout_minutes: 30,
@@ -62,6 +63,21 @@ describe(maintenanceMiddleware.name, () => {
 
     expect(ctx.reply).toHaveBeenCalledWith('maintenance_mode_active')
     expect(next).not.toHaveBeenCalled()
+  })
+
+  it('should allow callbackQuery mid-flow (ongoing command) if maintenance mode is on', async () => {
+    vi.mocked(configurationRepository.findGlobalConfig).mockResolvedValueOnce({
+      maintenance_mode: true,
+      maintenance_timeout_minutes: 30,
+    } as any)
+    ctx.session.command = 'some_command'
+    ctx.session.command_started_at = Date.now() - 5 * 60 * 1000 // 5 minutes ago
+    ctx.callbackQuery = {}
+
+    await maintenanceMiddleware(ctx, next)
+
+    expect(next).toHaveBeenCalled()
+    expect(ctx.reply).not.toHaveBeenCalled()
   })
 
   it('should call next if continuing ongoing operation within timeout', async () => {
