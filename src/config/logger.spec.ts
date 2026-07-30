@@ -44,6 +44,7 @@ describe('logger', () => {
             '*.*.apiKey',
             '*.*.*.apiKey',
             '*.*.*.*.apiKey',
+            'Authorization',
             '*.Authorization',
             '*.*.Authorization',
             '*.*.*.Authorization',
@@ -68,6 +69,7 @@ describe('logger', () => {
       token: 'tok1',
       apiKey: 'api1',
       header: { Authorization: 'Bearer x' },
+      Authorization: 'Bearer root',
     })
 
     const log = logs[0]
@@ -87,5 +89,6 @@ describe('logger', () => {
     expect(log.token).toBe('[REDACTED]')
     expect(log.apiKey).toBe('[REDACTED]')
     expect(log.header.Authorization).toBe('[REDACTED]')
+    expect(log.Authorization).toBe('[REDACTED]')
   })
 })

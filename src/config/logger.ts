@@ -40,6 +40,7 @@ export const logger = pino(
         '*.*.apiKey',
         '*.*.*.apiKey',
         '*.*.*.*.apiKey',
+        'Authorization',
         '*.Authorization',
         '*.*.Authorization',
         '*.*.*.Authorization',
