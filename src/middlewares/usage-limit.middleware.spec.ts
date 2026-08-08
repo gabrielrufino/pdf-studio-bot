@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { userRepository } from '../repositories'
 import { usageLimitMiddleware } from './usage-limit.middleware'
@@ -18,12 +18,18 @@ describe(usageLimitMiddleware.name, () => {
   let handler: any
 
   beforeEach(() => {
+    vi.resetAllMocks()
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2024-01-15T12:00:00.000Z'))
     next = vi.fn()
     ctx = { t: (key: string) => key, from: { id: 12345 }, reply: vi.fn() }
     handler = {
       hasUsageLimits: true,
     }
-    vi.resetAllMocks()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('should call next if handler does not have usage limits', async () => {
@@ -53,7 +59,7 @@ describe(usageLimitMiddleware.name, () => {
       plan_type: PlanTypeEnum.Free,
       is_blocked: false,
       daily_usage_count: 0,
-      last_usage_date: new Date().toISOString().split('T')[0],
+      last_usage_date: '2024-01-15',
     }
     vi.mocked(userRepository.create).mockResolvedValueOnce(newUser as any)
 
@@ -70,7 +76,7 @@ describe(usageLimitMiddleware.name, () => {
       plan_type: PlanTypeEnum.Free,
       is_blocked: false,
       daily_usage_count: 3,
-      last_usage_date: new Date().toISOString().split('T')[0],
+      last_usage_date: '2024-01-15',
     }
     vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
 
@@ -87,7 +93,7 @@ describe(usageLimitMiddleware.name, () => {
       plan_type: PlanTypeEnum.Pro,
       is_blocked: false,
       daily_usage_count: 50,
-      last_usage_date: new Date().toISOString().split('T')[0],
+      last_usage_date: '2024-01-15',
     }
     vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
 
@@ -104,7 +110,7 @@ describe(usageLimitMiddleware.name, () => {
       plan_type: PlanTypeEnum.Pro,
       is_blocked: false,
       daily_usage_count: 49,
-      last_usage_date: new Date().toISOString().split('T')[0],
+      last_usage_date: '2024-01-15',
     }
     vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
 
@@ -124,7 +130,7 @@ describe(usageLimitMiddleware.name, () => {
       plan_started_at: expiredDate,
       is_blocked: false,
       daily_usage_count: 0,
-      last_usage_date: new Date().toISOString().split('T')[0],
+      last_usage_date: '2024-01-15',
     }
     vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
 
@@ -148,7 +154,7 @@ describe(usageLimitMiddleware.name, () => {
       plan_started_at: recentDate,
       is_blocked: false,
       daily_usage_count: 0,
-      last_usage_date: new Date().toISOString().split('T')[0],
+      last_usage_date: '2024-01-15',
     }
     vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
 
@@ -156,6 +162,39 @@ describe(usageLimitMiddleware.name, () => {
     await middleware(ctx, next)
 
     expect(userRepository.updateById).not.toHaveBeenCalled()
+    expect(next).toHaveBeenCalled()
+  })
+
+  it('should block if user is blocked', async () => {
+    const user = {
+      _id: 'user-id',
+      plan_type: PlanTypeEnum.Free,
+      is_blocked: true,
+      daily_usage_count: 0,
+      last_usage_date: '2024-01-15',
+    }
+    vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
+
+    const middleware = usageLimitMiddleware(handler)
+    await middleware(ctx, next)
+
+    expect(next).not.toHaveBeenCalled()
+    expect(ctx.reply).toHaveBeenCalled()
+  })
+
+  it('should allow if usage count is high but last usage date is from a previous day', async () => {
+    const user = {
+      _id: 'user-id',
+      plan_type: PlanTypeEnum.Free,
+      is_blocked: false,
+      daily_usage_count: 100,
+      last_usage_date: '2000-01-01',
+    }
+    vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
+
+    const middleware = usageLimitMiddleware(handler)
+    await middleware(ctx, next)
+
     expect(next).toHaveBeenCalled()
   })
 })
