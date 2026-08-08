@@ -4,8 +4,11 @@ import { HelpMessage } from '../messages/help.message'
 import { BaseHandler } from './base.handler'
 
 export class HelpHandler extends BaseHandler {
+  private readonly allHandlers: BaseHandler[]
+
   constructor(private readonly handlers: BaseHandler[]) {
     super()
+    this.allHandlers = [this, ...this.handlers]
   }
 
   readonly command = CommandEnum.Help
@@ -15,7 +18,7 @@ export class HelpHandler extends BaseHandler {
     callback_query: async (ctx: CustomContext) => {
       await ctx.answerCallbackQuery()
       const command = ctx.callbackQuery?.data
-      const handler = [this, ...this.handlers].find(h => h.command === command)
+      const handler = this.allHandlers.find(h => h.command === command)
 
       if (handler) {
         await ctx.deleteMessage().catch(error => this.logger.error({ error }, 'Failed to delete help menu message'))
@@ -25,7 +28,7 @@ export class HelpHandler extends BaseHandler {
   }
 
   async onCommand(ctx: CustomContext) {
-    const { text, reply_markup } = new HelpMessage([this, ...this.handlers], ctx).build()
+    const { text, reply_markup } = new HelpMessage(this.allHandlers, ctx).build()
     await ctx.reply(text, { reply_markup })
   }
 }
