@@ -2,8 +2,10 @@ import { Writable } from 'node:stream'
 import pino from 'pino'
 import { describe, expect, it } from 'vitest'
 
+import { deepRedact, SENSITIVE_KEYS } from './logger'
+
 describe('logger', () => {
-  it('should redact sensitive keys at multiple nesting depths', () => {
+  it('should redact sensitive keys at any nesting depth', () => {
     const logs: any[] = []
 
     const stream = new Writable({
@@ -13,43 +15,10 @@ describe('logger', () => {
       },
     })
 
-    // We recreate the logger purely to inject our in-memory stream.
-    // The point of the test is to ensure the redaction paths we defined work.
     const testLogger = pino(
       {
-        redact: {
-          paths: [
-            'BOT_TOKEN',
-            '*.BOT_TOKEN',
-            '*.*.BOT_TOKEN',
-            '*.*.*.BOT_TOKEN',
-            '*.*.*.*.BOT_TOKEN',
-            'GOOGLE_GENAI_API_KEY',
-            '*.GOOGLE_GENAI_API_KEY',
-            '*.*.GOOGLE_GENAI_API_KEY',
-            '*.*.*.GOOGLE_GENAI_API_KEY',
-            '*.*.*.*.GOOGLE_GENAI_API_KEY',
-            'LOKI_HOST',
-            '*.LOKI_HOST',
-            '*.*.LOKI_HOST',
-            '*.*.*.LOKI_HOST',
-            '*.*.*.*.LOKI_HOST',
-            'token',
-            '*.token',
-            '*.*.token',
-            '*.*.*.token',
-            '*.*.*.*.token',
-            'apiKey',
-            '*.apiKey',
-            '*.*.apiKey',
-            '*.*.*.apiKey',
-            '*.*.*.*.apiKey',
-            '*.Authorization',
-            '*.*.Authorization',
-            '*.*.*.Authorization',
-            '*.*.*.*.Authorization',
-          ],
-          censor: '[REDACTED]',
+        formatters: {
+          log: deepRedact,
         },
       },
       stream,
@@ -63,8 +32,6 @@ describe('logger', () => {
       ultra: { very: { deep: { nested: { BOT_TOKEN: 'secret5' } } } },
       GOOGLE_GENAI_API_KEY: 'secret_key',
       auth: { GOOGLE_GENAI_API_KEY: 'secret_key_2' },
-      LOKI_HOST: 'host1',
-      servers: { LOKI_HOST: 'host2' },
       token: 'tok1',
       apiKey: 'api1',
       header: { Authorization: 'Bearer x' },
@@ -81,11 +48,49 @@ describe('logger', () => {
     expect(log.GOOGLE_GENAI_API_KEY).toBe('[REDACTED]')
     expect(log.auth.GOOGLE_GENAI_API_KEY).toBe('[REDACTED]')
 
-    expect(log.LOKI_HOST).toBe('[REDACTED]')
-    expect(log.servers.LOKI_HOST).toBe('[REDACTED]')
-
     expect(log.token).toBe('[REDACTED]')
     expect(log.apiKey).toBe('[REDACTED]')
     expect(log.header.Authorization).toBe('[REDACTED]')
+  })
+
+  it('should redact at arbitrarily deep levels with no depth limit', () => {
+    // Build a 10-level deep object: { a: { a: { ... { BOT_TOKEN: 'secret' } } } }
+    let obj: any = { BOT_TOKEN: 'deep-secret' }
+    for (let i = 0; i < 10; i++) {
+      obj = { wrapper: obj }
+    }
+
+    const result = deepRedact(obj)
+
+    // Traverse 10 levels deep
+    let current: any = result
+    for (let i = 0; i < 10; i++) {
+      current = current.wrapper
+    }
+    expect(current.BOT_TOKEN).toBe('[REDACTED]')
+  })
+
+  it('should preserve non-sensitive values', () => {
+    const result = deepRedact({
+      username: 'gabriel',
+      chat: { id: 12345, type: 'private' },
+    })
+
+    expect(result.username).toBe('gabriel')
+    expect((result.chat as any).id).toBe(12345)
+    expect((result.chat as any).type).toBe('private')
+  })
+
+  it('should cover all declared sensitive keys', () => {
+    const input: Record<string, string> = {}
+    for (const key of SENSITIVE_KEYS) {
+      input[key] = `value-${key}`
+    }
+
+    const result = deepRedact(input)
+
+    for (const key of SENSITIVE_KEYS) {
+      expect(result[key]).toBe('[REDACTED]')
+    }
   })
 })
