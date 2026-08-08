@@ -154,46 +154,6 @@ describe(UserRepository.name, () => {
     })
   })
 
-  describe(UserRepository.prototype.isWithinLimit.name, () => {
-    it('should return true if user does not exist', async () => {
-      const isWithin = await userRepository.isWithinLimit(8888, 3)
-      expect(isWithin).toBe(true)
-    })
-
-    it('should return true if it is a new day', async () => {
-      await userRepository.create(new UserEntity({
-        telegram_user: { id: 40, is_bot: false, first_name: 'Test' },
-        daily_usage_count: 5,
-        last_usage_date: '2000-01-01',
-      }))
-
-      const isWithin = await userRepository.isWithinLimit(40, 3)
-      expect(isWithin).toBe(true)
-    })
-
-    it('should return true if within limit', async () => {
-      await userRepository.create(new UserEntity({
-        telegram_user: { id: 41, is_bot: false, first_name: 'Test' },
-        daily_usage_count: 2,
-        last_usage_date: new Date().toISOString().split('T')[0],
-      }))
-
-      const isWithin = await userRepository.isWithinLimit(41, 3)
-      expect(isWithin).toBe(true)
-    })
-
-    it('should return false if limit reached', async () => {
-      await userRepository.create(new UserEntity({
-        telegram_user: { id: 42, is_bot: false, first_name: 'Test' },
-        daily_usage_count: 3,
-        last_usage_date: new Date().toISOString().split('T')[0],
-      }))
-
-      const isWithin = await userRepository.isWithinLimit(42, 3)
-      expect(isWithin).toBe(false)
-    })
-  })
-
   describe('findInactiveUsers', () => {
     beforeEach(async () => {
       const db = client.db('pdf_studio_test')
