@@ -13,7 +13,7 @@ export class ConfigurationRepository extends BaseRepository<ConfigurationEntity>
       validator: {
         $jsonSchema: {
           bsonType: 'object',
-          required: ['_id', 'pro_price', 'maintenance_mode', 'maintenance_timeout_minutes', 'created_at', 'updated_at'],
+          required: ['_id', 'pro_price', 'maintenance_mode', 'created_at', 'updated_at'],
           properties: {
             _id: {
               bsonType: 'string',
@@ -24,10 +24,6 @@ export class ConfigurationRepository extends BaseRepository<ConfigurationEntity>
             },
             maintenance_mode: {
               bsonType: 'bool',
-            },
-            maintenance_timeout_minutes: {
-              bsonType: 'number',
-              minimum: 0,
             },
             created_at: {
               bsonType: 'date',
@@ -59,18 +55,17 @@ export class ConfigurationRepository extends BaseRepository<ConfigurationEntity>
         _id: GLOBAL_CONFIG_ID,
         pro_price: 350,
         maintenance_mode: false,
-        maintenance_timeout_minutes: 30,
         created_at: now,
         updated_at: now,
       } as any)
     }
-    else if (exists.maintenance_mode === undefined || exists.maintenance_timeout_minutes === undefined) {
+    else if (exists.maintenance_mode === undefined) {
       await this.collection.updateOne(
         { _id: GLOBAL_CONFIG_ID } as any,
         {
           $set: {
-            maintenance_mode: exists.maintenance_mode ?? false,
-            maintenance_timeout_minutes: exists.maintenance_timeout_minutes ?? 30,
+            maintenance_mode: false,
+            updated_at: new Date(),
           },
         },
       )

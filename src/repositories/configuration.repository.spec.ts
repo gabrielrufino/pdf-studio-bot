@@ -30,7 +30,6 @@ describe(ConfigurationRepository.name, () => {
         _id: 'global_config',
         pro_price: 350,
         maintenance_mode: false,
-        maintenance_timeout_minutes: 30,
       })
     })
 
@@ -69,7 +68,6 @@ describe(ConfigurationRepository.name, () => {
         _id: 'global_config',
         pro_price: 400,
         maintenance_mode: false,
-        maintenance_timeout_minutes: 30,
       })
     })
   })

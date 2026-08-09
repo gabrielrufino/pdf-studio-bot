@@ -7,7 +7,6 @@ import type { PasswordParams } from '../schemas/password-params.schema'
 
 export interface SessionData {
   command: Nullable<CommandEnum>
-  command_started_at?: number
   params: Nullable<PasswordParams | DownloadParams | JoinParams>
   language?: Nullable<LanguageEnum>
 }
