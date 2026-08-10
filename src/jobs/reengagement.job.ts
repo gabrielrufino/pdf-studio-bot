@@ -25,7 +25,7 @@ export function initReengagementJob() {
           // Sleep for 50ms to respect rate limits (max 30 messages per second)
           await new Promise(resolve => setTimeout(resolve, 50))
         }
-        catch (error: any) {
+        catch (error: unknown) {
           logger.error({ error, userId: user.telegram_user.id }, 'Failed to send re-engagement message')
         }
       }
