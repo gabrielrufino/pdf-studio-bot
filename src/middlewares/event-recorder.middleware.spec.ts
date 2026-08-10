@@ -1,7 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { logger } from '../config/logger'
 import { EventEnum } from '../enums/event.enum'
 import { eventRepository } from '../repositories'
 import { eventRecorderMiddleware } from './event-recorder.middleware'
+
+vi.mock('../config/logger', () => ({
+  logger: {
+    error: vi.fn(),
+  },
+}))
 
 vi.mock('../repositories', () => ({
   eventRepository: {
@@ -82,5 +89,23 @@ describe(eventRecorderMiddleware.name, () => {
     await eventRecorderMiddleware(ctx, next)
     expect(next).toHaveBeenCalled()
     expect(eventRepository.insertMany).not.toHaveBeenCalled()
+  })
+
+  it('should log error if insertMany fails', async () => {
+    const error = new Error('Database error')
+    vi.mocked(eventRepository.insertMany).mockRejectedValueOnce(error)
+
+    const ctx: any = {
+      from: { id: 123 },
+      message: { text: '/start' },
+    }
+
+    await eventRecorderMiddleware(ctx, next)
+
+    // Wait for the next tick to allow the catch block to execute
+    await new Promise(resolve => setTimeout(resolve, 0))
+
+    expect(next).toHaveBeenCalled()
+    expect(logger.error).toHaveBeenCalledWith({ error }, 'Failed to record events')
   })
 })
