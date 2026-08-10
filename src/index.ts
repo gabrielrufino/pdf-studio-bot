@@ -15,6 +15,7 @@ import { initReengagementJob } from './jobs/reengagement.job'
 import { HelpMessage } from './messages/help.message'
 import { UnknownMessage } from './messages/unknown.message'
 import { i18nMiddleware } from './middlewares/i18n.middleware'
+import { maintenanceMiddleware } from './middlewares/maintenance.middleware'
 import { usageLimitMiddleware } from './middlewares/usage-limit.middleware'
 import { repositories } from './repositories'
 
@@ -26,6 +27,7 @@ async function main() {
   initReengagementJob()
 
   bot.use(i18nMiddleware)
+  bot.use(maintenanceMiddleware)
 
   for (const handler of handlers) {
     bot.command(

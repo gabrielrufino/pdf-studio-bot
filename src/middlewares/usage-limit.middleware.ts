@@ -39,7 +39,8 @@ export function usageLimitMiddleware(handler: BaseHandler) {
 
     const limit = limits[user.plan_type || PlanTypeEnum.Free]
 
-    const isWithinLimit = await userRepository.isWithinLimit(ctx.from!.id, limit)
+    const today = new Date().toISOString().split('T')[0]
+    const isWithinLimit = !user.is_blocked && (user.last_usage_date !== today || (user.daily_usage_count || 0) < limit)
 
     if (!isWithinLimit) {
       if (user.plan_type === PlanTypeEnum.Pro) {
