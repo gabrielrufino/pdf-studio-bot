@@ -129,8 +129,8 @@ export class SummaryHandler extends BaseHandler {
         })
         break
       }
-      catch (error: any) {
-        if (error.status === 503 && i < maxRetries - 1) {
+      catch (error: unknown) {
+        if (error instanceof Error && 'status' in error && error.status === 503 && i < maxRetries - 1) {
           this.logger.warn({ error, attempt: i + 1 }, 'Gemini API 503 error, retrying...')
           await new Promise(resolve => setTimeout(resolve, delay))
           delay *= 2
