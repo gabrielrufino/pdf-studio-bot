@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { configurationRepository } from '../repositories'
-import { maintenanceMiddleware } from './maintenance.middleware'
+import { clearMaintenanceCache, maintenanceMiddleware } from './maintenance.middleware'
 
 vi.mock('../repositories', () => ({
   configurationRepository: {
@@ -13,6 +13,8 @@ describe(maintenanceMiddleware.name, () => {
   let ctx: any
 
   beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2024-06-01T12:00:00.000Z'))
     next = vi.fn()
     ctx = {
       t: (key: string) => key,
@@ -24,6 +26,11 @@ describe(maintenanceMiddleware.name, () => {
       message: {},
     }
     vi.clearAllMocks()
+    clearMaintenanceCache()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('should call next if maintenance mode is off', async () => {
@@ -93,5 +100,65 @@ describe(maintenanceMiddleware.name, () => {
 
     expect(ctx.reply).toHaveBeenCalledWith('maintenance_mode_active')
     expect(next).not.toHaveBeenCalled()
+  })
+
+  it('should propagate error if database query fails', async () => {
+    vi.mocked(configurationRepository.findGlobalConfig).mockRejectedValueOnce(new Error('DB Error'))
+
+    await expect(maintenanceMiddleware(ctx, next)).rejects.toThrow('DB Error')
+    expect(next).not.toHaveBeenCalled()
+  })
+
+  describe('caching', () => {
+    it('should use cached config within TTL and not query DB again', async () => {
+      vi.mocked(configurationRepository.findGlobalConfig).mockResolvedValueOnce({
+        maintenance_mode: false,
+      } as any)
+
+      await maintenanceMiddleware(ctx, next)
+      await maintenanceMiddleware(ctx, next)
+
+      expect(configurationRepository.findGlobalConfig).toHaveBeenCalledTimes(1)
+      expect(next).toHaveBeenCalledTimes(2)
+    })
+
+    it('should refresh cache after TTL expires', async () => {
+      vi.mocked(configurationRepository.findGlobalConfig).mockResolvedValueOnce({
+        maintenance_mode: false,
+      } as any)
+
+      await maintenanceMiddleware(ctx, next)
+
+      // Advance past the 30s TTL
+      vi.advanceTimersByTime(31_000)
+
+      vi.mocked(configurationRepository.findGlobalConfig).mockResolvedValueOnce({
+        maintenance_mode: true,
+      } as any)
+
+      await maintenanceMiddleware(ctx, next)
+
+      expect(configurationRepository.findGlobalConfig).toHaveBeenCalledTimes(2)
+      expect(ctx.reply).toHaveBeenCalledWith('maintenance_mode_active')
+    })
+
+    it('should respect clearMaintenanceCache and re-fetch', async () => {
+      vi.mocked(configurationRepository.findGlobalConfig).mockResolvedValueOnce({
+        maintenance_mode: false,
+      } as any)
+
+      await maintenanceMiddleware(ctx, next)
+
+      clearMaintenanceCache()
+
+      vi.mocked(configurationRepository.findGlobalConfig).mockResolvedValueOnce({
+        maintenance_mode: true,
+      } as any)
+
+      await maintenanceMiddleware(ctx, next)
+
+      expect(configurationRepository.findGlobalConfig).toHaveBeenCalledTimes(2)
+      expect(ctx.reply).toHaveBeenCalledWith('maintenance_mode_active')
+    })
   })
 })

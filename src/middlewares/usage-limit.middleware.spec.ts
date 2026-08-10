@@ -197,4 +197,21 @@ describe(usageLimitMiddleware.name, () => {
 
     expect(next).toHaveBeenCalled()
   })
+
+  it('should fallback to Free limits when plan_type is undefined', async () => {
+    const user = {
+      _id: 'user-id',
+      plan_type: undefined,
+      is_blocked: false,
+      daily_usage_count: 3,
+      last_usage_date: '2024-01-15',
+    }
+    vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
+
+    const middleware = usageLimitMiddleware(handler)
+    await middleware(ctx, next)
+
+    expect(next).not.toHaveBeenCalled()
+    expect(ctx.reply).toHaveBeenCalledWith('free_limit_reached')
+  })
 })

@@ -93,4 +93,40 @@ describe('logger', () => {
       expect(result[key]).toBe('[REDACTED]')
     }
   })
+
+  it('should handle circular references without crashing', () => {
+    const obj: any = { name: 'test', token: 'secret' }
+    obj.self = obj
+
+    const result = deepRedact(obj)
+
+    expect(result.name).toBe('test')
+    expect(result.token).toBe('[REDACTED]')
+    expect(result.self).toEqual({ '[Circular]': '[REDACTED]' })
+  })
+
+  it('should redact sensitive keys inside arrays of objects', () => {
+    const result = deepRedact({
+      users: [
+        { name: 'alice', token: 'secret1' },
+        { name: 'bob', apiKey: 'secret2' },
+      ],
+    })
+
+    const users = result.users as any[]
+    expect(users[0].name).toBe('alice')
+    expect(users[0].token).toBe('[REDACTED]')
+    expect(users[1].name).toBe('bob')
+    expect(users[1].apiKey).toBe('[REDACTED]')
+  })
+
+  it('should preserve arrays of primitives', () => {
+    const result = deepRedact({
+      tags: ['pdf', 'studio', 'bot'],
+      counts: [1, 2, 3],
+    })
+
+    expect(result.tags).toEqual(['pdf', 'studio', 'bot'])
+    expect(result.counts).toEqual([1, 2, 3])
+  })
 })
