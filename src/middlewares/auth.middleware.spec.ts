@@ -14,7 +14,7 @@ describe(authMiddleware.name, () => {
 
   beforeEach(() => {
     next = vi.fn()
-    ctx = { t: (key: string) => key, from: { id: 12345 }, reply: vi.fn() }
+    ctx = { t: (key: string) => key, from: { id: 12345 }, reply: vi.fn(), user: undefined }
     vi.clearAllMocks()
   })
 
@@ -47,6 +47,7 @@ describe(authMiddleware.name, () => {
 
     expect(next).toHaveBeenCalled()
     expect(ctx.reply).not.toHaveBeenCalled()
+    expect(ctx.user).toEqual({ is_blocked: false })
   })
 
   it('should call next if user is not found in database (not blocked)', async () => {
