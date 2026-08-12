@@ -72,6 +72,26 @@ describe(JoinHandler.name, () => {
 
         await expect(handler.events['msg:document'](ctx)).rejects.toThrow(SessionValidationError)
       })
+
+      it('should not be vulnerable to string format injection via file_name', async () => {
+        const filePath = '/tmp/file.pdf'
+        vi.mocked(ctx.getFile).mockResolvedValueOnce({
+          download: vi.fn().mockResolvedValue(filePath),
+        } as any)
+
+        ctx.message!.document!.file_name = 'malicious_{current}_{max}.pdf'
+        ctx.t = (key: string) => {
+          if (key === 'join_file_received') {
+            return 'File {name} received. {current}/{max}'
+          }
+          return key
+        }
+
+        await handler.events['msg:document'](ctx)
+
+        expect(ctx.getFile).toHaveBeenCalled()
+        expect(ctx.reply).toHaveBeenCalledWith('File malicious_{current}_{max}.pdf received. 1/10')
+      })
     })
 
     describe('msg:document (limit reached)', () => {

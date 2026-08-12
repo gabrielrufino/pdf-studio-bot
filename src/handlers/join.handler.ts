@@ -11,6 +11,7 @@ import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { LimitExceededError } from '../errors/limit-exceeded.error'
 import { UserNotFoundError } from '../errors/user-not-found.error'
 import { JoinParamsSchema } from '../schemas/join-params.schema'
+import { formatString } from '../utils/format.util'
 import { BaseHandler } from './base.handler'
 
 export class JoinHandler extends BaseHandler {
@@ -26,7 +27,9 @@ export class JoinHandler extends BaseHandler {
       const params = this.validateParams(JoinParamsSchema, ctx.session.params)
 
       if (params.paths.length >= JoinHandler.MAX_PDF_FILES) {
-        await ctx.reply(ctx.t('join_limit_reached').replace('{max}', JoinHandler.MAX_PDF_FILES.toString()))
+        await ctx.reply(formatString(ctx.t('join_limit_reached'), {
+          max: JoinHandler.MAX_PDF_FILES.toString(),
+        }))
         return
       }
 
@@ -49,10 +52,11 @@ export class JoinHandler extends BaseHandler {
       ctx.session.params = params
 
       await ctx.reply(
-        ctx.t('join_file_received')
-          .replace('{name}', ctx.message?.document?.file_name || 'file')
-          .replace('{current}', params.paths.length.toString())
-          .replace('{max}', JoinHandler.MAX_PDF_FILES.toString()),
+        formatString(ctx.t('join_file_received'), {
+          name: ctx.message?.document?.file_name || 'file',
+          current: params.paths.length.toString(),
+          max: JoinHandler.MAX_PDF_FILES.toString(),
+        }),
       )
     },
     'msg:text': async (ctx: CustomContext) => {
@@ -71,7 +75,9 @@ export class JoinHandler extends BaseHandler {
     await this.setSessionCommand(ctx)
     ctx.session.params = { paths: [] }
     await ctx.reply(
-      ctx.t('join_send_files').replace('{max}', JoinHandler.MAX_PDF_FILES.toString()),
+      formatString(ctx.t('join_send_files'), {
+        max: JoinHandler.MAX_PDF_FILES.toString(),
+      }),
     )
   }
 
