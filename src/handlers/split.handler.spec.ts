@@ -88,6 +88,27 @@ describe(SplitHandler.name, () => {
         expect(ctx.reply).toHaveBeenCalledWith('split_error')
       })
 
+      it('should log error if fs.rm fails to remove temporary folder', async () => {
+        const error = new Error('Directory delete failed')
+        const fakeOutputDir = '/tmp/fake-output-dir'
+
+        const mkdtempSpy = vi.spyOn(fs, 'mkdtemp').mockResolvedValue(fakeOutputDir)
+        const chmodSpy = vi.spyOn(fs, 'chmod').mockResolvedValue(undefined)
+        vi.mocked(ctx.getFile).mockRejectedValue(new Error('Download failed'))
+
+        const rmSpy = vi.spyOn(fs, 'rm').mockRejectedValue(error)
+        const loggerSpy = vi.spyOn((handler as any).logger, 'error')
+
+        await handler.events['msg:document'](ctx)
+
+        expect(rmSpy).toHaveBeenCalledWith(fakeOutputDir, { force: true, recursive: true })
+        expect(loggerSpy).toHaveBeenCalledWith({ error, path: fakeOutputDir }, 'Failed to remove temporary folder.')
+
+        mkdtempSpy.mockRestore()
+        chmodSpy.mockRestore()
+        rmSpy.mockRestore()
+      })
+
       it('should log error if fs.rm fails in finally block', async () => {
         const error = new Error('Delete failed')
         const rmSpy = vi.spyOn(fs, 'rm').mockRejectedValue(error)
