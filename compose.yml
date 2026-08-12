@@ -6,6 +6,10 @@ services:
       target: ${BUILD_TARGET:-production}
     container_name: pdf-studio-bot
     restart: unless-stopped
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - seccomp=unconfined
     env_file:
       - .env
     environment:
