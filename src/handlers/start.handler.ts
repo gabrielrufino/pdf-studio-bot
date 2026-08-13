@@ -20,8 +20,8 @@ export class StartHandler extends BaseHandler {
 
   async onCommand(ctx: CustomContext) {
     await this.resetSession(ctx)
-    const user = await this.userRepository.findByTelegramId(ctx.from!.id)
-    if (user === null) {
+    const user = ctx.user
+    if (!user) {
       const language = Object.values(LanguageEnum).includes(ctx.from?.language_code as any)
         ? ctx.from?.language_code as LanguageEnum
         : LanguageEnum.English

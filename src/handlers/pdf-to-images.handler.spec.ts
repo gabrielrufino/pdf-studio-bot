@@ -39,7 +39,7 @@ describe(PdfToImagesHandler.name, () => {
     } as unknown as UserRepository
 
     handler = new PdfToImagesHandler(mockUserRepository)
-    ctx = { t: (key: string) => key, from: { id: 123 }, chat: { id: 456 }, session: {
+    ctx = { t: (key: string) => key, from: { id: 123 }, user: { plan_type: PlanTypeEnum.Pro }, chat: { id: 456 }, session: {
       command: null,
     }, message: {
       document: {
@@ -110,7 +110,7 @@ describe(PdfToImagesHandler.name, () => {
 
       it('should notify limit exceeded for free users', async () => {
         ctx.session.command = CommandEnum.PdfToImages
-        vi.mocked(mockUserRepository.findByTelegramId).mockResolvedValue({ plan_type: PlanTypeEnum.Free } as any)
+        ctx.user = { plan_type: PlanTypeEnum.Free } as any
         ctx.message!.document!.file_size = 20 * 1024 * 1024 // > 10MB
 
         await handler.events['msg:document'](ctx)
@@ -134,6 +134,28 @@ describe(PdfToImagesHandler.name, () => {
         await handler.events['msg:document'](ctx)
 
         expect(loggerSpy).toHaveBeenCalledWith(expect.objectContaining({ error: expect.any(Error) }), expect.stringContaining('Failed to remove'))
+      })
+
+      it('should log error if removing input file fails', async () => {
+        ctx.session.command = CommandEnum.PdfToImages
+        const mockImages = [Buffer.from([1, 2, 3])]
+        const mockDocument = {
+          length: 1,
+          [Symbol.asyncIterator]: vi.fn().mockReturnValue(mockImages[Symbol.iterator]()),
+        }
+        vi.mocked(pdf).mockResolvedValue(mockDocument as any)
+
+        const fs = await import('node:fs/promises')
+        vi.mocked(fs.default.rm).mockImplementation(async (path) => {
+          if (path === '/tmp/test.pdf') {
+            throw new Error('rm input failed')
+          }
+        })
+        const loggerSpy = vi.spyOn((handler as any).logger, 'error')
+
+        await handler.events['msg:document'](ctx)
+
+        expect(loggerSpy).toHaveBeenCalledWith(expect.objectContaining({ error: expect.any(Error) }), 'Failed to remove input file.')
       })
 
       it('should handle errors during conversion', async () => {

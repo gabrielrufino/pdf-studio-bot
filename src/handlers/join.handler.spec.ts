@@ -24,7 +24,7 @@ describe(JoinHandler.name, () => {
     } as unknown as UserRepository
 
     handler = new JoinHandler(mockUserRepository)
-    ctx = { t: (key: string) => key, from: { id: 123 }, session: {
+    ctx = { t: (key: string) => key, from: { id: 123 }, user: { plan_type: 'free' }, session: {
       command: null,
       params: { paths: [] } as JoinParams,
     }, message: {

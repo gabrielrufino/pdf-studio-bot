@@ -27,7 +27,7 @@ export class SplitHandler extends BaseHandler {
       let inputPath: string | undefined
 
       try {
-        const user = await this.userRepository.findByTelegramId(ctx.from?.id ?? 0)
+        const user = ctx.user
         if (!user) {
           throw new UserNotFoundError()
         }

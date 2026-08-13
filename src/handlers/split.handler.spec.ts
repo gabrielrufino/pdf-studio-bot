@@ -19,7 +19,7 @@ describe(SplitHandler.name, () => {
       incrementUsage: vi.fn(),
     } as unknown as UserRepository
     handler = new SplitHandler(mockUserRepository)
-    ctx = { t: (key: string) => key, from: { id: 123 }, session: {
+    ctx = { t: (key: string) => key, from: { id: 123 }, user: { plan_type: 'free' }, session: {
       command: null,
       params: {} as any,
     }, message: {
@@ -86,6 +86,27 @@ describe(SplitHandler.name, () => {
 
         expect(loggerSpy).toHaveBeenCalled()
         expect(ctx.reply).toHaveBeenCalledWith('split_error')
+      })
+
+      it('should log error if fs.rm fails to remove temporary folder', async () => {
+        const error = new Error('Directory delete failed')
+        const fakeOutputDir = '/tmp/fake-output-dir'
+
+        const mkdtempSpy = vi.spyOn(fs, 'mkdtemp').mockResolvedValue(fakeOutputDir)
+        const chmodSpy = vi.spyOn(fs, 'chmod').mockResolvedValue(undefined)
+        vi.mocked(ctx.getFile).mockRejectedValue(new Error('Download failed'))
+
+        const rmSpy = vi.spyOn(fs, 'rm').mockRejectedValue(error)
+        const loggerSpy = vi.spyOn((handler as any).logger, 'error')
+
+        await handler.events['msg:document'](ctx)
+
+        expect(rmSpy).toHaveBeenCalledWith(fakeOutputDir, { force: true, recursive: true })
+        expect(loggerSpy).toHaveBeenCalledWith({ error, path: fakeOutputDir }, 'Failed to remove temporary folder.')
+
+        mkdtempSpy.mockRestore()
+        chmodSpy.mockRestore()
+        rmSpy.mockRestore()
       })
 
       it('should log error if fs.rm fails in finally block', async () => {

@@ -9,6 +9,7 @@ export async function authMiddleware(ctx: CustomContext, next: NextFunction) {
   }
 
   const user = await userRepository.findByTelegramId(ctx.from.id)
+  ctx.user = user
 
   if (user?.is_blocked) {
     await ctx.reply('You are blocked from using this bot.')

@@ -33,7 +33,7 @@ export class PdfToImagesHandler extends BaseHandler {
       try {
         await this.validatePDF(ctx)
 
-        const user = await this.userRepository.findByTelegramId(ctx.from?.id ?? 0)
+        const user = ctx.user
         if (!user) {
           throw new UserNotFoundError()
         }

@@ -52,10 +52,10 @@ describe(SummaryHandler.name, () => {
   })
 
   const mockUserWithId = (id: number, plan: PlanTypeEnum) => {
-    vi.mocked(mockUserRepository.findByTelegramId).mockResolvedValue({
+    ctx.user = {
       telegram_user: { id },
       plan_type: plan,
-    } as any)
+    } as any
   }
 
   const setupTestFile = async (prefix: string) => {
@@ -69,10 +69,10 @@ describe(SummaryHandler.name, () => {
   }
 
   const mockUserWithPlan = (plan: PlanTypeEnum) => {
-    vi.mocked(mockUserRepository.findByTelegramId).mockResolvedValue({
+    ctx.user = {
       telegram_user: { id: 123 },
       plan_type: plan,
-    } as any)
+    } as any
   }
 
   it('should have correct command', () => {
@@ -91,7 +91,7 @@ describe(SummaryHandler.name, () => {
   describe('events', () => {
     describe('msg:document', () => {
       it('should return error if user not found', async () => {
-        vi.mocked(mockUserRepository.findByTelegramId).mockResolvedValueOnce(null)
+        ctx.user = null
 
         await handler.events['msg:document'](ctx)
 

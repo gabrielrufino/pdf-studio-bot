@@ -22,7 +22,7 @@ describe(usageLimitMiddleware.name, () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2024-01-15T12:00:00.000Z'))
     next = vi.fn()
-    ctx = { t: (key: string) => key, from: { id: 12345 }, reply: vi.fn() }
+    ctx = { t: (key: string) => key, from: { id: 12345 }, reply: vi.fn(), user: undefined }
     handler = {
       hasUsageLimits: true,
     }
@@ -50,6 +50,23 @@ describe(usageLimitMiddleware.name, () => {
 
     expect(next).toHaveBeenCalled()
     expect(userRepository.findByTelegramId).not.toHaveBeenCalled()
+  })
+
+  it('should not query db if ctx.user is present', async () => {
+    const user = {
+      _id: 'user-id',
+      plan_type: PlanTypeEnum.Pro,
+      is_blocked: false,
+      daily_usage_count: 49,
+      last_usage_date: '2024-01-15',
+    }
+    ctx.user = user as any
+
+    const middleware = usageLimitMiddleware(handler)
+    await middleware(ctx, next)
+
+    expect(userRepository.findByTelegramId).not.toHaveBeenCalled()
+    expect(next).toHaveBeenCalled()
   })
 
   it('should create user and check limit if user does not exist', async () => {
