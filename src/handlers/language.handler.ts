@@ -21,7 +21,7 @@ export class LanguageHandler extends BaseHandler {
         return
       }
 
-      const user = await this.userRepository.findByTelegramId(ctx.from!.id)
+      const user = ctx.user
       if (user) {
         user.language = data as LanguageEnum
         await this.userRepository.updateById(user._id, user)

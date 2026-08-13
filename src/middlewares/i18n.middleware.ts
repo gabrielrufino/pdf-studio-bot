@@ -20,6 +20,7 @@ export async function i18nMiddleware(ctx: CustomContext, next: NextFunction) {
     let user = ctx.user
     if (user === undefined) {
       user = await userRepository.findByTelegramId(userId)
+      ctx.user = user
     }
 
     if (user?.language) {

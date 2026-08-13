@@ -19,7 +19,7 @@ describe(SplitHandler.name, () => {
       incrementUsage: vi.fn(),
     } as unknown as UserRepository
     handler = new SplitHandler(mockUserRepository)
-    ctx = { t: (key: string) => key, from: { id: 123 }, session: {
+    ctx = { t: (key: string) => key, from: { id: 123 }, user: { plan_type: 'free' }, session: {
       command: null,
       params: {} as any,
     }, message: {
