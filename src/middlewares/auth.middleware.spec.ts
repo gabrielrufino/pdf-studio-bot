@@ -57,5 +57,6 @@ describe(authMiddleware.name, () => {
 
     expect(next).toHaveBeenCalled()
     expect(ctx.reply).not.toHaveBeenCalled()
+    expect(ctx.user).toBeNull()
   })
 })
