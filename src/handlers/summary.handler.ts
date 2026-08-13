@@ -77,7 +77,7 @@ export class SummaryHandler extends BaseHandler {
   }
 
   private async verifyLimits(ctx: CustomContext, path: string): Promise<void> {
-    const user = await this.userRepository.findByTelegramId(ctx.from?.id ?? 0)
+    const user = ctx.user
     if (!user)
       throw new UserNotFoundError()
     if (user.plan_type === PlanTypeEnum.Pro)

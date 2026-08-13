@@ -16,7 +16,11 @@ export function usageLimitMiddleware(handler: BaseHandler) {
       return next()
     }
 
-    let user = await userRepository.findByTelegramId(userId)
+    let user = ctx.user
+    if (user === undefined) {
+      user = await userRepository.findByTelegramId(userId)
+    }
+
     if (!user) {
       user = await userRepository.create(new UserEntity({
         telegram_user: ctx.from!,
@@ -31,6 +35,8 @@ export function usageLimitMiddleware(handler: BaseHandler) {
         user.plan_type = PlanTypeEnum.Free
       }
     }
+
+    ctx.user = user
 
     const limits = {
       [PlanTypeEnum.Free]: 3,

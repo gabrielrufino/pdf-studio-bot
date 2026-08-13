@@ -39,7 +39,7 @@ describe(PdfToImagesHandler.name, () => {
     } as unknown as UserRepository
 
     handler = new PdfToImagesHandler(mockUserRepository)
-    ctx = { t: (key: string) => key, from: { id: 123 }, chat: { id: 456 }, session: {
+    ctx = { t: (key: string) => key, from: { id: 123 }, user: { plan_type: PlanTypeEnum.Pro }, chat: { id: 456 }, session: {
       command: null,
     }, message: {
       document: {
@@ -110,7 +110,7 @@ describe(PdfToImagesHandler.name, () => {
 
       it('should notify limit exceeded for free users', async () => {
         ctx.session.command = CommandEnum.PdfToImages
-        vi.mocked(mockUserRepository.findByTelegramId).mockResolvedValue({ plan_type: PlanTypeEnum.Free } as any)
+        ctx.user = { plan_type: PlanTypeEnum.Free } as any
         ctx.message!.document!.file_size = 20 * 1024 * 1024 // > 10MB
 
         await handler.events['msg:document'](ctx)

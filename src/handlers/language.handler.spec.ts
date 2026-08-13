@@ -80,8 +80,6 @@ describe(LanguageHandler.name, () => {
       } as unknown as CustomContext
 
       await handler.events.callback_query(ctx)
-
-      expect(userRepository.findByTelegramId).not.toHaveBeenCalled()
     })
 
     it('should do nothing if data is not a valid LanguageEnum', async () => {
@@ -90,8 +88,6 @@ describe(LanguageHandler.name, () => {
       } as unknown as CustomContext
 
       await handler.events.callback_query(ctx)
-
-      expect(userRepository.findByTelegramId).not.toHaveBeenCalled()
     })
 
     it('should update user language if user exists', async () => {
@@ -104,6 +100,7 @@ describe(LanguageHandler.name, () => {
       const ctx = {
         callbackQuery: { data: LanguageEnum.Spanish },
         from: { id: 12345 },
+        user: mockUser,
         session: { language: LanguageEnum.English, command: CommandEnum.Language, params: {} },
         answerCallbackQuery: vi.fn(),
         editMessageText: vi.fn(),
@@ -111,7 +108,6 @@ describe(LanguageHandler.name, () => {
 
       await handler.events.callback_query(ctx)
 
-      expect(userRepository.findByTelegramId).toHaveBeenCalledWith(12345)
       expect(mockUser.language).toBe(LanguageEnum.Spanish)
       expect(userRepository.updateById).toHaveBeenCalledWith('user_123', mockUser)
     })
@@ -122,6 +118,7 @@ describe(LanguageHandler.name, () => {
       const ctx = {
         callbackQuery: { data: LanguageEnum.Portuguese },
         from: { id: 12345 },
+        user: null,
         session: { language: LanguageEnum.English, command: CommandEnum.Language, params: { foo: 'bar' } },
         answerCallbackQuery: vi.fn(),
         editMessageText: vi.fn(),

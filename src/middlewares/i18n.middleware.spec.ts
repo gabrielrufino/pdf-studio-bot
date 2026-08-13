@@ -19,6 +19,7 @@ describe(i18nMiddleware.name, () => {
       from: { id: 12345, language_code: undefined },
       session: { language: undefined },
       t: undefined,
+      user: undefined,
     }
     vi.clearAllMocks()
   })
@@ -42,6 +43,19 @@ describe(i18nMiddleware.name, () => {
     await i18nMiddleware(ctx, next)
 
     expect(userRepository.findByTelegramId).toHaveBeenCalledWith(12345)
+    expect(ctx.session.language).toBe(LanguageEnum.Portuguese)
+    expect(ctx.t('operation_help')).toBe(locales.pt.operation_help)
+    expect(next).toHaveBeenCalled()
+  })
+
+  it('should not query database if user is available on context', async () => {
+    ctx.user = {
+      language: LanguageEnum.Portuguese,
+    }
+
+    await i18nMiddleware(ctx, next)
+
+    expect(userRepository.findByTelegramId).not.toHaveBeenCalled()
     expect(ctx.session.language).toBe(LanguageEnum.Portuguese)
     expect(ctx.t('operation_help')).toBe(locales.pt.operation_help)
     expect(next).toHaveBeenCalled()
