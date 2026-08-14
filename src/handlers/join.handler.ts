@@ -5,7 +5,7 @@ import os from 'node:os'
 import { join } from 'node:path'
 import { InputFile } from 'grammy'
 import muhammara from 'muhammara'
-import { MAX_FILE_SIZE } from '../config/constants'
+import { MAX_FILE_SIZE, MAX_PRO_FILE_SIZE } from '../config/constants'
 import { CommandEnum } from '../enums/command.enum'
 import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { LimitExceededError } from '../errors/limit-exceeded.error'
@@ -37,7 +37,14 @@ export class JoinHandler extends BaseHandler {
         throw new UserNotFoundError()
       }
 
-      if (user.plan_type !== PlanTypeEnum.Pro && (ctx.message?.document?.file_size ?? 0) > MAX_FILE_SIZE) {
+      const isPro = user.plan_type === PlanTypeEnum.Pro
+      const fileSize = ctx.message?.document?.file_size ?? 0
+
+      if (!isPro && fileSize > MAX_FILE_SIZE) {
+        await ctx.reply(ctx.t('free_limit_reached'))
+        throw new LimitExceededError()
+      }
+      if (isPro && fileSize > MAX_PRO_FILE_SIZE) {
         await ctx.reply(ctx.t('free_limit_reached'))
         throw new LimitExceededError()
       }
