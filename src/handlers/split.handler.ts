@@ -5,7 +5,7 @@ import os from 'node:os'
 import { join } from 'node:path'
 import { InputFile } from 'grammy'
 import muhammara from 'muhammara'
-import { MAX_FILE_SIZE, MAX_PAGES } from '../config/constants'
+import { MAX_FILE_SIZE, MAX_PAGES, MAX_PRO_PAGES } from '../config/constants'
 import { CommandEnum } from '../enums/command.enum'
 import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { LimitExceededError } from '../errors/limit-exceeded.error'
@@ -50,7 +50,10 @@ export class SplitHandler extends BaseHandler {
         const pdfReader = muhammara.createReader(inputPath)
         const pagesCount = pdfReader.getPagesCount()
 
-        if (user.plan_type !== PlanTypeEnum.Pro && pagesCount > MAX_PAGES) {
+        if (
+          (user.plan_type !== PlanTypeEnum.Pro && pagesCount > MAX_PAGES)
+          || (user.plan_type === PlanTypeEnum.Pro && pagesCount > MAX_PRO_PAGES)
+        ) {
           await this.notifyLimitExceeded(ctx)
           throw new LimitExceededError()
         }
