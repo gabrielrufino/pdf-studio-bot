@@ -41,11 +41,11 @@ export class JoinHandler extends BaseHandler {
       const fileSize = ctx.message?.document?.file_size ?? 0
 
       if (!isPro && fileSize > MAX_FILE_SIZE) {
-        await ctx.reply(ctx.t('free_limit_reached'))
+        await this.notifyLimitExceeded(ctx)
         throw new LimitExceededError()
       }
       if (isPro && fileSize > MAX_PRO_FILE_SIZE) {
-        await ctx.reply(ctx.t('free_limit_reached'))
+        await this.notifyLimitExceeded(ctx)
         throw new LimitExceededError()
       }
 

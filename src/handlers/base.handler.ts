@@ -4,6 +4,7 @@ import type { CommandEnum } from '../enums/command.enum'
 import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
 import { logger } from '../config/logger'
+import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { InvalidFileError } from '../errors/invalid-file.error'
 import { SessionValidationError } from '../errors/session-validation.error'
 
@@ -46,7 +47,8 @@ export abstract class BaseHandler {
   }
 
   protected async notifyLimitExceeded(ctx: CustomContext): Promise<void> {
-    await ctx.reply(ctx.t('free_limit_reached'))
+    const isPro = ctx.user?.plan_type === PlanTypeEnum.Pro
+    await ctx.reply(ctx.t(isPro ? 'pro_limit_reached' : 'free_limit_reached'))
   }
 
   private async removeTemporaryFiles(ctx: CustomContext) {
