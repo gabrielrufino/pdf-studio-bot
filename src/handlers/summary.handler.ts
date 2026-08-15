@@ -3,11 +3,8 @@ import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
 import muhammara from 'muhammara'
-import { MAX_FILE_SIZE, MAX_PAGES, MAX_PRO_FILE_SIZE, MAX_PRO_PAGES } from '../config/constants'
 import { CommandEnum } from '../enums/command.enum'
-import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { LimitExceededError } from '../errors/limit-exceeded.error'
-import { UserNotFoundError } from '../errors/user-not-found.error'
 import { BaseHandler } from './base.handler'
 
 export class SummaryHandler extends BaseHandler {
@@ -77,32 +74,12 @@ export class SummaryHandler extends BaseHandler {
   }
 
   private async verifyLimits(ctx: CustomContext, path: string): Promise<void> {
-    const user = ctx.user
-    if (!user)
-      throw new UserNotFoundError()
-
-    const isPro = user.plan_type === PlanTypeEnum.Pro
-
     const stats = await fs.stat(path)
-    if (!isPro && stats.size > MAX_FILE_SIZE) {
-      await this.notifyLimitExceeded(ctx)
-      throw new LimitExceededError()
-    }
-    if (isPro && stats.size > MAX_PRO_FILE_SIZE) {
-      await this.notifyLimitExceeded(ctx)
-      throw new LimitExceededError()
-    }
+    await this.validateFileSize(ctx, stats.size)
 
     const pdfReader = muhammara.createReader(path)
     const pagesCount = pdfReader.getPagesCount()
-    if (!isPro && pagesCount > MAX_PAGES) {
-      await this.notifyLimitExceeded(ctx)
-      throw new LimitExceededError()
-    }
-    if (isPro && pagesCount > MAX_PRO_PAGES) {
-      await this.notifyLimitExceeded(ctx)
-      throw new LimitExceededError()
-    }
+    await this.validatePageCount(ctx, pagesCount)
   }
 
   private async performSummarization(path: string, prompt: string, onUploadComplete: (fileName: string) => void): Promise<string> {

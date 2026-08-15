@@ -6,12 +6,9 @@ import os from 'node:os'
 import { join } from 'node:path'
 import { InputFile } from 'grammy'
 import { pdf } from 'pdf-to-img'
-import { MAX_FILE_SIZE, MAX_PAGES, MAX_PRO_FILE_SIZE, MAX_PRO_PAGES } from '../config/constants'
 import { CommandEnum } from '../enums/command.enum'
-import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { InvalidFileError } from '../errors/invalid-file.error'
 import { LimitExceededError } from '../errors/limit-exceeded.error'
-import { UserNotFoundError } from '../errors/user-not-found.error'
 import { BaseHandler } from './base.handler'
 
 export class PdfToImagesHandler extends BaseHandler {
@@ -32,24 +29,7 @@ export class PdfToImagesHandler extends BaseHandler {
 
       try {
         await this.validatePDF(ctx)
-
-        const user = ctx.user
-        if (!user) {
-          throw new UserNotFoundError()
-        }
-
-        const isPro = user.plan_type === PlanTypeEnum.Pro
-        const fileSize = ctx.message?.document?.file_size ?? 0
-
-        if (!isPro && fileSize > MAX_FILE_SIZE) {
-          await this.notifyLimitExceeded(ctx)
-          throw new LimitExceededError()
-        }
-
-        if (isPro && fileSize > MAX_PRO_FILE_SIZE) {
-          await this.notifyLimitExceeded(ctx)
-          throw new LimitExceededError()
-        }
+        await this.validateFileSize(ctx)
 
         const file = await ctx.getFile()
         inputPath = await file.download()
@@ -61,15 +41,7 @@ export class PdfToImagesHandler extends BaseHandler {
         const document = await pdf(inputPath)
         const totalPages = document.length
 
-        if (!isPro && totalPages > MAX_PAGES) {
-          await this.notifyLimitExceeded(ctx)
-          throw new LimitExceededError()
-        }
-
-        if (isPro && totalPages > MAX_PRO_PAGES) {
-          await this.notifyLimitExceeded(ctx)
-          throw new LimitExceededError()
-        }
+        await this.validatePageCount(ctx, totalPages)
 
         await ctx.reply(ctx.t('pdftoimages_converting'))
 

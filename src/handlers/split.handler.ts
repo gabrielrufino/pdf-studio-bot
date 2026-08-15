@@ -5,11 +5,7 @@ import os from 'node:os'
 import { join } from 'node:path'
 import { InputFile } from 'grammy'
 import muhammara from 'muhammara'
-import { MAX_FILE_SIZE, MAX_PAGES, MAX_PRO_FILE_SIZE, MAX_PRO_PAGES } from '../config/constants'
 import { CommandEnum } from '../enums/command.enum'
-import { PlanTypeEnum } from '../enums/plan-type.enum'
-import { LimitExceededError } from '../errors/limit-exceeded.error'
-import { UserNotFoundError } from '../errors/user-not-found.error'
 import { BaseHandler } from './base.handler'
 
 export class SplitHandler extends BaseHandler {
@@ -27,23 +23,7 @@ export class SplitHandler extends BaseHandler {
       let inputPath: string | undefined
 
       try {
-        const user = ctx.user
-        if (!user) {
-          throw new UserNotFoundError()
-        }
-
-        const isPro = user.plan_type === PlanTypeEnum.Pro
-        const fileSize = ctx.message?.document?.file_size ?? 0
-
-        if (!isPro && fileSize > MAX_FILE_SIZE) {
-          await this.notifyLimitExceeded(ctx)
-          throw new LimitExceededError()
-        }
-
-        if (isPro && fileSize > MAX_PRO_FILE_SIZE) {
-          await this.notifyLimitExceeded(ctx)
-          throw new LimitExceededError()
-        }
+        await this.validateFileSize(ctx)
 
         outputDir = await fs.mkdtemp(join(os.tmpdir(), 'pdf-studio-bot-split-'))
         await fs.chmod(outputDir, 0o700)
@@ -58,15 +38,7 @@ export class SplitHandler extends BaseHandler {
         const pdfReader = muhammara.createReader(inputPath)
         const pagesCount = pdfReader.getPagesCount()
 
-        if (!isPro && pagesCount > MAX_PAGES) {
-          await this.notifyLimitExceeded(ctx)
-          throw new LimitExceededError()
-        }
-
-        if (isPro && pagesCount > MAX_PRO_PAGES) {
-          await this.notifyLimitExceeded(ctx)
-          throw new LimitExceededError()
-        }
+        await this.validatePageCount(ctx, pagesCount)
 
         await ctx.reply(ctx.t('split_splitting'))
 
