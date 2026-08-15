@@ -36,7 +36,7 @@ bot.use(
     getSessionKey: (ctx) => {
       const id = ctx.from?.id || ctx.chat?.id
       if (!id) {
-        logger.warn({ update: ctx.update }, 'Session key could not be determined for update')
+        logger.warn({ update_id: ctx.update?.update_id }, 'Session key could not be determined for update')
         return undefined
       }
       return id.toString()
