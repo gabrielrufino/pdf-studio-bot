@@ -5,6 +5,7 @@ import fs from 'node:fs/promises'
 import muhammara from 'muhammara'
 import { CommandEnum } from '../enums/command.enum'
 import { LimitExceededError } from '../errors/limit-exceeded.error'
+import { UserNotFoundError } from '../errors/user-not-found.error'
 import { BaseHandler } from './base.handler'
 
 export class SummaryHandler extends BaseHandler {
@@ -74,12 +75,15 @@ export class SummaryHandler extends BaseHandler {
   }
 
   private async verifyLimits(ctx: CustomContext, path: string): Promise<void> {
+    if (!ctx.user)
+      throw new UserNotFoundError()
+
     const stats = await fs.stat(path)
-    await this.validateFileSize(ctx, stats.size)
+    await this.checkLimits(ctx, { fileSize: stats.size })
 
     const pdfReader = muhammara.createReader(path)
     const pagesCount = pdfReader.getPagesCount()
-    await this.validatePageCount(ctx, pagesCount)
+    await this.checkLimits(ctx, { pagesCount })
   }
 
   private async performSummarization(path: string, prompt: string, onUploadComplete: (fileName: string) => void): Promise<string> {

@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import { InputFile } from 'grammy'
 import muhammara from 'muhammara'
 import { CommandEnum } from '../enums/command.enum'
+import { UserNotFoundError } from '../errors/user-not-found.error'
 import { JoinParamsSchema } from '../schemas/join-params.schema'
 import { BaseHandler } from './base.handler'
 
@@ -27,7 +28,13 @@ export class JoinHandler extends BaseHandler {
       }
 
       await this.validatePDF(ctx)
-      await this.validateFileSize(ctx)
+
+      if (!ctx.user) {
+        throw new UserNotFoundError()
+      }
+
+      const fileSize = ctx.message?.document?.file_size ?? 0
+      await this.checkLimits(ctx, { fileSize })
 
       const file = await ctx.getFile()
       const filePath = await file.download()

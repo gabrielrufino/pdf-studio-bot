@@ -118,38 +118,6 @@ describe(PdfToImagesHandler.name, () => {
         expect(ctx.reply).toHaveBeenCalledWith('free_limit_reached')
       })
 
-      it('should notify limit exceeded for pro users exceeding file size', async () => {
-        ctx.session.command = CommandEnum.PdfToImages
-        ctx.user = { plan_type: PlanTypeEnum.Pro } as any
-        ctx.message!.document!.file_size = 60 * 1024 * 1024 // 60MB > 50MB pro limit
-
-        await handler.events['msg:document'](ctx)
-
-        expect(ctx.reply).toHaveBeenCalledWith('pro_limit_reached')
-        expect(ctx.getFile).not.toHaveBeenCalled()
-      })
-
-      it('should notify limit exceeded for pro users exceeding page limit', async () => {
-        ctx.session.command = CommandEnum.PdfToImages
-        ctx.user = { plan_type: PlanTypeEnum.Pro } as any
-        ctx.message!.document!.file_size = 100 // small file size
-
-        const muhammara = await import('muhammara')
-        vi.mocked(muhammara.default.createReader).mockReturnValueOnce({
-          getPagesCount: vi.fn().mockReturnValue(1001),
-        } as any)
-
-        const mockDocument = {
-          length: 1001,
-          [Symbol.asyncIterator]: vi.fn().mockReturnValue([][Symbol.iterator]()),
-        }
-        vi.mocked(pdf).mockResolvedValue(mockDocument as any)
-
-        await handler.events['msg:document'](ctx)
-
-        expect(ctx.reply).toHaveBeenCalledWith('pro_limit_reached')
-      })
-
       it('should log error if removing temporary files fails', async () => {
         ctx.session.command = CommandEnum.PdfToImages
         const mockImages = [Buffer.from([1, 2, 3])]

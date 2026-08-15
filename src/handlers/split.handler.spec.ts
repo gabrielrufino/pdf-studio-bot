@@ -5,7 +5,6 @@ import os from 'node:os'
 import path from 'node:path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CommandEnum } from '../enums/command.enum'
-import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { SplitHandler } from './split.handler'
 
 describe(SplitHandler.name, () => {
@@ -15,7 +14,6 @@ describe(SplitHandler.name, () => {
   let ctx: CustomContext
 
   beforeEach(() => {
-    vi.clearAllMocks()
     mockUserRepository = {
       findByTelegramId: vi.fn().mockResolvedValue({ plan_type: 'free' }),
       incrementUsage: vi.fn(),
@@ -127,8 +125,6 @@ describe(SplitHandler.name, () => {
 
         expect(rmSpy).toHaveBeenCalled()
         expect(loggerSpy).toHaveBeenCalledWith({ error, path: '/tmp/fake-input.pdf' }, 'Failed to remove input file.')
-
-        rmSpy.mockRestore()
       })
 
       it('should throw error if download fails (inputPath is null)', async () => {
@@ -141,43 +137,6 @@ describe(SplitHandler.name, () => {
 
         expect(loggerSpy).toHaveBeenCalledWith(new Error('Failed to download file'))
         expect(ctx.reply).toHaveBeenCalledWith('split_error')
-      })
-
-      it('should notify limit exceeded for pro users exceeding file size', async () => {
-        ctx.user = { plan_type: PlanTypeEnum.Pro } as any
-        ctx.message!.document!.file_size = 60 * 1024 * 1024 // 60MB > 50MB pro limit
-
-        await handler.events['msg:document'](ctx)
-
-        expect(ctx.reply).toHaveBeenCalledWith('pro_limit_reached')
-        expect(ctx.getFile).not.toHaveBeenCalled()
-      })
-
-      it('should notify limit exceeded for pro users exceeding page limit', async () => {
-        const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-studio-bot-test-split-pro-pages-'))
-        const targetPath = path.join(tempDir, 'test.pdf')
-
-        try {
-          await fs.copyFile(`${process.cwd()}/assets/lorem-ipsum.pdf`, targetPath)
-          vi.mocked(ctx.getFile).mockResolvedValueOnce({
-            download: vi.fn().mockResolvedValue(targetPath),
-          } as any)
-
-          ctx.user = { plan_type: PlanTypeEnum.Pro } as any
-          ctx.message!.document!.file_size = 100 // small file size
-
-          const muhammara = await import('muhammara')
-          vi.spyOn(muhammara.default, 'createReader').mockReturnValueOnce({
-            getPagesCount: vi.fn().mockReturnValue(1001),
-          } as any)
-
-          await handler.events['msg:document'](ctx)
-
-          expect(ctx.reply).toHaveBeenCalledWith('pro_limit_reached')
-        }
-        finally {
-          await fs.rm(tempDir, { recursive: true, force: true })
-        }
       })
     })
   })

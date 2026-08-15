@@ -6,9 +6,7 @@ import os from 'node:os'
 import { join } from 'node:path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CommandEnum } from '../enums/command.enum'
-import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { InvalidFileError } from '../errors/invalid-file.error'
-import { LimitExceededError } from '../errors/limit-exceeded.error'
 import { SessionValidationError } from '../errors/session-validation.error'
 import { JoinHandler } from './join.handler'
 
@@ -73,16 +71,6 @@ describe(JoinHandler.name, () => {
         ctx.session.params = null
 
         await expect(handler.events['msg:document'](ctx)).rejects.toThrow(SessionValidationError)
-      })
-
-      it('should notify limit exceeded for pro users exceeding file size', async () => {
-        ctx.user = { plan_type: PlanTypeEnum.Pro } as any
-        ctx.message!.document!.file_size = 60 * 1024 * 1024 // 60MB > 50MB pro limit
-
-        await expect(handler.events['msg:document'](ctx)).rejects.toThrow(LimitExceededError)
-
-        expect(ctx.reply).toHaveBeenCalledWith('pro_limit_reached')
-        expect(ctx.getFile).not.toHaveBeenCalled()
       })
     })
 

@@ -9,6 +9,7 @@ import { pdf } from 'pdf-to-img'
 import { CommandEnum } from '../enums/command.enum'
 import { InvalidFileError } from '../errors/invalid-file.error'
 import { LimitExceededError } from '../errors/limit-exceeded.error'
+import { UserNotFoundError } from '../errors/user-not-found.error'
 import { BaseHandler } from './base.handler'
 
 export class PdfToImagesHandler extends BaseHandler {
@@ -29,7 +30,13 @@ export class PdfToImagesHandler extends BaseHandler {
 
       try {
         await this.validatePDF(ctx)
-        await this.validateFileSize(ctx)
+
+        if (!ctx.user) {
+          throw new UserNotFoundError()
+        }
+
+        const fileSize = ctx.message?.document?.file_size ?? 0
+        await this.checkLimits(ctx, { fileSize })
 
         const file = await ctx.getFile()
         inputPath = await file.download()
@@ -41,7 +48,7 @@ export class PdfToImagesHandler extends BaseHandler {
         const document = await pdf(inputPath)
         const totalPages = document.length
 
-        await this.validatePageCount(ctx, totalPages)
+        await this.checkLimits(ctx, { pagesCount: totalPages })
 
         await ctx.reply(ctx.t('pdftoimages_converting'))
 

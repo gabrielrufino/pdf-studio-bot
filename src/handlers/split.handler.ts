@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import { InputFile } from 'grammy'
 import muhammara from 'muhammara'
 import { CommandEnum } from '../enums/command.enum'
+import { UserNotFoundError } from '../errors/user-not-found.error'
 import { BaseHandler } from './base.handler'
 
 export class SplitHandler extends BaseHandler {
@@ -23,7 +24,12 @@ export class SplitHandler extends BaseHandler {
       let inputPath: string | undefined
 
       try {
-        await this.validateFileSize(ctx)
+        if (!ctx.user) {
+          throw new UserNotFoundError()
+        }
+
+        const fileSize = ctx.message?.document?.file_size ?? 0
+        await this.checkLimits(ctx, { fileSize })
 
         outputDir = await fs.mkdtemp(join(os.tmpdir(), 'pdf-studio-bot-split-'))
         await fs.chmod(outputDir, 0o700)
@@ -38,7 +44,7 @@ export class SplitHandler extends BaseHandler {
         const pdfReader = muhammara.createReader(inputPath)
         const pagesCount = pdfReader.getPagesCount()
 
-        await this.validatePageCount(ctx, pagesCount)
+        await this.checkLimits(ctx, { pagesCount })
 
         await ctx.reply(ctx.t('split_splitting'))
 
