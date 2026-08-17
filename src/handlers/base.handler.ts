@@ -49,7 +49,8 @@ export abstract class BaseHandler {
   }
 
   protected async notifyLimitExceeded(ctx: CustomContext): Promise<void> {
-    await ctx.reply(ctx.t('free_limit_reached'))
+    const isPro = ctx.user?.plan_type === PlanTypeEnum.Pro
+    await ctx.reply(ctx.t(isPro ? 'pro_limit_reached' : 'free_limit_reached'))
   }
 
   protected async checkLimits(

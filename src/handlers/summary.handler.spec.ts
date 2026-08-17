@@ -167,7 +167,7 @@ describe(SummaryHandler.name, () => {
 
           await handler.events['msg:document'](ctx)
 
-          expect(ctx.reply).toHaveBeenCalledWith('free_limit_reached')
+          expect(ctx.reply).toHaveBeenCalledWith('pro_limit_reached')
           expect(mockGenerateContent).not.toHaveBeenCalled()
         }
         finally {
@@ -190,7 +190,7 @@ describe(SummaryHandler.name, () => {
 
           await handler.events['msg:document'](ctx)
 
-          expect(ctx.reply).toHaveBeenCalledWith('free_limit_reached')
+          expect(ctx.reply).toHaveBeenCalledWith('pro_limit_reached')
           expect(mockGenerateContent).not.toHaveBeenCalled()
         }
         finally {
