@@ -3,8 +3,11 @@ import type { z } from 'zod'
 import type { CommandEnum } from '../enums/command.enum'
 import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
+import { MAX_FILE_SIZE, MAX_PAGES, MAX_PRO_FILE_SIZE, MAX_PRO_PAGES } from '../config/constants'
 import { logger } from '../config/logger'
+import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { InvalidFileError } from '../errors/invalid-file.error'
+import { LimitExceededError } from '../errors/limit-exceeded.error'
 import { SessionValidationError } from '../errors/session-validation.error'
 
 export abstract class BaseHandler {
@@ -46,7 +49,37 @@ export abstract class BaseHandler {
   }
 
   protected async notifyLimitExceeded(ctx: CustomContext): Promise<void> {
-    await ctx.reply(ctx.t('free_limit_reached'))
+    const isPro = ctx.user?.plan_type === PlanTypeEnum.Pro
+    await ctx.reply(ctx.t(isPro ? 'pro_limit_reached' : 'free_limit_reached'))
+  }
+
+  protected async checkLimits(
+    ctx: CustomContext,
+    options: { fileSize?: number, pagesCount?: number },
+  ): Promise<void> {
+    const isPro = ctx.user?.plan_type === PlanTypeEnum.Pro
+
+    if (options.fileSize !== undefined) {
+      if (!isPro && options.fileSize > MAX_FILE_SIZE) {
+        await this.notifyLimitExceeded(ctx)
+        throw new LimitExceededError()
+      }
+      if (isPro && options.fileSize > MAX_PRO_FILE_SIZE) {
+        await this.notifyLimitExceeded(ctx)
+        throw new LimitExceededError()
+      }
+    }
+
+    if (options.pagesCount !== undefined) {
+      if (!isPro && options.pagesCount > MAX_PAGES) {
+        await this.notifyLimitExceeded(ctx)
+        throw new LimitExceededError()
+      }
+      if (isPro && options.pagesCount > MAX_PRO_PAGES) {
+        await this.notifyLimitExceeded(ctx)
+        throw new LimitExceededError()
+      }
+    }
   }
 
   private async removeTemporaryFiles(ctx: CustomContext) {

@@ -155,24 +155,46 @@ describe(SummaryHandler.name, () => {
         }
       })
 
-      it('should summarize PDF for pro user ignoring limits', async () => {
-        const { tempDir } = await setupTestFile('pdf-studio-bot-test-summary-pro-')
+      it('should enforce size limit for pro users', async () => {
+        const { tempDir } = await setupTestFile('pdf-studio-bot-test-summary-pro-size-')
+
+        const statSpy = vi.spyOn(fs, 'stat')
 
         try {
           mockUserWithPlan(PlanTypeEnum.Pro)
 
-          mockGenerateContent.mockResolvedValueOnce({
-            text: 'This is a mock summary of the PDF.',
-          })
-
-          const statSpy = vi.spyOn(fs, 'stat')
+          statSpy.mockResolvedValueOnce({ size: 100 * 1024 * 1024 } as any) // 100MB
 
           await handler.events['msg:document'](ctx)
 
-          expect(statSpy).not.toHaveBeenCalled()
-          expect(mockGenerateContent).toHaveBeenCalled()
+          expect(ctx.reply).toHaveBeenCalledWith('pro_limit_reached')
+          expect(mockGenerateContent).not.toHaveBeenCalled()
         }
         finally {
+          statSpy.mockRestore()
+          await fs.rm(tempDir, { recursive: true, force: true })
+        }
+      })
+
+      it('should enforce page limit for pro users', async () => {
+        const { tempDir } = await setupTestFile('pdf-studio-bot-test-summary-pro-pages-')
+
+        const createReaderSpy = vi.spyOn(muhammara, 'createReader')
+
+        try {
+          mockUserWithPlan(PlanTypeEnum.Pro)
+
+          createReaderSpy.mockReturnValueOnce({
+            getPagesCount: () => 1001,
+          } as any)
+
+          await handler.events['msg:document'](ctx)
+
+          expect(ctx.reply).toHaveBeenCalledWith('pro_limit_reached')
+          expect(mockGenerateContent).not.toHaveBeenCalled()
+        }
+        finally {
+          createReaderSpy.mockRestore()
           await fs.rm(tempDir, { recursive: true, force: true })
         }
       })
