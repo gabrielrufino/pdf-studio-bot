@@ -32,7 +32,7 @@ bot.use(
       command: null,
       params: null,
     }),
-    storage: new MongoDBAdapter({ collection: database.collection<ISession>('sessions') }),
+    storage: new MongoDBAdapter({ collection: database.collection<ISession>('sessions') as any }),
     getSessionKey: (ctx) => {
       const id = ctx.from?.id || ctx.chat?.id
       if (!id) {
