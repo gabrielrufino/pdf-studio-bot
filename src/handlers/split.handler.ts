@@ -6,6 +6,8 @@ import { join } from 'node:path'
 import { InputFile } from 'grammy'
 import muhammara from 'muhammara'
 import { CommandEnum } from '../enums/command.enum'
+import { InvalidFileError } from '../errors/invalid-file.error'
+import { LimitExceededError } from '../errors/limit-exceeded.error'
 import { UserNotFoundError } from '../errors/user-not-found.error'
 import { BaseHandler } from './base.handler'
 
@@ -74,6 +76,10 @@ export class SplitHandler extends BaseHandler {
         await this.userRepository.incrementUsage(ctx.from!.id)
       }
       catch (error) {
+        if (error instanceof InvalidFileError || error instanceof LimitExceededError) {
+          return
+        }
+
         this.logger.error(error)
         await ctx.reply(ctx.t('split_error'))
       }

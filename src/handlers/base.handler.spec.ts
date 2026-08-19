@@ -1,8 +1,11 @@
 import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { MAX_FILE_SIZE, MAX_PAGES, MAX_PRO_FILE_SIZE, MAX_PRO_PAGES } from '../config/constants'
 import { CommandEnum } from '../enums/command.enum'
+import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { InvalidFileError } from '../errors/invalid-file.error'
+import { LimitExceededError } from '../errors/limit-exceeded.error'
 import { BaseHandler } from './base.handler'
 
 describe(BaseHandler.name, () => {
@@ -23,6 +26,14 @@ describe(BaseHandler.name, () => {
 
     public async validatePDF(ctx: CustomContext) {
       await super.validatePDF(ctx)
+    }
+
+    public async notifyLimitExceeded(ctx: CustomContext) {
+      await super.notifyLimitExceeded(ctx)
+    }
+
+    public async checkLimits(ctx: CustomContext, options: { fileSize?: number, pagesCount?: number }) {
+      await super.checkLimits(ctx, options)
     }
   }
 
@@ -165,6 +176,130 @@ describe(BaseHandler.name, () => {
       const handler = new TestHandler()
       const schema = { safeParse: vi.fn().mockReturnValue({ success: false, error: new Error('Validation failed') }) } as any
       expect(() => (handler as any).validateParams(schema, { foo: 'bar' })).toThrow()
+    })
+  })
+
+  describe('notifyLimitExceeded', () => {
+    it('should reply with free_limit_reached for Free users', async () => {
+      const handler = new TestHandler()
+      const ctx: any = {
+        t: (key: string) => key,
+        user: { plan_type: PlanTypeEnum.Free },
+        reply: vi.fn(),
+      } as unknown as CustomContext
+
+      await handler.notifyLimitExceeded(ctx)
+
+      expect(ctx.reply).toHaveBeenCalledWith('free_limit_reached')
+    })
+
+    it('should reply with pro_limit_reached for Pro users', async () => {
+      const handler = new TestHandler()
+      const ctx: any = {
+        t: (key: string) => key,
+        user: { plan_type: PlanTypeEnum.Pro },
+        reply: vi.fn(),
+      } as unknown as CustomContext
+
+      await handler.notifyLimitExceeded(ctx)
+
+      expect(ctx.reply).toHaveBeenCalledWith('pro_limit_reached')
+    })
+
+    it('should reply with free_limit_reached if user is undefined', async () => {
+      const handler = new TestHandler()
+      const ctx: any = {
+        t: (key: string) => key,
+        reply: vi.fn(),
+      } as unknown as CustomContext
+
+      await handler.notifyLimitExceeded(ctx)
+
+      expect(ctx.reply).toHaveBeenCalledWith('free_limit_reached')
+    })
+  })
+
+  describe('checkLimits', () => {
+    it('should not throw if file size and page count are within free limits', async () => {
+      const handler = new TestHandler()
+      const ctx: any = {
+        t: (key: string) => key,
+        user: { plan_type: PlanTypeEnum.Free },
+        reply: vi.fn(),
+      } as unknown as CustomContext
+
+      await expect(
+        handler.checkLimits(ctx, { fileSize: MAX_FILE_SIZE, pagesCount: MAX_PAGES }),
+      ).resolves.not.toThrow()
+    })
+
+    it('should throw LimitExceededError and reply free_limit_reached when free user exceeds file size', async () => {
+      const handler = new TestHandler()
+      const ctx: any = {
+        t: (key: string) => key,
+        user: { plan_type: PlanTypeEnum.Free },
+        reply: vi.fn(),
+      } as unknown as CustomContext
+
+      await expect(
+        handler.checkLimits(ctx, { fileSize: MAX_FILE_SIZE + 1 }),
+      ).rejects.toThrow(LimitExceededError)
+      expect(ctx.reply).toHaveBeenCalledWith('free_limit_reached')
+    })
+
+    it('should throw LimitExceededError and reply free_limit_reached when free user exceeds page count', async () => {
+      const handler = new TestHandler()
+      const ctx: any = {
+        t: (key: string) => key,
+        user: { plan_type: PlanTypeEnum.Free },
+        reply: vi.fn(),
+      } as unknown as CustomContext
+
+      await expect(
+        handler.checkLimits(ctx, { pagesCount: MAX_PAGES + 1 }),
+      ).rejects.toThrow(LimitExceededError)
+      expect(ctx.reply).toHaveBeenCalledWith('free_limit_reached')
+    })
+
+    it('should not throw if file size and page count are within pro limits', async () => {
+      const handler = new TestHandler()
+      const ctx: any = {
+        t: (key: string) => key,
+        user: { plan_type: PlanTypeEnum.Pro },
+        reply: vi.fn(),
+      } as unknown as CustomContext
+
+      await expect(
+        handler.checkLimits(ctx, { fileSize: MAX_PRO_FILE_SIZE, pagesCount: MAX_PRO_PAGES }),
+      ).resolves.not.toThrow()
+    })
+
+    it('should throw LimitExceededError and reply pro_limit_reached when pro user exceeds file size', async () => {
+      const handler = new TestHandler()
+      const ctx: any = {
+        t: (key: string) => key,
+        user: { plan_type: PlanTypeEnum.Pro },
+        reply: vi.fn(),
+      } as unknown as CustomContext
+
+      await expect(
+        handler.checkLimits(ctx, { fileSize: MAX_PRO_FILE_SIZE + 1 }),
+      ).rejects.toThrow(LimitExceededError)
+      expect(ctx.reply).toHaveBeenCalledWith('pro_limit_reached')
+    })
+
+    it('should throw LimitExceededError and reply pro_limit_reached when pro user exceeds page count', async () => {
+      const handler = new TestHandler()
+      const ctx: any = {
+        t: (key: string) => key,
+        user: { plan_type: PlanTypeEnum.Pro },
+        reply: vi.fn(),
+      } as unknown as CustomContext
+
+      await expect(
+        handler.checkLimits(ctx, { pagesCount: MAX_PRO_PAGES + 1 }),
+      ).rejects.toThrow(LimitExceededError)
+      expect(ctx.reply).toHaveBeenCalledWith('pro_limit_reached')
     })
   })
 
