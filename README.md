@@ -79,25 +79,25 @@ src/
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Run in development mode with hot reload
-npm run start:dev
+pnpm start:dev
 
 # Build for production
-npm run build
+pnpm build
 
 # Run tests
-npm test
+pnpm test
 
 # Run tests with coverage
-npm run test:cov
+pnpm test:cov
 
 # Lint code
-npm run lint
+pnpm lint
 
 # Fix linting issues
-npm run lint:fix
+pnpm lint:fix
 ```
 
 ## 🧪 Testing
@@ -109,9 +109,9 @@ The project uses Vitest for unit testing with comprehensive test coverage for:
 
 Run tests with:
 ```bash
-npm test          # Run all tests
-npm run test:cov  # Run with coverage report
-npm run test:watch # Watch mode for development
+pnpm test          # Run all tests
+pnpm test:cov      # Run with coverage report
+pnpm test:watch    # Watch mode for development
 ```
 
 ## 🛠️ Stay tuned!
