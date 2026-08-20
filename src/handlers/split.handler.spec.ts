@@ -181,6 +181,16 @@ describe(SplitHandler.name, () => {
           await fs.rm(tempDir, { recursive: true, force: true })
         }
       })
+
+      it('should not reply with generic error if file is not a PDF (InvalidFileError)', async () => {
+        ctx.message!.document!.mime_type = 'image/png'
+
+        await handler.events['msg:document'](ctx)
+
+        expect(ctx.reply).toHaveBeenCalledWith('invalid_pdf')
+        expect(ctx.reply).not.toHaveBeenCalledWith('split_error')
+        expect(ctx.session.command).toBeNull()
+      })
     })
   })
 })

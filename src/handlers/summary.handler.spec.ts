@@ -221,6 +221,18 @@ describe(SummaryHandler.name, () => {
         expect(mockGenerateContent).not.toHaveBeenCalled()
       })
 
+      it('should not reply with generic error if file is not a PDF (InvalidFileError)', async () => {
+        mockUserWithPlan(PlanTypeEnum.Free)
+        ctx.message!.document!.mime_type = 'image/png'
+
+        await handler.events['msg:document'](ctx)
+
+        expect(ctx.reply).toHaveBeenCalledWith('invalid_pdf')
+        expect(ctx.reply).not.toHaveBeenCalledWith('summary_error')
+        expect(ctx.session.command).toBeNull()
+        expect(mockGenerateContent).not.toHaveBeenCalled()
+      })
+
       it('should enforce size limit for free users', async () => {
         const { tempDir } = await setupTestFile('pdf-studio-bot-test-summary-size-')
 

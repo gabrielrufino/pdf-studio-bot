@@ -20,12 +20,12 @@ export class SplitHandler extends BaseHandler {
   readonly description = '✂️ Split a PDF into individual pages'
   readonly events = {
     'msg:document': async (ctx: CustomContext) => {
-      await this.validatePDF(ctx)
-
       let outputDir: string | undefined
       let inputPath: string | undefined
 
       try {
+        await this.validatePDF(ctx)
+
         if (!ctx.user) {
           throw new UserNotFoundError()
         }

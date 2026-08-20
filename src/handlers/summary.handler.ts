@@ -23,12 +23,12 @@ export class SummaryHandler extends BaseHandler {
 
   public readonly events = {
     'msg:document': async (ctx: CustomContext) => {
-      await this.validatePDF(ctx)
-
       let uploadedFileName: string | undefined
       let inputPath: string | undefined
 
       try {
+        await this.validatePDF(ctx)
+
         if (!ctx.user) {
           throw new UserNotFoundError()
         }
