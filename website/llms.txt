@@ -4,16 +4,20 @@ Your personal PDF assistant on Telegram. Fast, secure, and multi-language.
 
 ## Features
 
-- **Download from URL**: Convert any webpage to PDF by just sending the link.
-- **Add Password**: Secure your documents with strong encryption.
-- **Remove Password**: Decrypt protected PDFs if you have the password.
-- **Split PDF**: Separate documents into individual pages.
-- **Merge PDFs**: Combine multiple PDF files into one.
-- **PDF to Images**: Convert PDF pages into high-quality images.
-- **AI Summary**: Get concise summaries of your PDF documents using advanced AI.
+- **Download from URL**: Convert any webpage or document link to PDF instantly.
+- **Add Password**: Protect and encrypt your PDF files with a secure password.
+- **Remove Password**: Unlock and decrypt password-protected PDFs with the correct password.
+- **Split PDF**: Separate multi-page documents into individual PDF pages.
+- **Merge PDFs**: Combine multiple PDF files (up to 10) into a single document.
+- **PDF to Images**: Convert PDF pages into high-resolution PNG images.
+- **AI Summary**: Get concise, structured summaries of your PDF documents using Google Gemini AI.
 - **Multi-language Support**: Available in English, Spanish, and Portuguese.
+- **PRO Subscription**: Upgrade via Telegram Stars for higher daily limits (up to 50 operations/day).
+- **Feedback & Support**: Send feedback, feature suggestions, or issue reports directly to the developer.
 
 ## Get Started
 
-Open the bot on Telegram: [https://t.me/PDFStudio_bot](https://t.me/PDFStudio_bot)
-Source Code: [https://github.com/gabrielrufino/pdf-studio-bot](https://github.com/gabrielrufino/pdf-studio-bot)
+- Open the bot on Telegram: [https://t.me/PDFStudio_bot](https://t.me/PDFStudio_bot)
+- Website: [https://pdfstudio.gabrielrufino.com/](https://pdfstudio.gabrielrufino.com/)
+- Source Code: [https://github.com/gabrielrufino/pdf-studio-bot](https://github.com/gabrielrufino/pdf-studio-bot)
+

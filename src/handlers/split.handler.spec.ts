@@ -14,6 +14,7 @@ describe(SplitHandler.name, () => {
   let ctx: CustomContext
 
   beforeEach(() => {
+    vi.restoreAllMocks()
     mockUserRepository = {
       findByTelegramId: vi.fn().mockResolvedValue({ plan_type: 'free' }),
       incrementUsage: vi.fn(),
@@ -125,6 +126,7 @@ describe(SplitHandler.name, () => {
 
         expect(rmSpy).toHaveBeenCalled()
         expect(loggerSpy).toHaveBeenCalledWith({ error, path: '/tmp/fake-input.pdf' }, 'Failed to remove input file.')
+        rmSpy.mockRestore()
       })
 
       it('should throw error if download fails (inputPath is null)', async () => {
@@ -137,6 +139,57 @@ describe(SplitHandler.name, () => {
 
         expect(loggerSpy).toHaveBeenCalledWith(new Error('Failed to download file'))
         expect(ctx.reply).toHaveBeenCalledWith('split_error')
+      })
+
+      it('should notify limit exceeded and not reply with split_error when file size limit exceeded', async () => {
+        ctx.message!.document!.file_size = 20 * 1024 * 1024 // 20MB > 10MB free limit
+        const loggerSpy = vi.spyOn((handler as any).logger, 'error')
+
+        await handler.events['msg:document'](ctx)
+
+        expect(ctx.reply).toHaveBeenCalledWith('free_limit_reached')
+        expect(ctx.reply).not.toHaveBeenCalledWith('split_error')
+        expect(loggerSpy).not.toHaveBeenCalled()
+        expect(ctx.getFile).not.toHaveBeenCalled()
+      })
+
+      it('should notify limit exceeded and not reply with split_error when page limit exceeded', async () => {
+        const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-studio-bot-test-split-limit-'))
+        const targetPath = path.join(tempDir, 'test.pdf')
+
+        try {
+          await fs.copyFile(`${process.cwd()}/assets/lorem-ipsum.pdf`, targetPath)
+          vi.mocked(ctx.getFile).mockResolvedValueOnce({
+            download: vi.fn().mockResolvedValue(targetPath),
+          } as any)
+
+          const muhammara = await import('muhammara')
+          const createReaderSpy = vi.spyOn(muhammara.default, 'createReader').mockReturnValueOnce({
+            getPagesCount: () => 51,
+          } as any)
+          const loggerSpy = vi.spyOn((handler as any).logger, 'error')
+
+          await handler.events['msg:document'](ctx)
+
+          expect(ctx.reply).toHaveBeenCalledWith('free_limit_reached')
+          expect(ctx.reply).not.toHaveBeenCalledWith('split_error')
+          expect(loggerSpy).not.toHaveBeenCalled()
+
+          createReaderSpy.mockRestore()
+        }
+        finally {
+          await fs.rm(tempDir, { recursive: true, force: true })
+        }
+      })
+
+      it('should not reply with generic error if file is not a PDF (InvalidFileError)', async () => {
+        ctx.message!.document!.mime_type = 'image/png'
+
+        await handler.events['msg:document'](ctx)
+
+        expect(ctx.reply).toHaveBeenCalledWith('invalid_pdf')
+        expect(ctx.reply).not.toHaveBeenCalledWith('split_error')
+        expect(ctx.session.command).toBeNull()
       })
     })
   })

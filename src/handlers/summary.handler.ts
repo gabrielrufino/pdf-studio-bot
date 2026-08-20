@@ -4,6 +4,7 @@ import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
 import muhammara from 'muhammara'
 import { CommandEnum } from '../enums/command.enum'
+import { InvalidFileError } from '../errors/invalid-file.error'
 import { LimitExceededError } from '../errors/limit-exceeded.error'
 import { UserNotFoundError } from '../errors/user-not-found.error'
 import { BaseHandler } from './base.handler'
@@ -22,12 +23,19 @@ export class SummaryHandler extends BaseHandler {
 
   public readonly events = {
     'msg:document': async (ctx: CustomContext) => {
-      await this.validatePDF(ctx)
-
       let uploadedFileName: string | undefined
       let inputPath: string | undefined
 
       try {
+        await this.validatePDF(ctx)
+
+        if (!ctx.user) {
+          throw new UserNotFoundError()
+        }
+
+        const fileSize = ctx.message?.document?.file_size ?? 0
+        await this.checkLimits(ctx, { fileSize })
+
         const file = await ctx.getFile()
         inputPath = await file.download()
 
@@ -47,7 +55,7 @@ export class SummaryHandler extends BaseHandler {
         await this.userRepository.incrementUsage(ctx.from!.id)
       }
       catch (error) {
-        if (error instanceof LimitExceededError)
+        if (error instanceof InvalidFileError || error instanceof LimitExceededError)
           return
 
         this.logger.error(error)

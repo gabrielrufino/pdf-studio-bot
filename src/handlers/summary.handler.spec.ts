@@ -199,6 +199,40 @@ describe(SummaryHandler.name, () => {
         }
       })
 
+      it('should enforce size limit for free users upfront without downloading file', async () => {
+        mockUserWithPlan(PlanTypeEnum.Free)
+        ctx.message!.document!.file_size = 15 * 1024 * 1024 // 15MB > 10MB limit
+
+        await handler.events['msg:document'](ctx)
+
+        expect(ctx.reply).toHaveBeenCalledWith('free_limit_reached')
+        expect(ctx.getFile).not.toHaveBeenCalled()
+        expect(mockGenerateContent).not.toHaveBeenCalled()
+      })
+
+      it('should enforce size limit for pro users upfront without downloading file', async () => {
+        mockUserWithPlan(PlanTypeEnum.Pro)
+        ctx.message!.document!.file_size = 60 * 1024 * 1024 // 60MB > 50MB pro limit
+
+        await handler.events['msg:document'](ctx)
+
+        expect(ctx.reply).toHaveBeenCalledWith('pro_limit_reached')
+        expect(ctx.getFile).not.toHaveBeenCalled()
+        expect(mockGenerateContent).not.toHaveBeenCalled()
+      })
+
+      it('should not reply with generic error if file is not a PDF (InvalidFileError)', async () => {
+        mockUserWithPlan(PlanTypeEnum.Free)
+        ctx.message!.document!.mime_type = 'image/png'
+
+        await handler.events['msg:document'](ctx)
+
+        expect(ctx.reply).toHaveBeenCalledWith('invalid_pdf')
+        expect(ctx.reply).not.toHaveBeenCalledWith('summary_error')
+        expect(ctx.session.command).toBeNull()
+        expect(mockGenerateContent).not.toHaveBeenCalled()
+      })
+
       it('should enforce size limit for free users', async () => {
         const { tempDir } = await setupTestFile('pdf-studio-bot-test-summary-size-')
 
