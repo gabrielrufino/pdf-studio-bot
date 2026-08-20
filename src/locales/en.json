@@ -63,5 +63,11 @@
   "summary_prompt": "Create a concise yet informative summary of this PDF, structured with bullet points. Target length: ~2000 characters.",
   "unexpected_error": "❌ An unexpected error occurred. Please try again later.",
   "reengagement_message": "We miss you at <b>PDF Studio</b>! 🎉\n\nCome back and check out our latest PDF tools. If you need any help, just type /help!",
-  "maintenance_mode_active": "🛠️ The bot is currently under maintenance. We'll be back soon!"
+  "maintenance_mode_active": "🛠️ The bot is currently under maintenance. We'll be back soon!",
+  "operation_rotate": "🔄 Rotate",
+  "rotate_send_file": "🔄 Send me the PDF file you want to rotate.",
+  "rotate_choose_degrees": "🔄 Choose how many degrees you want to rotate the PDF:",
+  "rotate_rotating": "🔄 Rotating your PDF file...",
+  "rotate_success": "✅ Here is your rotated PDF file!",
+  "rotate_error": "❌ An error occurred while rotating your PDF file. Please try again later."
 }
