@@ -47,6 +47,7 @@ describe('rotateHandler', () => {
       reply: vi.fn().mockResolvedValue(undefined),
       replyWithDocument: vi.fn().mockResolvedValue(undefined),
       editMessageText: vi.fn().mockResolvedValue(undefined),
+      answerCallbackQuery: vi.fn().mockResolvedValue(undefined),
       getFile: vi.fn().mockResolvedValue({
         download: vi.fn().mockResolvedValue('/tmp/test.pdf'),
         file_size: 100,
@@ -99,6 +100,7 @@ describe('rotateHandler', () => {
       ctx.session.params = { file_id: 'doc-id' }
       await handler.events.callback_query(ctx)
 
+      expect(ctx.answerCallbackQuery).toHaveBeenCalled()
       expect(ctx.editMessageText).toHaveBeenCalledWith('rotate_rotating')
       expect(ctx.replyWithDocument).toHaveBeenCalledWith(expect.anything(), {
         caption: 'rotate_success',
@@ -106,6 +108,18 @@ describe('rotateHandler', () => {
       expect(userRepository.incrementUsage).toHaveBeenCalledWith(1)
       expect(ctx.session.command).toBeNull()
       expect(ctx.session.params).toBeNull()
+    })
+
+    it('should rotate with negative degrees correctly', async () => {
+      ctx.session.params = { file_id: 'doc-id' }
+      ctx.callbackQuery!.data = 'rotate_-90'
+      await handler.events.callback_query(ctx)
+
+      expect(ctx.answerCallbackQuery).toHaveBeenCalled()
+      expect(ctx.editMessageText).toHaveBeenCalledWith('rotate_rotating')
+      expect(ctx.replyWithDocument).toHaveBeenCalledWith(expect.anything(), {
+        caption: 'rotate_success',
+      })
     })
 
     it('should throw UserNotFoundError if no user in callback', async () => {

@@ -1,5 +1,4 @@
 import type { UserRepository } from '../repositories/user.repository'
-import type { RotateParams } from '../schemas/rotate-params.schema'
 import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
 import os from 'node:os'
@@ -10,6 +9,7 @@ import { CommandEnum } from '../enums/command.enum'
 import { InvalidFileError } from '../errors/invalid-file.error'
 import { LimitExceededError } from '../errors/limit-exceeded.error'
 import { UserNotFoundError } from '../errors/user-not-found.error'
+import { rotateParamsSchema } from '../schemas/rotate-params.schema'
 import { BaseHandler } from './base.handler'
 
 export class RotateHandler extends BaseHandler {
@@ -34,7 +34,7 @@ export class RotateHandler extends BaseHandler {
 
         ctx.session.params = {
           file_id: documentId,
-        } as RotateParams
+        }
 
         const keyboard = new InlineKeyboard()
           .text('90°', 'rotate_90')
@@ -75,9 +75,9 @@ export class RotateHandler extends BaseHandler {
         if (![90, 180, -90].includes(degreesValue))
           return
 
-        const fileId = (ctx.session.params as RotateParams)?.file_id
-        if (!fileId)
-          return
+        await ctx.answerCallbackQuery()
+
+        const { file_id: fileId } = this.validateParams(rotateParamsSchema, ctx.session.params)
 
         // We edit the message to remove keyboard
         await ctx.editMessageText(ctx.t('rotate_rotating'))
@@ -102,7 +102,8 @@ export class RotateHandler extends BaseHandler {
         const pages = pdfDoc.getPages()
         for (const page of pages) {
           const currentRotation = page.getRotation().angle
-          page.setRotation(degrees(currentRotation + degreesValue))
+          const newRotation = ((currentRotation + degreesValue) % 360 + 360) % 360
+          page.setRotation(degrees(newRotation))
         }
 
         const savedPdfBytes = await pdfDoc.save()
