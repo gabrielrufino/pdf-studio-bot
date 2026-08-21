@@ -64,10 +64,10 @@ export class RotateHandler extends BaseHandler {
         }
 
         const data = ctx.callbackQuery?.data
-        if (!data || !data.startsWith('rotate_'))
+        if (!data?.startsWith('rotate_'))
           return
 
-        const degreesStr = data.split('_')[1]
+        const [, degreesStr] = data.split('_')
         if (!degreesStr)
           return
         const degreesValue = Number(degreesStr)
