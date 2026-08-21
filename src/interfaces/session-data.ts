@@ -4,9 +4,10 @@ import type { LanguageEnum } from '../enums/language.enum'
 import type { DownloadParams } from '../schemas/download-params.schema'
 import type { JoinParams } from '../schemas/join-params.schema'
 import type { PasswordParams } from '../schemas/password-params.schema'
+import type { RotateParams } from '../schemas/rotate-params.schema'
 
 export interface SessionData {
   command: Nullable<CommandEnum>
-  params: Nullable<PasswordParams | DownloadParams | JoinParams>
+  params: Nullable<PasswordParams | DownloadParams | JoinParams | RotateParams>
   language?: Nullable<LanguageEnum>
 }

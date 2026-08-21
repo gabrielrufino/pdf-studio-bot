@@ -10,6 +10,7 @@ export class HelpMessage {
     CommandEnum.PdfToImages,
     CommandEnum.PutPassword,
     CommandEnum.RemovePassword,
+    CommandEnum.Rotate,
     CommandEnum.Split,
     CommandEnum.Summary,
     CommandEnum.Language,
