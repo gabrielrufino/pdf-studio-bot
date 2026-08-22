@@ -69,5 +69,12 @@
   "rotate_choose_degrees": "🔄 Escolha quantos graus você deseja rotacionar o PDF:",
   "rotate_rotating": "🔄 Rotacionando seu arquivo PDF...",
   "rotate_success": "✅ Aqui está o seu arquivo PDF rotacionado!",
-  "rotate_error": "❌ Ocorreu um erro ao rotacionar seu arquivo PDF. Por favor, tente novamente mais tarde."
+  "rotate_error": "❌ Ocorreu um erro ao rotacionar seu arquivo PDF. Por favor, tente novamente mais tarde.",
+  "operation_extract": "✂️ Extrair",
+  "extract_send_file": "✂️ Envie-me o arquivo PDF do qual você deseja extrair as páginas.",
+  "extract_send_range": "🔢 Por favor, responda com o intervalo de páginas que deseja extrair (ex: 1-3).",
+  "extract_invalid_range": "❌ Formato de intervalo inválido. Use o formato INÍCIO-FIM (ex: 1-3) e certifique-se de que as páginas existam.",
+  "extract_extracting": "🔄 Extraindo as páginas do seu PDF...",
+  "extract_success": "✅ Aqui está o seu arquivo PDF extraído!",
+  "extract_error": "❌ Ocorreu um erro ao extrair as páginas do seu PDF. Por favor, tente novamente mais tarde."
 }
