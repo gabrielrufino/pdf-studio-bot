@@ -9,6 +9,7 @@ export enum CommandEnum {
   PutPassword = 'putpassword',
   RemovePassword = 'removepassword',
   Rotate = 'rotate',
+  Extract = 'extract',
   Split = 'split',
   Start = 'start',
   Summary = 'summary',

@@ -69,5 +69,12 @@
   "rotate_choose_degrees": "🔄 Choose how many degrees you want to rotate the PDF:",
   "rotate_rotating": "🔄 Rotating your PDF file...",
   "rotate_success": "✅ Here is your rotated PDF file!",
-  "rotate_error": "❌ An error occurred while rotating your PDF file. Please try again later."
+  "rotate_error": "❌ An error occurred while rotating your PDF file. Please try again later.",
+  "operation_extract": "✂️ Extract",
+  "extract_send_file": "✂️ Send me the PDF file you want to extract pages from.",
+  "extract_send_range": "🔢 Please reply with the range of pages to extract (e.g., 1-3).",
+  "extract_invalid_range": "❌ Invalid range format. Please use the format START-END (e.g., 1-3) and ensure it's within the document bounds.",
+  "extract_extracting": "🔄 Extracting pages from your PDF...",
+  "extract_success": "✅ Here is your extracted PDF file!",
+  "extract_error": "❌ An error occurred while extracting pages from your PDF. Please try again later."
 }
