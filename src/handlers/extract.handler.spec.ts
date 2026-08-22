@@ -135,12 +135,13 @@ describe(ExtractHandler.name, () => {
           expect(mockAppend).toHaveBeenNthCalledWith(3, 2)
           expect(ctx.replyWithDocument).toHaveBeenCalledWith(
             expect.objectContaining({ filename: 'extracted-1-3.pdf' }),
-            { caption: 'extract_success' }
+            { caption: 'extract_success' },
           )
           expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
 
           spyWriter.mockRestore()
-        } finally {
+        }
+        finally {
           await fs.rm(tempDir, { recursive: true, force: true })
         }
       })
@@ -154,7 +155,8 @@ describe(ExtractHandler.name, () => {
           Object.defineProperty(ctx, 'message', { value: { text: '1-3' } })
 
           const rmSpy = vi.spyOn(fs, 'rm').mockImplementation(async (filePath) => {
-            if (filePath === targetPath) throw new Error('Delete failed')
+            if (filePath === targetPath)
+              throw new Error('Delete failed')
             return undefined
           })
           const loggerSpy = vi.spyOn((handler as any).logger, 'error')
@@ -179,7 +181,8 @@ describe(ExtractHandler.name, () => {
           Object.defineProperty(ctx, 'message', { value: { text: '1-3' } })
 
           const rmSpy = vi.spyOn(fs, 'rm').mockImplementation(async (filePath) => {
-            if (typeof filePath === 'string' && filePath.includes('extract-')) throw new Error('Delete failed')
+            if (typeof filePath === 'string' && filePath.includes('extract-'))
+              throw new Error('Delete failed')
             return undefined
           })
           const loggerSpy = vi.spyOn((handler as any).logger, 'error')
@@ -198,7 +201,7 @@ describe(ExtractHandler.name, () => {
       it('should log error and reply with extract_error if generic error occurs in msg:text', async () => {
         ;(ctx.session.params as any).path = '/tmp/fake.pdf'
         Object.defineProperty(ctx, 'message', { value: { text: '1-3' } })
-        
+
         // Mock muhammara to throw
         const muhammara = await import('muhammara')
         const spy = vi.spyOn(muhammara.default, 'createReader').mockImplementation(() => {
