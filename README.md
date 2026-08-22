@@ -20,6 +20,9 @@ Try it now and experience the convenience: just click the button above 🚀
 - **📄 Split PDFs into Individual Pages**
   Break down multi-page PDFs into separate files, one page at a time.
 
+- **🔄 Rotate PDFs**
+  Rotate your PDF files by 90, 180, or -90 degrees.
+
 - **📎 Merge / Join PDFs**
   Send multiple PDF files (up to 10 files) and merge them into a single document.
 
@@ -59,6 +62,7 @@ Try it now and experience the convenience: just click the button above 🚀
 - `/download` - Download and convert a webpage URL into a PDF
 - `/join` - Join multiple PDF files into a single document
 - `/split` - Split a PDF into individual pages
+- `/rotate` - Rotate a PDF file by a specified degree
 - `/pdftoimages` - Convert PDF pages to high-quality images
 - `/putpassword` - Protect a PDF with a password
 - `/removepassword` - Remove password protection from a PDF

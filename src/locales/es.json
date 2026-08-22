@@ -63,5 +63,11 @@
   "summary_prompt": "Crea un resumen conciso e informativo de este PDF, estructurado con viñetas (bullet points). Longitud objetivo: ~2000 caracteres.",
   "unexpected_error": "❌ Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.",
   "reengagement_message": "¡Te extrañamos en <b>PDF Studio</b>! 🎉\n\nRegresa y descubre nuestras últimas herramientas para PDF. Si necesitas ayuda, ¡escribe /help!",
-  "maintenance_mode_active": "🛠️ El bot está actualmente en mantenimiento. ¡Volveremos pronto!"
+  "maintenance_mode_active": "🛠️ El bot está actualmente en mantenimiento. ¡Volveremos pronto!",
+  "operation_rotate": "🔄 Rotar",
+  "rotate_send_file": "🔄 Envíame el archivo PDF que deseas rotar.",
+  "rotate_choose_degrees": "🔄 Elige cuántos grados deseas rotar el PDF:",
+  "rotate_rotating": "🔄 Rotando tu archivo PDF...",
+  "rotate_success": "✅ ¡Aquí tienes tu archivo PDF rotado!",
+  "rotate_error": "❌ Ocurrió un error al rotar tu archivo PDF. Por favor, inténtalo de nuevo más tarde."
 }

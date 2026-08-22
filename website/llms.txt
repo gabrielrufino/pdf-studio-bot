@@ -8,6 +8,7 @@ Your personal PDF assistant on Telegram. Fast, secure, and multi-language.
 - **Add Password**: Protect and encrypt your PDF files with a secure password.
 - **Remove Password**: Unlock and decrypt password-protected PDFs with the correct password.
 - **Split PDF**: Separate multi-page documents into individual PDF pages.
+- **Rotate PDF**: Rotate your PDF files by 90, 180, or -90 degrees.
 - **Merge PDFs**: Combine multiple PDF files (up to 10) into a single document.
 - **PDF to Images**: Convert PDF pages into high-resolution PNG images.
 - **AI Summary**: Get concise, structured summaries of your PDF documents using Google Gemini AI.
