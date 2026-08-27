@@ -1,5 +1,6 @@
+import type { Browser as PuppeteerBrowser } from 'puppeteer'
 import process from 'node:process'
-import puppeteer, { type Browser as PuppeteerBrowser } from 'puppeteer'
+import puppeteer from 'puppeteer'
 
 export class Browser {
   private browserPromise: Promise<PuppeteerBrowser> | null = null

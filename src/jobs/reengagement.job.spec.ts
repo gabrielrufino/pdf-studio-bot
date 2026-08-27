@@ -62,7 +62,7 @@ describe('reengagementJob', () => {
     ]
 
     vi.mocked(userRepository.findInactiveUsers).mockResolvedValue({
-      async *[Symbol.asyncIterator]() {
+      async* [Symbol.asyncIterator]() {
         for (const user of inactiveUsers) {
           yield user
         }
@@ -97,7 +97,7 @@ describe('reengagementJob', () => {
     ]
 
     vi.mocked(userRepository.findInactiveUsers).mockResolvedValue({
-      async *[Symbol.asyncIterator]() {
+      async* [Symbol.asyncIterator]() {
         for (const user of inactiveUsers) {
           yield user
         }
