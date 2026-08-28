@@ -76,5 +76,10 @@
   "extract_invalid_range": "❌ Invalid range format. Please use the format START-END (e.g., 1-3) and ensure it's within the document bounds.",
   "extract_extracting": "🔄 Extracting pages from your PDF...",
   "extract_success": "✅ Here is your extracted PDF file!",
-  "extract_error": "❌ An error occurred while extracting pages from your PDF. Please try again later."
+  "extract_error": "❌ An error occurred while extracting pages from your PDF. Please try again later.",
+  "operation_extracttext": "📝 Extract Text",
+  "extracttext_send_file": "📝 Send me a PDF file and I will extract the text for you!",
+  "extracttext_extracting": "🔄 Extracting text from your PDF...",
+  "extracttext_success": "✅ Here is the extracted text from your PDF!",
+  "extracttext_error": "❌ An error occurred while extracting text from your PDF. Please try again later."
 }

@@ -76,5 +76,10 @@
   "extract_invalid_range": "❌ Formato de intervalo inválido. Use o formato INÍCIO-FIM (ex: 1-3) e certifique-se de que as páginas existam.",
   "extract_extracting": "🔄 Extraindo as páginas do seu PDF...",
   "extract_success": "✅ Aqui está o seu arquivo PDF extraído!",
-  "extract_error": "❌ Ocorreu um erro ao extrair as páginas do seu PDF. Por favor, tente novamente mais tarde."
+  "extract_error": "❌ Ocorreu um erro ao extrair as páginas do seu PDF. Por favor, tente novamente mais tarde.",
+  "operation_extracttext": "📝 Extrair Texto",
+  "extracttext_send_file": "📝 Me envie um arquivo PDF e eu extrairei o texto para você!",
+  "extracttext_extracting": "🔄 Extraindo texto do seu PDF...",
+  "extracttext_success": "✅ Aqui está o texto extraído do seu PDF!",
+  "extracttext_error": "❌ Ocorreu um erro ao extrair texto do seu PDF. Por favor, tente novamente mais tarde."
 }
