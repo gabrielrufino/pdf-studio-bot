@@ -3,6 +3,7 @@ import { ai } from '../config/ai'
 import { browser } from '../config/browser'
 import { configurationRepository, feedbackRepository, paymentRepository, userRepository } from '../repositories'
 import { DownloadHandler } from './download.handler'
+import { ExtractTextHandler } from './extract-text.handler'
 import { ExtractHandler } from './extract.handler'
 import { FeedbackHandler } from './feedback.handler'
 import { HelpHandler } from './help.handler'
@@ -29,6 +30,7 @@ const coreHandlers: Array<BaseHandler> = [
   new RemovePasswordHandler(userRepository),
   new RotateHandler(userRepository),
   new ExtractHandler(userRepository),
+  new ExtractTextHandler(userRepository),
   new SplitHandler(userRepository),
   new StartHandler(userRepository),
   new SummaryHandler(userRepository, ai),

@@ -76,5 +76,10 @@
   "extract_invalid_range": "❌ Formato de rango no válido. Usa el formato INICIO-FIN (ej: 1-3) y asegúrate de que las páginas existan.",
   "extract_extracting": "🔄 Extrayendo las páginas de tu PDF...",
   "extract_success": "✅ ¡Aquí tienes tu archivo PDF extraído!",
-  "extract_error": "❌ Ocurrió un error al extraer las páginas de tu PDF. Por favor, inténtalo de nuevo más tarde."
+  "extract_error": "❌ Ocurrió un error al extraer las páginas de su PDF. Por favor, inténtelo de nuevo más tarde.",
+  "operation_extracttext": "📝 Extraer Texto",
+  "extracttext_send_file": "📝 ¡Envíeme un archivo PDF y extraeré el texto por usted!",
+  "extracttext_extracting": "🔄 Extrayendo texto de su PDF...",
+  "extracttext_success": "✅ ¡Aquí está el texto extraído de su PDF!",
+  "extracttext_error": "❌ Ocurrió un error al extraer el texto de su PDF. Por favor, inténtelo de nuevo más tarde."
 }
