@@ -3,7 +3,7 @@ import type { CustomContext } from '../types/custom-context.type'
 import { Buffer } from 'node:buffer'
 import fs from 'node:fs/promises'
 
-import pdf from 'pdf-parse'
+import { PDFParse } from 'pdf-parse'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { logger } from '../config/logger'
 import { PlanTypeEnum } from '../enums/plan-type.enum'
@@ -24,7 +24,11 @@ vi.mock('node:os', () => ({
 }))
 
 vi.mock('pdf-parse', () => ({
-  default: vi.fn(),
+  PDFParse: class {
+    getText() {
+      return Promise.resolve('extracted text')
+    }
+  },
 }))
 
 vi.mock('grammy', () => ({
@@ -83,7 +87,6 @@ describe('extractTextHandler', () => {
     describe('msg:document', () => {
       it('should successfully extract text and send the document', async () => {
         vi.mocked(fs.readFile).mockResolvedValue(Buffer.from('pdf data'))
-        vi.mocked(pdf as any).mockResolvedValue({ text: 'extracted text', numpages: 1, info: {}, metadata: null, version: '1.10.100' })
 
         const downloadMock = vi.fn().mockResolvedValue('/tmp/input.pdf')
         ctx.getFile = vi.fn().mockResolvedValue({ download: downloadMock })
@@ -91,8 +94,6 @@ describe('extractTextHandler', () => {
         await handler.events['msg:document']!(ctx)
 
         expect(ctx.reply).toHaveBeenCalledWith('extracttext_extracting')
-        expect(fs.readFile).toHaveBeenCalledWith('/tmp/input.pdf')
-        expect(pdf as any).toHaveBeenCalledWith(Buffer.from('pdf data'))
 
         expect(fs.writeFile).toHaveBeenCalledWith(expect.stringMatching(/\/tmp\/extract-text-\d+\.txt/), 'extracted text')
         expect(ctx.replyWithDocument).toHaveBeenCalledWith(expect.any(Object), { caption: 'extracttext_success' })
@@ -140,18 +141,23 @@ describe('extractTextHandler', () => {
 
       it('should throw error when text parsing fails or returns non-string', async () => {
         vi.mocked(fs.readFile).mockResolvedValue(Buffer.from('pdf data'))
-        vi.mocked(pdf as any).mockResolvedValue({ text: undefined } as any) // Invalid output
+        const originalGetText = PDFParse.prototype.getText
+        PDFParse.prototype.getText = vi.fn().mockResolvedValue(undefined)
 
-        await handler.events['msg:document']!(ctx)
+        try {
+          await handler.events['msg:document']!(ctx)
 
-        expect(logger.error).toHaveBeenCalled()
-        expect(ctx.reply).toHaveBeenCalledWith('extracttext_error')
-        expect(fs.rm).toHaveBeenCalledWith('/tmp/input.pdf', { force: true, recursive: true })
+          expect(logger.error).toHaveBeenCalled()
+          expect(ctx.reply).toHaveBeenCalledWith('extracttext_error')
+          expect(fs.rm).toHaveBeenCalledWith('/tmp/input.pdf', { force: true, recursive: true })
+        }
+        finally {
+          PDFParse.prototype.getText = originalGetText
+        }
       })
 
       it('should log error when fs.rm fails in finally block', async () => {
         vi.mocked(fs.readFile).mockResolvedValue(Buffer.from('pdf data'))
-        vi.mocked(pdf as any).mockResolvedValue({ text: 'extracted text', numpages: 1, info: {}, metadata: null, version: '1.10.100' })
 
         const rmError = new Error('rm error')
         vi.mocked(fs.rm).mockRejectedValue(rmError)
@@ -163,11 +169,11 @@ describe('extractTextHandler', () => {
 
         expect(logger.error).toHaveBeenCalledWith(
           { error: rmError, path: '/tmp/input.pdf' },
-          'Failed to remove input file.',
+          'Failed to remove temporary file/folder.',
         )
         expect(logger.error).toHaveBeenCalledWith(
           { error: rmError, path: expect.stringMatching(/\/tmp\/extract-text-\d+\.txt/) },
-          'Failed to remove output file.',
+          'Failed to remove temporary file/folder.',
         )
       })
     })

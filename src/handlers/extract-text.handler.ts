@@ -5,7 +5,7 @@ import os from 'node:os'
 import { join } from 'node:path'
 import { InputFile } from 'grammy'
 
-import pdf from 'pdf-parse'
+import { PDFParse } from 'pdf-parse'
 import { CommandEnum } from '../enums/command.enum'
 import { InvalidFileError } from '../errors/invalid-file.error'
 import { LimitExceededError } from '../errors/limit-exceeded.error'
@@ -44,15 +44,15 @@ export class ExtractTextHandler extends BaseHandler {
 
         await ctx.reply(ctx.t('extracttext_extracting'))
 
-        const dataBuffer = await fs.readFile(inputPath)
-        const data = await pdf(dataBuffer)
+        const parser = new PDFParse({ url: inputPath })
+        const text = await parser.getText()
 
-        if (!data || typeof data.text !== 'string') {
-          throw new Error('Failed to parse text from PDF')
+        if (typeof text !== 'string') {
+          throw new TypeError('Failed to parse text from PDF')
         }
 
         outputPath = join(os.tmpdir(), `extract-text-${Date.now()}.txt`)
-        await fs.writeFile(outputPath, data.text)
+        await fs.writeFile(outputPath, text)
 
         const extractedFile = new InputFile(outputPath, 'extracted-text.txt')
         await ctx.replyWithDocument(extractedFile, {
@@ -70,15 +70,8 @@ export class ExtractTextHandler extends BaseHandler {
         await ctx.reply(ctx.t('extracttext_error'))
       }
       finally {
-        if (inputPath) {
-          await fs.rm(inputPath, { force: true, recursive: true }).catch(error =>
-            this.logger.error({ error, path: inputPath }, 'Failed to remove input file.'),
-          )
-        }
-        if (outputPath) {
-          await fs.rm(outputPath, { force: true, recursive: true }).catch(error =>
-            this.logger.error({ error, path: outputPath }, 'Failed to remove output file.'),
-          )
+        ctx.session.params = {
+          paths: [inputPath, outputPath].filter(Boolean) as string[],
         }
         await this.resetSession(ctx)
       }
