@@ -6,6 +6,8 @@ import { LanguageEnum } from '../enums/language.enum'
 import { locales } from '../middlewares/i18n.middleware'
 import { BaseHandler } from './base.handler'
 
+const ALLOWED_LANGUAGES = new Set<string>(Object.values(LanguageEnum))
+
 export class LanguageHandler extends BaseHandler {
   constructor(private readonly userRepository: UserRepository) {
     super()
@@ -17,7 +19,7 @@ export class LanguageHandler extends BaseHandler {
   public readonly events = {
     callback_query: async (ctx: CustomContext) => {
       const data = ctx.callbackQuery?.data
-      if (!data || !Object.values(LanguageEnum).includes(data as LanguageEnum)) {
+      if (!data || !ALLOWED_LANGUAGES.has(data)) {
         return
       }
 
