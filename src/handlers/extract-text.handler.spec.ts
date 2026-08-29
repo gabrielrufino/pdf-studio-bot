@@ -26,7 +26,7 @@ vi.mock('node:os', () => ({
 vi.mock('pdf-parse', () => ({
   PDFParse: class {
     getText() {
-      return Promise.resolve('extracted text')
+      return Promise.resolve({ text: 'extracted text' })
     }
   },
 }))
@@ -142,7 +142,7 @@ describe('extractTextHandler', () => {
       it('should throw error when text parsing fails or returns non-string', async () => {
         vi.mocked(fs.readFile).mockResolvedValue(Buffer.from('pdf data'))
         const originalGetText = PDFParse.prototype.getText
-        PDFParse.prototype.getText = vi.fn().mockResolvedValue(undefined)
+        PDFParse.prototype.getText = vi.fn().mockResolvedValue({ text: undefined })
 
         try {
           await handler.events['msg:document']!(ctx)

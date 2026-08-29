@@ -45,7 +45,8 @@ export class ExtractTextHandler extends BaseHandler {
         await ctx.reply(ctx.t('extracttext_extracting'))
 
         const parser = new PDFParse({ url: inputPath })
-        const text = await parser.getText()
+        const result = await parser.getText()
+        const text = result.text
 
         if (typeof text !== 'string') {
           throw new TypeError('Failed to parse text from PDF')
