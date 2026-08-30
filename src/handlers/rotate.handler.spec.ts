@@ -33,7 +33,7 @@ vi.mock('node:fs/promises', () => ({
   },
 }))
 
-describe('rotateHandler', () => {
+describe(RotateHandler.name, () => {
   let userRepository: UserRepository
   let handler: RotateHandler
   let ctx: CustomContext

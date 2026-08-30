@@ -43,7 +43,7 @@ vi.mock('../config/logger', () => ({
   },
 }))
 
-describe('extractTextHandler', () => {
+describe(ExtractTextHandler.name, () => {
   let userRepository: UserRepository
   let handler: ExtractTextHandler
   let ctx: any
