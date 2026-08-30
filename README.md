@@ -20,6 +20,9 @@ Try it now and experience the convenience: just click the button above 🚀
 - **📄 Split PDFs into Individual Pages**
   Break down multi-page PDFs into separate files, one page at a time.
 
+- **✂️ Extract Pages from PDF**
+  Specify a start and end page to extract precisely what you need from your PDF document.
+
 - **🔄 Rotate PDFs**
   Rotate your PDF files by 90, 180, or -90 degrees.
 
@@ -62,6 +65,7 @@ Try it now and experience the convenience: just click the button above 🚀
 - `/download` - Download and convert a webpage URL into a PDF
 - `/join` - Join multiple PDF files into a single document
 - `/split` - Split a PDF into individual pages
+- `/extract` - Extract a specific range of pages from a PDF
 - `/rotate` - Rotate a PDF file by a specified degree
 - `/pdftoimages` - Convert PDF pages to high-quality images
 - `/putpassword` - Protect a PDF with a password

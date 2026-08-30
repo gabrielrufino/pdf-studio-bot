@@ -6,6 +6,8 @@ import { LanguageEnum } from '../enums/language.enum'
 import { WelcomeMessage } from '../messages/welcome.message'
 import { BaseHandler } from './base.handler'
 
+const SUPPORTED_LANGUAGES = new Set(Object.values(LanguageEnum) as string[])
+
 export class StartHandler extends BaseHandler {
   constructor(
     private readonly userRepository: UserRepository,
@@ -22,7 +24,7 @@ export class StartHandler extends BaseHandler {
     await this.resetSession(ctx)
     const user = ctx.user
     if (!user) {
-      const language = Object.values(LanguageEnum).includes(ctx.from?.language_code as any)
+      const language = SUPPORTED_LANGUAGES.has(ctx.from?.language_code as any)
         ? ctx.from?.language_code as LanguageEnum
         : LanguageEnum.English
 

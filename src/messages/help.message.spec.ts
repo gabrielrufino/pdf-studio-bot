@@ -28,6 +28,24 @@ describe(HelpMessage.name, () => {
     expect((buttons[1][0] as any).callback_data).toBe('help')
   })
 
+  it('should include extract, extracttext and rotate as operations', () => {
+    const operationHandlers = [
+      { command: 'extract', description: 'Extract pages' },
+      { command: 'extracttext', description: 'Extract text' },
+      { command: 'rotate', description: 'Rotate PDF' },
+    ] as any
+    const { reply_markup } = new HelpMessage(operationHandlers, ctx).build()
+    const keyboard = reply_markup as InlineKeyboard
+    const buttons = keyboard.inline_keyboard
+
+    expect(buttons[0][0].text).toBe('operation_extract')
+    expect((buttons[0][0] as any).callback_data).toBe('extract')
+    expect(buttons[1][0].text).toBe('operation_extracttext')
+    expect((buttons[1][0] as any).callback_data).toBe('extracttext')
+    expect(buttons[2][0].text).toBe('operation_rotate')
+    expect((buttons[2][0] as any).callback_data).toBe('rotate')
+  })
+
   it('should not include uncategorized handlers', () => {
     const customHandlers = [
       { command: 'custom', description: 'Custom command' },

@@ -9,7 +9,7 @@ import { CommandEnum } from '../enums/command.enum'
 import { InvalidFileError } from '../errors/invalid-file.error'
 import { LimitExceededError } from '../errors/limit-exceeded.error'
 import { UserNotFoundError } from '../errors/user-not-found.error'
-import { rotateParamsSchema } from '../schemas/rotate-params.schema'
+import { RotateParamsSchema } from '../schemas/rotate-params.schema'
 import { BaseHandler } from './base.handler'
 
 export class RotateHandler extends BaseHandler {
@@ -77,7 +77,7 @@ export class RotateHandler extends BaseHandler {
 
         await ctx.answerCallbackQuery()
 
-        const { file_id: fileId } = this.validateParams(rotateParamsSchema, ctx.session.params)
+        const { file_id: fileId } = this.validateParams(RotateParamsSchema, ctx.session.params)
 
         // We edit the message to remove keyboard
         await ctx.editMessageText(ctx.t('rotate_rotating'))

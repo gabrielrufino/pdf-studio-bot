@@ -12,6 +12,8 @@ export const locales: Record<string, Record<string, string>> = {
   es,
 }
 
+const ALLOWED_LANGUAGES = new Set(Object.values(LanguageEnum))
+
 export async function i18nMiddleware(ctx: CustomContext, next: NextFunction) {
   const userId = ctx.from?.id
   let language = ctx.session.language
@@ -26,7 +28,7 @@ export async function i18nMiddleware(ctx: CustomContext, next: NextFunction) {
     if (user?.language) {
       language = user.language
     }
-    else if (ctx.from?.language_code && Object.values(LanguageEnum).includes(ctx.from.language_code as any)) {
+    else if (ctx.from?.language_code && ALLOWED_LANGUAGES.has(ctx.from.language_code as any)) {
       language = ctx.from.language_code as any
     }
     else {

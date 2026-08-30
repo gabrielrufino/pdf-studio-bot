@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
-export const rotateParamsSchema = z.object({
+export const RotateParamsSchema = z.object({
   file_id: z.string(),
 })
 
-export type RotateParams = z.infer<typeof rotateParamsSchema>
+export type RotateParams = z.infer<typeof RotateParamsSchema>

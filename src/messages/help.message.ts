@@ -6,6 +6,8 @@ import { CommandEnum } from '../enums/command.enum'
 export class HelpMessage {
   private static readonly OPERATIONS = new Set<string>([
     CommandEnum.Download,
+    CommandEnum.Extract,
+    CommandEnum.ExtractText,
     CommandEnum.Join,
     CommandEnum.PdfToImages,
     CommandEnum.PutPassword,
