@@ -91,6 +91,18 @@ describe(eventRecorderMiddleware.name, () => {
     expect(eventRepository.insertMany).not.toHaveBeenCalled()
   })
 
+  it('should not record anything for a command present in CommandEnum but missing from EventEnum', async () => {
+    // 'extract' exists in CommandEnum but has no Command/Button entry in EventEnum on this branch
+    // The Map lookup returns undefined and the event is silently skipped
+    const ctx: any = {
+      from: { id: 123 },
+      message: { text: '/extract' },
+    }
+    await eventRecorderMiddleware(ctx, next)
+    expect(next).toHaveBeenCalled()
+    expect(eventRepository.insertMany).not.toHaveBeenCalled()
+  })
+
   it('should log error if insertMany fails', async () => {
     const error = new Error('Database error')
     vi.mocked(eventRepository.insertMany).mockRejectedValueOnce(error)

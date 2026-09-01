@@ -6,22 +6,26 @@ import { CommandEnum } from '../enums/command.enum'
 import { EventEnum } from '../enums/event.enum'
 import { eventRepository } from '../repositories'
 
-const commandToEventMap = new Map<string, EventEnum>()
-const buttonToEventMap = new Map<string, EventEnum>()
+function buildEventMaps() {
+  const command = new Map<string, EventEnum>()
+  const button = new Map<string, EventEnum>()
 
-for (const [key, value] of Object.entries(CommandEnum)) {
-  const enumKey = key as keyof typeof CommandEnum
+  for (const [key, value] of Object.entries(CommandEnum)) {
+    const cmd = EventEnum[`Command${key}` as keyof typeof EventEnum]
+    if (cmd) {
+      command.set(value, cmd)
+    }
 
-  const commandEventValue = EventEnum[`Command${enumKey}` as keyof typeof EventEnum]
-  if (commandEventValue) {
-    commandToEventMap.set(value, commandEventValue)
+    const btn = EventEnum[`Button${key}` as keyof typeof EventEnum]
+    if (btn) {
+      button.set(value, btn)
+    }
   }
 
-  const buttonEventValue = EventEnum[`Button${enumKey}` as keyof typeof EventEnum]
-  if (buttonEventValue) {
-    buttonToEventMap.set(value, buttonEventValue)
-  }
+  return { command, button } as const
 }
+
+const { command: commandToEventMap, button: buttonToEventMap } = buildEventMaps()
 
 export async function eventRecorderMiddleware(ctx: CustomContext, next: NextFunction) {
   if (!ctx.from) {
@@ -32,7 +36,7 @@ export async function eventRecorderMiddleware(ctx: CustomContext, next: NextFunc
 
   // Check for command
   if (ctx.message?.text?.startsWith('/')) {
-    const rawCommand = ctx.message.text.split(' ')[0]!.substring(1)
+    const rawCommand = ctx.message.text.split(' ')[0].substring(1)
     const eventValue = commandToEventMap.get(rawCommand)
 
     if (eventValue) {
