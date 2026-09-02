@@ -86,9 +86,6 @@ export class SummaryHandler extends BaseHandler {
     if (!ctx.user)
       throw new UserNotFoundError()
 
-    const stats = await fs.stat(path)
-    await this.checkLimits(ctx, { fileSize: stats.size })
-
     const pdfReader = muhammara.createReader(path)
     const pagesCount = pdfReader.getPagesCount()
     await this.checkLimits(ctx, { pagesCount })

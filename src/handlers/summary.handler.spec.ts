@@ -155,27 +155,6 @@ describe(SummaryHandler.name, () => {
         }
       })
 
-      it('should enforce size limit for pro users', async () => {
-        const { tempDir } = await setupTestFile('pdf-studio-bot-test-summary-pro-size-')
-
-        const statSpy = vi.spyOn(fs, 'stat')
-
-        try {
-          mockUserWithPlan(PlanTypeEnum.Pro)
-
-          statSpy.mockResolvedValueOnce({ size: 100 * 1024 * 1024 } as any) // 100MB
-
-          await handler.events['msg:document'](ctx)
-
-          expect(ctx.reply).toHaveBeenCalledWith('pro_limit_reached')
-          expect(mockGenerateContent).not.toHaveBeenCalled()
-        }
-        finally {
-          statSpy.mockRestore()
-          await fs.rm(tempDir, { recursive: true, force: true })
-        }
-      })
-
       it('should enforce page limit for pro users', async () => {
         const { tempDir } = await setupTestFile('pdf-studio-bot-test-summary-pro-pages-')
 
@@ -231,27 +210,6 @@ describe(SummaryHandler.name, () => {
         expect(ctx.reply).not.toHaveBeenCalledWith('summary_error')
         expect(ctx.session.command).toBeNull()
         expect(mockGenerateContent).not.toHaveBeenCalled()
-      })
-
-      it('should enforce size limit for free users', async () => {
-        const { tempDir } = await setupTestFile('pdf-studio-bot-test-summary-size-')
-
-        const statSpy = vi.spyOn(fs, 'stat')
-
-        try {
-          mockUserWithPlan(PlanTypeEnum.Free)
-
-          statSpy.mockResolvedValueOnce({ size: 15 * 1024 * 1024 } as any) // 15MB
-
-          await handler.events['msg:document'](ctx)
-
-          expect(ctx.reply).toHaveBeenCalledWith('free_limit_reached')
-          expect(mockGenerateContent).not.toHaveBeenCalled()
-        }
-        finally {
-          statSpy.mockRestore()
-          await fs.rm(tempDir, { recursive: true, force: true })
-        }
       })
 
       it('should enforce page limit for free users', async () => {
