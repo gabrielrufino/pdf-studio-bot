@@ -1,5 +1,4 @@
 import type { NextFunction } from 'grammy'
-import type { ConfigurationEntity } from '../entities/configuration.entity'
 import type { CustomContext } from '../types/custom-context.type'
 import { configurationRepository } from '../repositories'
 
