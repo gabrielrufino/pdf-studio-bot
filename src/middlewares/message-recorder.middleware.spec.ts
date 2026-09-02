@@ -1,11 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { logger } from '../config/logger'
 import { CommandEnum } from '../enums/command.enum'
 import { messageRepository } from '../repositories'
 import { messageRecorderMiddleware } from './message-recorder.middleware'
 
 vi.mock('../repositories', () => ({
   messageRepository: {
-    create: vi.fn(),
+    create: vi.fn().mockResolvedValue(undefined),
+  },
+}))
+
+vi.mock('../config/logger', () => ({
+  logger: {
+    error: vi.fn(),
   },
 }))
 
@@ -72,6 +79,19 @@ describe(messageRecorderMiddleware.name, () => {
     await messageRecorderMiddleware(ctx, next)
 
     expect(messageRepository.create).not.toHaveBeenCalled()
+    expect(next).toHaveBeenCalled()
+  })
+
+  it('should log an error if messageRepository.create fails', async () => {
+    const testError = new Error('Database connection failed')
+    vi.mocked(messageRepository.create).mockRejectedValueOnce(testError)
+
+    await messageRecorderMiddleware(ctx, next)
+
+    // Yield to the event loop so the unawaited promise catch block runs
+    await new Promise(resolve => setTimeout(resolve, 0))
+
+    expect(logger.error).toHaveBeenCalledWith({ error: testError }, 'Failed to record message')
     expect(next).toHaveBeenCalled()
   })
 })
