@@ -33,6 +33,16 @@ vi.mock('node:fs/promises', () => ({
   },
 }))
 
+vi.mock('grammy', async () => {
+  const actual = await vi.importActual<any>('grammy')
+  return {
+    ...actual,
+    InputFile: class {
+      constructor(public path: string, public name: string) {}
+    },
+  }
+})
+
 describe(RotateHandler.name, () => {
   let userRepository: UserRepository
   let handler: RotateHandler
@@ -113,14 +123,14 @@ describe(RotateHandler.name, () => {
       expect(ctx.answerCallbackQuery).toHaveBeenCalled()
       expect(ctx.editMessageText).toHaveBeenCalledWith('rotate_rotating')
       expect(ctx.replyWithDocument).toHaveBeenCalledWith(
-        expect.objectContaining({ filename: 'rotated.pdf', fileData: expect.stringMatching(/rotate-\d+\.pdf$/) }),
+        expect.objectContaining({ name: 'rotated.pdf', path: expect.stringMatching(/rotate-[a-f0-9-]+\.pdf$/) }),
         { caption: 'rotate_success' },
       )
 
       expect(mockSetRotation).toHaveBeenCalledWith(90)
-      expect(fs.writeFile).toHaveBeenCalledWith(expect.stringMatching(/rotate-\d+\.pdf$/), expect.any(Buffer))
+      expect(fs.writeFile).toHaveBeenCalledWith(expect.stringMatching(/rotate-[a-f0-9-]+\.pdf$/), expect.any(Buffer))
       expect(fs.rm).toHaveBeenCalledWith('/tmp/test.pdf', { force: true })
-      expect(fs.rm).toHaveBeenCalledWith(expect.stringMatching(/rotate-\d+\.pdf$/), { force: true })
+      expect(fs.rm).toHaveBeenCalledWith(expect.stringMatching(/rotate-[a-f0-9-]+\.pdf$/), { force: true })
 
       expect(userRepository.incrementUsage).toHaveBeenCalledWith(1)
       expect(ctx.session.command).toBeNull()
@@ -173,7 +183,7 @@ describe(RotateHandler.name, () => {
 
       expect((handler as any).logger.error).toHaveBeenCalledWith({ error: err1, path: '/tmp/test.pdf' }, 'Failed to remove input file.')
       expect((handler as any).logger.error).toHaveBeenCalledWith(
-        { error: err2, path: expect.stringMatching(/rotate-\d+\.pdf$/) },
+        { error: err2, path: expect.stringMatching(/rotate-[a-f0-9-]+\.pdf$/) },
         'Failed to remove output file.',
       )
     })

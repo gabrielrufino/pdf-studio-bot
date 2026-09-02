@@ -1,5 +1,6 @@
 import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
+import crypto from 'node:crypto'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import { join } from 'node:path'
@@ -108,7 +109,7 @@ export class RotateHandler extends BaseHandler {
 
         const savedPdfBytes = await pdfDoc.save()
 
-        outputPath = join(os.tmpdir(), `rotate-${Date.now()}.pdf`)
+        outputPath = join(os.tmpdir(), `rotate-${crypto.randomUUID()}.pdf`)
         await fs.writeFile(outputPath, savedPdfBytes)
 
         const rotatedFile = new InputFile(outputPath, 'rotated.pdf')
