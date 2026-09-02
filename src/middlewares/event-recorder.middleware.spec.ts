@@ -91,7 +91,6 @@ describe(eventRecorderMiddleware.name, () => {
     expect(eventRepository.insertMany).not.toHaveBeenCalled()
   })
 
-
   it('should log error if insertMany fails', async () => {
     const error = new Error('Database error')
     vi.mocked(eventRepository.insertMany).mockRejectedValueOnce(error)
