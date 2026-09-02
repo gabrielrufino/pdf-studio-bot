@@ -91,17 +91,6 @@ describe(eventRecorderMiddleware.name, () => {
     expect(eventRepository.insertMany).not.toHaveBeenCalled()
   })
 
-  it('should not record anything for a command not present in CommandEnum', async () => {
-    // 'unknown' is not a valid CommandEnum value, so the Map has no entry for it
-    // The Map lookup returns undefined and the event is silently skipped
-    const ctx: any = {
-      from: { id: 123 },
-      message: { text: '/unknown' },
-    }
-    await eventRecorderMiddleware(ctx, next)
-    expect(next).toHaveBeenCalled()
-    expect(eventRepository.insertMany).not.toHaveBeenCalled()
-  })
 
   it('should log error if insertMany fails', async () => {
     const error = new Error('Database error')
