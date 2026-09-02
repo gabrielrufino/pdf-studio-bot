@@ -1,5 +1,6 @@
 import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
+import crypto from 'node:crypto'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import { join } from 'node:path'
@@ -104,7 +105,7 @@ export class ExtractHandler extends BaseHandler {
 
         await ctx.reply(ctx.t('extract_extracting'))
 
-        outputPath = join(os.tmpdir(), `extract-${Date.now()}.pdf`)
+        outputPath = join(os.tmpdir(), `extract-${crypto.randomUUID()}.pdf`)
         const pdfWriter = muhammara.createWriter(outputPath)
         const copyCtx = pdfWriter.createPDFCopyingContext(inputPath)
 

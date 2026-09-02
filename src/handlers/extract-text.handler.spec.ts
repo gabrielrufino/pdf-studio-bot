@@ -95,11 +95,11 @@ describe(ExtractTextHandler.name, () => {
 
         expect(ctx.reply).toHaveBeenCalledWith('extracttext_extracting')
 
-        expect(fs.writeFile).toHaveBeenCalledWith(expect.stringMatching(/\/tmp\/extract-text-\d+\.txt/), 'extracted text')
+        expect(fs.writeFile).toHaveBeenCalledWith(expect.stringMatching(/\/tmp\/extract-text-[a-f0-9-]+\.txt/), 'extracted text')
         expect(ctx.replyWithDocument).toHaveBeenCalledWith(expect.any(Object), { caption: 'extracttext_success' })
         expect(userRepository.incrementUsage).toHaveBeenCalledWith(123)
         expect(fs.rm).toHaveBeenCalledWith('/tmp/input.pdf', { force: true, recursive: true })
-        expect(fs.rm).toHaveBeenCalledWith(expect.stringMatching(/\/tmp\/extract-text-\d+\.txt/), { force: true, recursive: true })
+        expect(fs.rm).toHaveBeenCalledWith(expect.stringMatching(/\/tmp\/extract-text-[a-f0-9-]+\.txt/), { force: true, recursive: true })
         expect(ctx.session.command).toBeNull()
         expect(ctx.session.params).toBeNull()
       })
@@ -172,7 +172,7 @@ describe(ExtractTextHandler.name, () => {
           'Failed to remove temporary file/folder.',
         )
         expect(logger.error).toHaveBeenCalledWith(
-          { error: rmError, path: expect.stringMatching(/\/tmp\/extract-text-\d+\.txt/) },
+          { error: rmError, path: expect.stringMatching(/\/tmp\/extract-text-[a-f0-9-]+\.txt/) },
           'Failed to remove temporary file/folder.',
         )
       })

@@ -1,5 +1,6 @@
 import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
+import crypto from 'node:crypto'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import { join } from 'node:path'
@@ -52,7 +53,7 @@ export class ExtractTextHandler extends BaseHandler {
           throw new TypeError('Failed to parse text from PDF')
         }
 
-        outputPath = join(os.tmpdir(), `extract-text-${Date.now()}.txt`)
+        outputPath = join(os.tmpdir(), `extract-text-${crypto.randomUUID()}.txt`)
         await fs.writeFile(outputPath, text)
 
         const extractedFile = new InputFile(outputPath, 'extracted-text.txt')
