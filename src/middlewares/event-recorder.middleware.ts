@@ -6,6 +6,27 @@ import { CommandEnum } from '../enums/command.enum'
 import { EventEnum } from '../enums/event.enum'
 import { eventRepository } from '../repositories'
 
+function buildEventMaps() {
+  const command = new Map<string, EventEnum>()
+  const button = new Map<string, EventEnum>()
+
+  for (const [key, value] of Object.entries(CommandEnum)) {
+    const cmd = EventEnum[`Command${key}` as keyof typeof EventEnum]
+    if (cmd) {
+      command.set(value, cmd)
+    }
+
+    const btn = EventEnum[`Button${key}` as keyof typeof EventEnum]
+    if (btn) {
+      button.set(value, btn)
+    }
+  }
+
+  return { command, button } as const
+}
+
+const { command: commandToEventMap, button: buttonToEventMap } = buildEventMaps()
+
 export async function eventRecorderMiddleware(ctx: CustomContext, next: NextFunction) {
   if (!ctx.from) {
     return next()
@@ -15,35 +36,27 @@ export async function eventRecorderMiddleware(ctx: CustomContext, next: NextFunc
 
   // Check for command
   if (ctx.message?.text?.startsWith('/')) {
-    const rawCommand = ctx.message.text.split(' ')[0]!.substring(1)
-    const match = Object.entries(CommandEnum).find(([, value]) => value === rawCommand)
+    const rawCommand = ctx.message.text.split(' ')[0].substring(1)
+    const eventValue = commandToEventMap.get(rawCommand)
 
-    if (match) {
-      const enumKey = match[0] as keyof typeof CommandEnum
-      const eventValue = EventEnum[`Command${enumKey}` as keyof typeof EventEnum]
-      if (eventValue) {
-        events.push(new EventEntity({
-          event: eventValue,
-          telegram_user: ctx.from,
-        }))
-      }
+    if (eventValue) {
+      events.push(new EventEntity({
+        event: eventValue,
+        telegram_user: ctx.from,
+      }))
     }
   }
 
   // Check for callback query (button click)
   if (ctx.callbackQuery?.data) {
     const rawData = ctx.callbackQuery.data
-    const match = Object.entries(CommandEnum).find(([, value]) => value === rawData)
+    const eventValue = buttonToEventMap.get(rawData)
 
-    if (match) {
-      const enumKey = match[0] as keyof typeof CommandEnum
-      const eventValue = EventEnum[`Button${enumKey}` as keyof typeof EventEnum]
-      if (eventValue) {
-        events.push(new EventEntity({
-          event: eventValue,
-          telegram_user: ctx.from,
-        }))
-      }
+    if (eventValue) {
+      events.push(new EventEntity({
+        event: eventValue,
+        telegram_user: ctx.from,
+      }))
     }
   }
 
