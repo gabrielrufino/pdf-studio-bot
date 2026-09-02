@@ -1,6 +1,6 @@
 import { MongoClient } from 'mongodb'
 import { MongoMemoryServer } from 'mongodb-memory-server'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { ConfigurationRepository } from './configuration.repository'
 
 describe(ConfigurationRepository.name, () => {
@@ -23,6 +23,14 @@ describe(ConfigurationRepository.name, () => {
   })
 
   describe(ConfigurationRepository.prototype.findGlobalConfig.name, () => {
+    beforeAll(() => {
+      vi.useFakeTimers()
+    })
+
+    afterAll(() => {
+      vi.useRealTimers()
+    })
+
     it('should return the global_config document after init', async () => {
       const result = await configurationRepository.findGlobalConfig()
 
@@ -63,12 +71,55 @@ describe(ConfigurationRepository.name, () => {
       // Re-apply validator via init
       await configurationRepository.init()
 
+      configurationRepository.clearCache()
       const result = await configurationRepository.findGlobalConfig()
       expect(result).toMatchObject({
         _id: 'global_config',
         pro_price: 400,
         maintenance_mode: false,
       })
+    })
+
+    it('should use cached config within TTL and not query DB again', async () => {
+      configurationRepository.clearCache()
+
+      // Need to spy on the collection's findOne method via prototype or the instance
+      const findSpy = vi.spyOn((configurationRepository as any).collection, 'findOne')
+
+      await configurationRepository.findGlobalConfig()
+      await configurationRepository.findGlobalConfig()
+
+      expect(findSpy).toHaveBeenCalledTimes(1)
+
+      findSpy.mockRestore()
+    })
+
+    it('should refresh cache after TTL expires', async () => {
+      configurationRepository.clearCache()
+
+      const findSpy = vi.spyOn((configurationRepository as any).collection, 'findOne')
+
+      await configurationRepository.findGlobalConfig()
+      vi.advanceTimersByTime(31_000)
+      await configurationRepository.findGlobalConfig()
+
+      expect(findSpy).toHaveBeenCalledTimes(2)
+
+      findSpy.mockRestore()
+    })
+
+    it('should respect clearCache and re-fetch', async () => {
+      configurationRepository.clearCache()
+
+      const findSpy = vi.spyOn((configurationRepository as any).collection, 'findOne')
+
+      await configurationRepository.findGlobalConfig()
+      configurationRepository.clearCache()
+      await configurationRepository.findGlobalConfig()
+
+      expect(findSpy).toHaveBeenCalledTimes(2)
+
+      findSpy.mockRestore()
     })
   })
 

@@ -4,8 +4,11 @@ import { EnsureInitialized } from '../decorators/ensure-initialized.decorator'
 import { BaseRepository } from './base.repository'
 
 const GLOBAL_CONFIG_ID = 'global_config' as const
+const CACHE_TTL_MS = 30_000
 
 export class ConfigurationRepository extends BaseRepository<ConfigurationEntity> {
+  private cachedConfig: { value: ConfigurationEntity, expiresAt: number } | null = null
+
   constructor(database: Db) {
     super({
       collectionName: 'configurations',
@@ -44,7 +47,19 @@ export class ConfigurationRepository extends BaseRepository<ConfigurationEntity>
 
   @EnsureInitialized
   public async findGlobalConfig(): Promise<ConfigurationEntity> {
-    return this.collection.findOne({ _id: GLOBAL_CONFIG_ID })! as Promise<ConfigurationEntity>
+    if (!this.cachedConfig || Date.now() > this.cachedConfig.expiresAt) {
+      const config = await this.collection.findOne({ _id: GLOBAL_CONFIG_ID })! as ConfigurationEntity
+      this.cachedConfig = {
+        value: config,
+        expiresAt: Date.now() + CACHE_TTL_MS,
+      }
+    }
+
+    return this.cachedConfig.value
+  }
+
+  public clearCache(): void {
+    this.cachedConfig = null
   }
 
   private async seed(): Promise<void> {
