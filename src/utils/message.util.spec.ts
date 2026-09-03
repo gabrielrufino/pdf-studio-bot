@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { splitMessage } from './message.util'
 
-describe('splitMessage', () => {
+describe(splitMessage.name, () => {
   it('should split a line that is longer than maxLength', () => {
     const longLine = 'B'.repeat(4500)
     const chunks = splitMessage(longLine, 4000)
@@ -38,5 +38,18 @@ describe('splitMessage', () => {
     expect(chunks).toHaveLength(2)
     expect(chunks[0]).toBe('A'.repeat(3000))
     expect(chunks[1]).toBe('B'.repeat(1500))
+  })
+
+  it('should handle Windows-style CRLF line endings', () => {
+    const text = `line1\r\nline2\r\nline3`
+    const chunks = splitMessage(text, 4000)
+
+    expect(chunks).toHaveLength(1)
+    expect(chunks[0]).toBe('line1\nline2\nline3')
+  })
+
+  it('should throw RangeError if maxLength is less than or equal to 0', () => {
+    expect(() => splitMessage('hello', 0)).toThrow(RangeError)
+    expect(() => splitMessage('hello', -5)).toThrow(RangeError)
   })
 })
