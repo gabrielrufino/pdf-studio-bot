@@ -4,9 +4,10 @@ import { EnsureInitialized } from '../decorators/ensure-initialized.decorator'
 import { BaseRepository } from './base.repository'
 
 const GLOBAL_CONFIG_ID = 'global_config' as const
-const CACHE_TTL_MS = 30_000
 
 export class ConfigurationRepository extends BaseRepository<ConfigurationEntity> {
+  private static readonly CACHE_TTL_MS = 30_000
+
   private cachedConfig: { value: ConfigurationEntity, expiresAt: number } | null = null
   private pendingFetch: Promise<ConfigurationEntity> | null = null
 
@@ -73,7 +74,7 @@ export class ConfigurationRepository extends BaseRepository<ConfigurationEntity>
       }
       this.cachedConfig = {
         value: config,
-        expiresAt: Date.now() + CACHE_TTL_MS,
+        expiresAt: Date.now() + ConfigurationRepository.CACHE_TTL_MS,
       }
       return config
     }
