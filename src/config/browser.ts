@@ -19,9 +19,6 @@ export class Browser {
       return {
         ...baseConfig,
         executablePath: '/usr/bin/chromium-browser',
-        args: [
-          ...baseConfig.args,
-        ],
       }
     }
 
