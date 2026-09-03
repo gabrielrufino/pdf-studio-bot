@@ -1,3 +1,4 @@
+import type { Browser as PuppeteerBrowser } from 'puppeteer'
 import puppeteer from 'puppeteer'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Browser } from './browser'
@@ -10,14 +11,14 @@ vi.mock('puppeteer', () => ({
 
 describe('browser config', () => {
   let browserInstance: Browser
-  let mockBrowser: any
+  let mockBrowser: { close: ReturnType<typeof vi.fn> }
 
   beforeEach(() => {
     browserInstance = new Browser()
     mockBrowser = {
       close: vi.fn().mockResolvedValue(undefined),
     }
-    vi.mocked(puppeteer.launch).mockResolvedValue(mockBrowser as any)
+    vi.mocked(puppeteer.launch).mockResolvedValue(mockBrowser as unknown as PuppeteerBrowser)
   })
 
   afterEach(() => {
@@ -32,8 +33,6 @@ describe('browser config', () => {
 
     expect(puppeteer.launch).toHaveBeenCalledWith({
       args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
       ],
@@ -49,12 +48,8 @@ describe('browser config', () => {
 
     expect(puppeteer.launch).toHaveBeenCalledWith({
       args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
-        '--no-zygote',
-        '--single-process',
       ],
       headless: true,
       timeout: 30000,
