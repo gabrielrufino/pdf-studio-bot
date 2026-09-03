@@ -8,6 +8,7 @@ const CACHE_TTL_MS = 30_000
 
 export class ConfigurationRepository extends BaseRepository<ConfigurationEntity> {
   private cachedConfig: { value: ConfigurationEntity, expiresAt: number } | null = null
+  private pendingFetch: Promise<ConfigurationEntity> | null = null
 
   constructor(database: Db) {
     super({
@@ -48,7 +49,24 @@ export class ConfigurationRepository extends BaseRepository<ConfigurationEntity>
 
   @EnsureInitialized
   public async findGlobalConfig(): Promise<ConfigurationEntity> {
-    if (!this.cachedConfig || Date.now() > this.cachedConfig.expiresAt) {
+    if (this.cachedConfig && Date.now() <= this.cachedConfig.expiresAt) {
+      return this.cachedConfig.value
+    }
+
+    if (!this.pendingFetch) {
+      this.pendingFetch = this.fetchAndCache()
+    }
+
+    return this.pendingFetch
+  }
+
+  public clearCache(): void {
+    this.cachedConfig = null
+    this.pendingFetch = null
+  }
+
+  private async fetchAndCache(): Promise<ConfigurationEntity> {
+    try {
       const config = await this.collection.findOne({ _id: GLOBAL_CONFIG_ID }) as ConfigurationEntity | null
       if (!config) {
         throw new Error('Global configuration not found')
@@ -57,13 +75,11 @@ export class ConfigurationRepository extends BaseRepository<ConfigurationEntity>
         value: config,
         expiresAt: Date.now() + CACHE_TTL_MS,
       }
+      return config
     }
-
-    return this.cachedConfig.value
-  }
-
-  public clearCache(): void {
-    this.cachedConfig = null
+    finally {
+      this.pendingFetch = null
+    }
   }
 
   private async seed(): Promise<void> {

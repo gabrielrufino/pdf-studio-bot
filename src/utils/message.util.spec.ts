@@ -52,4 +52,10 @@ describe(splitMessage.name, () => {
     expect(() => splitMessage('hello', 0)).toThrow(RangeError)
     expect(() => splitMessage('hello', -5)).toThrow(RangeError)
   })
+
+  it('should return an empty array for an empty string', () => {
+    const chunks = splitMessage('', 4000)
+
+    expect(chunks).toHaveLength(0)
+  })
 })

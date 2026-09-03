@@ -34,7 +34,7 @@ vi.mock('node:fs/promises', () => ({
 }))
 
 vi.mock('grammy', async () => {
-  const actual = await vi.importActual<any>('grammy')
+  const actual = await vi.importActual<typeof import('grammy')>('grammy')
   return {
     ...actual,
     InputFile: class {
