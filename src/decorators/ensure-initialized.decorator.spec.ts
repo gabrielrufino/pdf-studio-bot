@@ -33,7 +33,7 @@ class MockRepository extends BaseRepository<MockEntity> {
   }
 }
 
-describe('ensureInitialized decorator', () => {
+describe(EnsureInitialized.name, () => {
   let repo: MockRepository
 
   beforeEach(() => {
