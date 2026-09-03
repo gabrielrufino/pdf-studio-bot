@@ -43,12 +43,16 @@ export class ConfigurationRepository extends BaseRepository<ConfigurationEntity>
   public async init(): Promise<void> {
     await super.init()
     await this.seed()
+    this.clearCache()
   }
 
   @EnsureInitialized
   public async findGlobalConfig(): Promise<ConfigurationEntity> {
     if (!this.cachedConfig || Date.now() > this.cachedConfig.expiresAt) {
-      const config = await this.collection.findOne({ _id: GLOBAL_CONFIG_ID })! as ConfigurationEntity
+      const config = await this.collection.findOne({ _id: GLOBAL_CONFIG_ID }) as ConfigurationEntity | null
+      if (!config) {
+        throw new Error('Global configuration not found')
+      }
       this.cachedConfig = {
         value: config,
         expiresAt: Date.now() + CACHE_TTL_MS,

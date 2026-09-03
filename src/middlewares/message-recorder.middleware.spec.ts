@@ -1,3 +1,4 @@
+import type { MessageEntity } from '../entities/message.entity'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { logger } from '../config/logger'
 import { CommandEnum } from '../enums/command.enum'
@@ -80,6 +81,21 @@ describe(messageRecorderMiddleware.name, () => {
 
     expect(messageRepository.create).not.toHaveBeenCalled()
     expect(next).toHaveBeenCalled()
+  })
+
+  it('should call next without waiting for create to settle (non-blocking)', async () => {
+    let resolveCreate!: () => void
+    const deferredCreate = new Promise<MessageEntity>(resolve => (resolveCreate = resolve as () => void))
+    vi.mocked(messageRepository.create).mockReturnValueOnce(deferredCreate)
+
+    await messageRecorderMiddleware(ctx, next)
+
+    // next() must have been called before create() resolved
+    expect(next).toHaveBeenCalled()
+
+    // Now resolve create and confirm no side-effects
+    resolveCreate()
+    await deferredCreate
   })
 
   it('should log an error if messageRepository.create fails', async () => {

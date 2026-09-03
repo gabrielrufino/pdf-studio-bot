@@ -71,7 +71,6 @@ describe(ConfigurationRepository.name, () => {
       // Re-apply validator via init
       await configurationRepository.init()
 
-      configurationRepository.clearCache()
       const result = await configurationRepository.findGlobalConfig()
       expect(result).toMatchObject({
         _id: 'global_config',
