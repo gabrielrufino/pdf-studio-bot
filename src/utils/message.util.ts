@@ -1,3 +1,14 @@
+function splitLongLine(line: string, maxLength: number): string[] {
+  const parts: string[] = []
+  let remaining = line
+  while (remaining.length > maxLength) {
+    parts.push(remaining.slice(0, maxLength))
+    remaining = remaining.slice(maxLength)
+  }
+  parts.push(remaining)
+  return parts
+}
+
 export function splitMessage(text: string, maxLength = 4000): string[] {
   if (maxLength <= 0) {
     throw new RangeError('maxLength must be greater than 0')
@@ -11,14 +22,11 @@ export function splitMessage(text: string, maxLength = 4000): string[] {
     if (line.length > maxLength) {
       if (currentChunk) {
         chunks.push(currentChunk)
-        currentChunk = ''
       }
-      let remainingLine = line
-      while (remainingLine.length > maxLength) {
-        chunks.push(remainingLine.slice(0, maxLength))
-        remainingLine = remainingLine.slice(maxLength)
-      }
-      currentChunk = remainingLine
+      const parts = splitLongLine(line, maxLength)
+      const last = parts.pop()
+      chunks.push(...parts)
+      currentChunk = last ?? ''
       continue
     }
 
