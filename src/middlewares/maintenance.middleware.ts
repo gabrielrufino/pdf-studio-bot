@@ -1,25 +1,15 @@
 import type { NextFunction } from 'grammy'
-import type { ConfigurationEntity } from '../entities/configuration.entity'
 import type { CustomContext } from '../types/custom-context.type'
 import { configurationRepository } from '../repositories'
 
-const CACHE_TTL_MS = 30_000
-
-let cachedConfig: { value: ConfigurationEntity | null, expiresAt: number } | null = null
-
 export function clearMaintenanceCache() {
-  cachedConfig = null
+  configurationRepository.clearCache()
 }
 
 export async function maintenanceMiddleware(ctx: CustomContext, next: NextFunction) {
-  if (!cachedConfig || Date.now() > cachedConfig.expiresAt) {
-    cachedConfig = {
-      value: await configurationRepository.findGlobalConfig(),
-      expiresAt: Date.now() + CACHE_TTL_MS,
-    }
-  }
+  const config = await configurationRepository.findGlobalConfig()
 
-  if (!cachedConfig.value?.maintenance_mode) {
+  if (!config?.maintenance_mode) {
     return next()
   }
 

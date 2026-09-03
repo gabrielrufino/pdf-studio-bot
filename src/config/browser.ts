@@ -8,8 +8,6 @@ export class Browser {
   private getBrowserConfig() {
     const baseConfig = {
       args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
       ],
@@ -21,11 +19,6 @@ export class Browser {
       return {
         ...baseConfig,
         executablePath: '/usr/bin/chromium-browser',
-        args: [
-          ...baseConfig.args,
-          '--no-zygote',
-          '--single-process',
-        ],
       }
     }
 

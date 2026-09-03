@@ -5,6 +5,7 @@ import { clearMaintenanceCache, maintenanceMiddleware } from './maintenance.midd
 vi.mock('../repositories', () => ({
   configurationRepository: {
     findGlobalConfig: vi.fn(),
+    clearCache: vi.fn(),
   },
 }))
 
@@ -110,55 +111,10 @@ describe(maintenanceMiddleware.name, () => {
   })
 
   describe('caching', () => {
-    it('should use cached config within TTL and not query DB again', async () => {
-      vi.mocked(configurationRepository.findGlobalConfig).mockResolvedValueOnce({
-        maintenance_mode: false,
-      } as any)
-
-      await maintenanceMiddleware(ctx, next)
-      await maintenanceMiddleware(ctx, next)
-
-      expect(configurationRepository.findGlobalConfig).toHaveBeenCalledTimes(1)
-      expect(next).toHaveBeenCalledTimes(2)
-    })
-
-    it('should refresh cache after TTL expires', async () => {
-      vi.mocked(configurationRepository.findGlobalConfig).mockResolvedValueOnce({
-        maintenance_mode: false,
-      } as any)
-
-      await maintenanceMiddleware(ctx, next)
-
-      // Advance past the 30s TTL
-      vi.advanceTimersByTime(31_000)
-
-      vi.mocked(configurationRepository.findGlobalConfig).mockResolvedValueOnce({
-        maintenance_mode: true,
-      } as any)
-
-      await maintenanceMiddleware(ctx, next)
-
-      expect(configurationRepository.findGlobalConfig).toHaveBeenCalledTimes(2)
-      expect(ctx.reply).toHaveBeenCalledWith('maintenance_mode_active')
-    })
-
     it('should respect clearMaintenanceCache and re-fetch', async () => {
-      vi.mocked(configurationRepository.findGlobalConfig).mockResolvedValueOnce({
-        maintenance_mode: false,
-      } as any)
-
-      await maintenanceMiddleware(ctx, next)
-
+      configurationRepository.clearCache = vi.fn()
       clearMaintenanceCache()
-
-      vi.mocked(configurationRepository.findGlobalConfig).mockResolvedValueOnce({
-        maintenance_mode: true,
-      } as any)
-
-      await maintenanceMiddleware(ctx, next)
-
-      expect(configurationRepository.findGlobalConfig).toHaveBeenCalledTimes(2)
-      expect(ctx.reply).toHaveBeenCalledWith('maintenance_mode_active')
+      expect(configurationRepository.clearCache).toHaveBeenCalled()
     })
   })
 })
