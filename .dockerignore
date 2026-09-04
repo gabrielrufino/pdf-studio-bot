@@ -34,7 +34,7 @@ coverage/
 # Lint and config files (keep tsconfig.json for build)
 .eslintrc*
 .prettierrc*
-vitest.config.ts
+vitest.config.js
 commitlint.config.js
 eslint.config.mjs
 
@@ -49,3 +49,4 @@ logs/
 
 # Others
 assets
+stryker.config.json
