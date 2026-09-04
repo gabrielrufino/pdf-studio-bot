@@ -112,11 +112,11 @@ describe(DownloadHandler.name, () => {
         const error = new Error('Navigation failed')
         const mockPage = await (await mockBrowser.getInstance()).newPage()
         vi.spyOn(mockPage, 'goto').mockRejectedValue(error)
-        const loggerSpy = vi.spyOn((handler as any).logger, 'error')
+        vi.spyOn((handler as any).logger, 'error')
 
         await handler.events['msg:text'](ctx)
 
-        expect(loggerSpy).toHaveBeenCalledWith(error)
+        expect((handler as any).logger.error).toHaveBeenCalledWith(error)
         expect(ctx.reply).toHaveBeenCalledWith('download_error')
         expect(mockPage.close).toHaveBeenCalled()
       })
@@ -168,6 +168,70 @@ describe(DownloadHandler.name, () => {
         await handler.events['msg:text'](ctx)
 
         expect(ctx.reply).toHaveBeenCalledWith('download_error')
+      })
+
+      it('should handle page.close error', async () => {
+        const mockPage = await (await mockBrowser.getInstance()).newPage()
+        vi.spyOn(mockPage, 'close').mockRejectedValue(new Error('Close failed'))
+        vi.spyOn((handler as any).logger, 'error')
+        await handler.events['msg:text'](ctx)
+        expect((handler as any).logger.error).toHaveBeenCalledWith(
+          expect.objectContaining({ error: expect.any(Error) }),
+          'Failed to close page.',
+        )
+      })
+
+      it('should fallback to document if title is fully sanitized away', async () => {
+        const mockPage = await (await mockBrowser.getInstance()).newPage()
+        vi.spyOn(mockPage, 'title').mockResolvedValue('*?()')
+        await handler.events['msg:text'](ctx)
+        expect(ctx.replyWithDocument).toHaveBeenCalledWith(
+          expect.objectContaining({ filename: 'document.pdf' }),
+        )
+      })
+
+      it('should ignore generic dns resolution errors', async () => {
+        ctx.message!.text = 'http://unknown-host.com'
+        const dns = await import('node:dns/promises')
+        vi.mocked(dns.default.lookup).mockRejectedValueOnce(new Error('ENOTFOUND'))
+        await handler.events['msg:text'](ctx)
+        expect(ctx.replyWithDocument).toHaveBeenCalled()
+      })
+
+      it('should block IPv4 mapped IPv6 private addresses', async () => {
+        ctx.message!.text = 'http://[::ffff:127.0.0.1]'
+        await handler.events['msg:text'](ctx)
+        vi.spyOn((handler as any).logger, 'error')
+        expect(ctx.reply).toHaveBeenCalledWith('download_error')
+      })
+
+      it('should handle malformed IPv6 brackets gracefully (starting but not ending)', async () => {
+        ctx.message!.text = 'http://[127.0.0.1'
+        await handler.events['msg:text'](ctx)
+        expect(ctx.reply).toHaveBeenCalledWith('download_error')
+        // Wait, new URL('http://[127.0.0.1') throws TypeError.
+        // If it throws TypeError, it will be caught in the catch block and logged, then reply download_error.
+      })
+
+      it('should log specific message for Private IP rejection', async () => {
+        ctx.message!.text = 'http://127.0.0.1'
+        vi.spyOn((handler as any).logger, 'error')
+        await handler.events['msg:text'](ctx)
+        expect((handler as any).logger.error).toHaveBeenCalledWith(new Error('Private IP addresses are not allowed'))
+      })
+
+      it('should resolve linkLocal addresses correctly', async () => {
+        ctx.message!.text = 'http://169.254.1.1' // linkLocal
+        vi.spyOn((handler as any).logger, 'error')
+        await handler.events['msg:text'](ctx)
+        expect((handler as any).logger.error).toHaveBeenCalledWith(new Error('Private IP addresses are not allowed'))
+      })
+
+      it('should resolve unspecified addresses correctly', async () => {
+        ctx.message!.text = 'http://0.0.0.0' // unspecified
+        vi.spyOn((handler as any).logger, 'error')
+        await handler.events['msg:text'](ctx)
+        expect((handler as any).logger.error).toHaveBeenCalledWith(new Error('Private IP addresses are not allowed'))
       })
     })
   })
