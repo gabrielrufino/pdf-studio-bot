@@ -144,7 +144,7 @@ describe(PasswordBaseHandler.name, () => {
 
         const loggerSpy = vi.spyOn((handler as any).logger, 'error')
         await handler.events['msg:text'](ctx)
-        
+
         expect(loggerSpy).toHaveBeenCalledWith(
           expect.objectContaining({ error: expect.any(Error) }),
           expectedLogMessage,
