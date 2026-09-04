@@ -11,11 +11,11 @@
     "build:check": "tsc --noEmit",
     "build:watch": "tsdown src/index.ts --watch",
     "lint": "eslint ./src",
-    "lint:fix": "npm run lint -- --fix",
+    "lint:fix": "pnpm run lint --fix",
     "start": "node .",
     "start:dev": "tsx watch --env-file=.env src/index.ts",
     "test": "vitest run",
-    "test:cov": "npm test -- --coverage",
+    "test:cov": "pnpm run test --coverage",
     "test:watch": "vitest",
     "test:mutate": "stryker run",
     "prepare": "if [ \"$NODE_ENV\" != \"production\" ]; then husky; fi"
