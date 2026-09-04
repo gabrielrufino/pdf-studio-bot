@@ -20,6 +20,7 @@ All code in this repository MUST follow the conventions derived from [`@antfu/es
 - **Trailing commas**: Always in multiline constructs (`arrays`, `objects`, `parameters`).
 - **Bracket spacing**: Always space inside objects (`{ foo }`, not `{foo}`).
 - **Brace style**: **Stroustrup** — `else`, `catch`, and `finally` MUST start on a new line after the closing brace `}`.
+- **Trailing spaces**: Never leave trailing spaces at the end of a line.
 
 ```typescript
 if (condition) {

@@ -40,14 +40,12 @@ WORKDIR /app
 # Copy package files and pre-built node_modules from builder.
 # We reuse the builder's node_modules to avoid recompiling native addons
 # (e.g. muhammara) in an environment without build tools (python3/make/g++).
-COPY package.json pnpm-lock.yaml ./
-COPY --from=builder /app/node_modules ./node_modules
+COPY --chown=pdfbot:nodejs package.json pnpm-lock.yaml ./
+COPY --chown=pdfbot:nodejs --from=builder /app/node_modules ./node_modules
 
 # Copy built application from builder stage
-COPY --from=builder /app/dist ./dist
+COPY --chown=pdfbot:nodejs --from=builder /app/dist ./dist
 
-# Change ownership to non-root user
-RUN chown -R pdfbot:nodejs /app
 USER pdfbot
 
-ENTRYPOINT ["pnpm", "start"]
+CMD ["node", "dist/index.cjs"]

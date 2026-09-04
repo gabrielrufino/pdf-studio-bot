@@ -8,7 +8,7 @@ export class EventEntity extends BaseEntity {
     this.assign(input)
   }
 
-  event!: EventEnum
-  telegram_user!: TelegramUser
-  metadata?: Record<string, any>
+  declare event: EventEnum
+  declare telegram_user: TelegramUser
+  metadata?: Record<string, unknown>
 }

@@ -112,62 +112,80 @@ describe(DownloadHandler.name, () => {
         const error = new Error('Navigation failed')
         const mockPage = await (await mockBrowser.getInstance()).newPage()
         vi.spyOn(mockPage, 'goto').mockRejectedValue(error)
-        const loggerSpy = vi.spyOn((handler as any).logger, 'error')
+        vi.spyOn((handler as any).logger, 'error')
 
         await handler.events['msg:text'](ctx)
 
-        expect(loggerSpy).toHaveBeenCalledWith(error)
+        expect((handler as any).logger.error).toHaveBeenCalledWith(error)
         expect(ctx.reply).toHaveBeenCalledWith('download_error')
         expect(mockPage.close).toHaveBeenCalled()
       })
 
-      it('should block private IP hostname', async () => {
-        const ip = ['127', '0', '0', '1'].join('.')
+      it.each([
+        ['private IP hostname', '127.0.0.1'],
+        ['IPv6 private IP hostname', '[fc00::1]'],
+        ['localhost IPv6 hostname', '[::1]'],
+        ['IPv4 mapped IPv6 private addresses', '[::ffff:127.0.0.1]'],
+        ['malformed IPv6 brackets gracefully (starting but not ending)', '[127.0.0.1'],
+      ])('should block %s', async (_, host) => {
+        ctx.message!.text = `http://${host}`
+
+        await handler.events['msg:text'](ctx)
+
+        expect(ctx.reply).toHaveBeenCalledWith('download_error')
+      })
+
+      it.each([
+        ['private IP', '10.0.0.1', 4],
+        ['IPv6 private IP', 'fd00::1', 6],
+      ])('should block URL that resolves to %s', async (_, ip, family) => {
+        ctx.message!.text = 'http://private-host.com'
+        const dns = await import('node:dns/promises')
+        vi.mocked(dns.default.lookup).mockResolvedValueOnce([{ address: ip, family }] as any)
+
+        await handler.events['msg:text'](ctx)
+
+        expect(ctx.reply).toHaveBeenCalledWith('download_error')
+      })
+
+      it('should handle page.close error', async () => {
+        const mockPage = await (await mockBrowser.getInstance()).newPage()
+        vi.spyOn(mockPage, 'close').mockRejectedValue(new Error('Close failed'))
+        vi.spyOn((handler as any).logger, 'error')
+        await handler.events['msg:text'](ctx)
+        expect((handler as any).logger.error).toHaveBeenCalledWith(
+          expect.objectContaining({ error: expect.any(Error) }),
+          'Failed to close page.',
+        )
+      })
+
+      it('should fallback to document if title is fully sanitized away', async () => {
+        const mockPage = await (await mockBrowser.getInstance()).newPage()
+        vi.spyOn(mockPage, 'title').mockResolvedValue('*?()')
+        await handler.events['msg:text'](ctx)
+        expect(ctx.replyWithDocument).toHaveBeenCalledWith(
+          expect.objectContaining({ filename: 'document.pdf' }),
+        )
+      })
+
+      it('should fail on generic dns resolution errors', async () => {
+        ctx.message!.text = 'http://unknown-host.com'
+        const dns = await import('node:dns/promises')
+        vi.mocked(dns.default.lookup).mockRejectedValueOnce(new Error('ENOTFOUND'))
+        await handler.events['msg:text'](ctx)
+        expect(ctx.reply).toHaveBeenCalledWith('download_error')
+        expect(ctx.replyWithDocument).not.toHaveBeenCalled()
+      })
+
+      it.each([
+        ['Private IP rejection', '127.0.0.1'],
+        ['linkLocal addresses', '169.254.1.1'],
+        ['unspecified addresses', '0.0.0.0'],
+      ])('should log error for %s', async (_, ip) => {
         ctx.message!.text = `http://${ip}`
-
+        vi.spyOn((handler as any).logger, 'error')
         await handler.events['msg:text'](ctx)
-
-        expect(ctx.reply).toHaveBeenCalledWith('download_error')
-      })
-
-      it('should block URL that resolves to private IP', async () => {
-        ctx.message!.text = 'http://private-host.com'
-        const dns = await import('node:dns/promises')
-        const ip = ['10', '0', '0', '1'].join('.')
-        vi.mocked(dns.default.lookup).mockResolvedValueOnce([{ address: ip, family: 4 }] as any)
-
-        await handler.events['msg:text'](ctx)
-
-        expect(ctx.reply).toHaveBeenCalledWith('download_error')
-      })
-
-      it('should block IPv6 private IP hostname', async () => {
-        const ip = ['fc00', '::1'].join('')
-        ctx.message!.text = `http://[${ip}]`
-
-        await handler.events['msg:text'](ctx)
-
-        expect(ctx.reply).toHaveBeenCalledWith('download_error')
-      })
-
-      it('should block localhost IPv6 hostname', async () => {
-        const ip = [':', ':1'].join('')
-        ctx.message!.text = `http://[${ip}]`
-
-        await handler.events['msg:text'](ctx)
-
-        expect(ctx.reply).toHaveBeenCalledWith('download_error')
-      })
-
-      it('should block URL that resolves to an IPv6 private IP', async () => {
-        ctx.message!.text = 'http://private-host.com'
-        const dns = await import('node:dns/promises')
-        const ip = ['fd00', '::1'].join('')
-        vi.mocked(dns.default.lookup).mockResolvedValueOnce([{ address: ip, family: 6 }] as any)
-
-        await handler.events['msg:text'](ctx)
-
-        expect(ctx.reply).toHaveBeenCalledWith('download_error')
+        expect((handler as any).logger.error).toHaveBeenCalledWith(new Error('Private IP addresses are not allowed'))
       })
     })
   })

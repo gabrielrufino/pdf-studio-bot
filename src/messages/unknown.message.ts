@@ -1,4 +1,4 @@
-import type { Message } from '../interfaces/message'
+import type { Message } from '../interfaces/message.interface'
 import type { CustomContext } from '../types/custom-context.type'
 
 export class UnknownMessage implements Message {

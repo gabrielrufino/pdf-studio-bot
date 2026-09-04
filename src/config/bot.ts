@@ -1,5 +1,5 @@
 import type { ISession } from '@grammyjs/storage-mongodb'
-import type { SessionData } from '../interfaces/session-data'
+import type { SessionData } from '../interfaces/session-data.interface'
 import type { CustomContext } from '../types/custom-context.type'
 import process from 'node:process'
 import { hydrateFiles } from '@grammyjs/files'

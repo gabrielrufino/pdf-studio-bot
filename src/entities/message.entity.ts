@@ -8,7 +8,7 @@ export class MessageEntity extends BaseEntity {
     this.assign(input)
   }
 
-  telegram_user!: TelegramUser
+  declare telegram_user: TelegramUser
 
   text: string = ''
 }

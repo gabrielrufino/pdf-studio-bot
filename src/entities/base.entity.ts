@@ -1,13 +1,13 @@
 import type { ObjectId } from 'mongodb'
 
 export abstract class BaseEntity {
-  _id!: ObjectId
+  declare _id: ObjectId
 
   created_at: Date = new Date()
 
   updated_at: Date = new Date()
 
-  protected assign(input?: any) {
+  protected assign(input?: Record<string, unknown>) {
     Object.assign(this, input)
   }
 }
