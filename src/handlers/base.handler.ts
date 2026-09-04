@@ -19,7 +19,7 @@ export abstract class BaseHandler {
 
   protected readonly logger = logger
 
-  protected validateParams<T>(schema: z.ZodSchema<T>, params: any): T {
+  protected validateParams<T>(schema: z.ZodSchema<T>, params: unknown): T {
     const result = schema.safeParse(params)
 
     if (!result.success) {

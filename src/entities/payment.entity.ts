@@ -8,9 +8,9 @@ export class PaymentEntity extends BaseEntity {
     this.assign(input)
   }
 
-  user_id!: ObjectId
+  declare user_id: ObjectId
 
-  amount!: number
+  declare amount: number
 
-  currency!: CurrencyEnum
+  declare currency: CurrencyEnum
 }
