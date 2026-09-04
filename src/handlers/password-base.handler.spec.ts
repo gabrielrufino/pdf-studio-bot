@@ -63,6 +63,7 @@ describe(PasswordBaseHandler.name, () => {
   describe('onCommand', () => {
     it('should set session command and ask for file', async () => {
       await handler.onCommand(ctx)
+      expect(ctx.session.command).toBe(handler.command)
       expect(ctx.reply).toHaveBeenCalledWith('test_send_file')
       expect(ctx.session.params).toEqual({ path: null })
     })
@@ -121,20 +122,32 @@ describe(PasswordBaseHandler.name, () => {
         expect(ctx.reply).toHaveBeenCalledWith('test_error')
       })
 
-      it('should handle outputDir fs.rm error silently in finally block', async () => {
+      it.each([
+        [
+          'outputDir fs.rm',
+          '/tmp/pdf-studio-bot-test-',
+          'Failed to remove temporary directory.',
+        ],
+        [
+          'input fs.rm',
+          '/tmp/input.pdf',
+          'Failed to remove temporary input file.',
+        ],
+      ])('should handle %s error silently', async (_, failPath, expectedLogMessage) => {
         ctx.session.params = { path: '/tmp/input.pdf' }
         Object.defineProperty(ctx, 'message', { value: { text: 'mypassword' }, writable: true })
 
         vi.spyOn(fs, 'rm').mockImplementation(async (path: any) => {
-          if (path === '/tmp/pdf-studio-bot-test-')
+          if (path === failPath)
             throw new Error('rm error')
         })
 
         const loggerSpy = vi.spyOn((handler as any).logger, 'error')
         await handler.events['msg:text'](ctx)
+        
         expect(loggerSpy).toHaveBeenCalledWith(
           expect.objectContaining({ error: expect.any(Error) }),
-          'Failed to remove temporary directory.',
+          expectedLogMessage,
         )
       })
 
@@ -145,22 +158,6 @@ describe(PasswordBaseHandler.name, () => {
         const loggerSpy = vi.spyOn((handler as any).logger, 'error')
         await handler.events['msg:text'](ctx)
         expect(loggerSpy).toHaveBeenCalledWith(expect.any(Error), 'Failed to delete message.')
-        expect(ctx.replyWithDocument).toHaveBeenCalled()
-      })
-
-      it('should handle input fs.rm error silently', async () => {
-        ctx.session.params = { path: '/tmp/input.pdf' }
-        Object.defineProperty(ctx, 'message', { value: { text: 'mypassword' }, writable: true })
-        vi.spyOn(fs, 'rm').mockImplementation(async (path: any) => {
-          if (path === '/tmp/input.pdf')
-            throw new Error('rm input error')
-        })
-        const loggerSpy = vi.spyOn((handler as any).logger, 'error')
-        await handler.events['msg:text'](ctx)
-        expect(loggerSpy).toHaveBeenCalledWith(
-          expect.objectContaining({ error: expect.any(Error) }),
-          'Failed to remove temporary input file.',
-        )
         expect(ctx.replyWithDocument).toHaveBeenCalled()
       })
     })

@@ -103,19 +103,11 @@ export class DownloadHandler extends BaseHandler {
       throw new Error('Private IP addresses are not allowed')
     }
 
-    try {
-      const addresses = await dns.lookup(hostname, { all: true })
-      for (const { address } of addresses) {
-        if (this.isPrivateIP(address)) {
-          throw new Error('URL resolves to a private IP address')
-        }
+    const addresses = await dns.lookup(hostname, { all: true })
+    for (const { address } of addresses) {
+      if (this.isPrivateIP(address)) {
+        throw new Error('URL resolves to a private IP address')
       }
-    }
-    catch (error: unknown) {
-      if (error instanceof Error && error.message === 'URL resolves to a private IP address') {
-        throw error
-      }
-      // Ignore resolution errors, as they'll be handled by Puppeteer
     }
   }
 
