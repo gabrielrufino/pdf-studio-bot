@@ -22,18 +22,24 @@ export function initReengagementJob() {
 
         try {
           await bot.api.sendMessage(user.telegram_user.id, message, { parse_mode: 'HTML' })
-
-          // Sleep for 50ms to respect rate limits (max 30 messages per second)
-          await setTimeout(50)
         }
         catch (error: any) {
           if (error?.error_code === 403 || error?.message?.includes('bot was blocked by the user')) {
             logger.info({ userId: user.telegram_user.id }, 'User blocked the bot, marking as inactive for re-engagement')
-            await userRepository.updateById(user._id, { is_bot_blocked: true })
+            try {
+              await userRepository.updateById(user._id, { is_bot_blocked: true })
+            }
+            catch (dbError) {
+              logger.error({ dbError, userId: user.telegram_user.id }, 'Failed to update is_bot_blocked status')
+            }
           }
           else {
             logger.error({ error, userId: user.telegram_user.id }, 'Failed to send re-engagement message')
           }
+        }
+        finally {
+          // Sleep for 50ms to respect rate limits (max 30 messages per second)
+          await setTimeout(50)
         }
       }
       logger.info('Re-engagement job finished')
