@@ -13,6 +13,8 @@ export class UserEntity extends BaseEntity {
 
   is_blocked: boolean = false
 
+  is_bot_blocked: boolean = false
+
   plan_type?: PlanTypeEnum = PlanTypeEnum.Free
 
   plan_started_at?: Date | null = new Date()

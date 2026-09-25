@@ -33,7 +33,14 @@ async function main() {
     bot.command(
       handler.command,
       usageLimitMiddleware(handler),
-      handler.onCommand.bind(handler),
+      async (ctx) => {
+        try {
+          await handler.onCommand(ctx)
+        }
+        catch (error) {
+          await handleHandlerError(ctx, error)
+        }
+      },
     )
   }
 

@@ -35,6 +35,7 @@ describe(UserRepository.name, () => {
       _id: expect.any(ObjectId),
       telegram_user: { id: 1, is_bot: false, first_name: 'Test' },
       is_blocked: false,
+      is_bot_blocked: false,
       plan_type: PlanTypeEnum.Free,
       plan_started_at: expect.any(Date),
       daily_usage_count: 0,

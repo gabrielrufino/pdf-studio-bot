@@ -2,6 +2,7 @@ import type { NextFunction } from 'grammy'
 import type { BaseHandler } from '../handlers/base.handler'
 import type { CustomContext } from '../types/custom-context.type'
 import { UserEntity } from '../entities/user.entity'
+import { LanguageEnum } from '../enums/language.enum'
 import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { userRepository } from '../repositories'
 
@@ -24,6 +25,7 @@ export function usageLimitMiddleware(handler: BaseHandler) {
     if (!user) {
       user = await userRepository.create(new UserEntity({
         telegram_user: ctx.from!,
+        language: ctx.session?.language || LanguageEnum.English,
       }))
     }
     else if (user.plan_type === PlanTypeEnum.Pro && user.plan_started_at) {

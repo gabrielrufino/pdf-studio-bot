@@ -4,6 +4,7 @@ import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import { join } from 'node:path'
+import { setTimeout } from 'node:timers/promises'
 import { InputFile } from 'grammy'
 import { pdf } from 'pdf-to-img'
 import { CommandEnum } from '../enums/command.enum'
@@ -89,6 +90,10 @@ export class PdfToImagesHandler extends BaseHandler {
             await ctx.replyWithPhoto(new InputFile(chunk[0], `page-${currentPage}.png`), {
               caption: `🖼️ Page ${currentPage} of ${totalPages}`,
             })
+          }
+
+          if (i + CHUNK_SIZE < images.length) {
+            await setTimeout(1000)
           }
         }
 
