@@ -18,6 +18,34 @@ export class PdfToImagesHandler extends BaseHandler {
     super()
   }
 
+  private async sendImageChunks(ctx: CustomContext, images: string[], totalPages: number) {
+    const CHUNK_SIZE = 10
+    for (let i = 0; i < images.length; i += CHUNK_SIZE) {
+      const chunk = images.slice(i, i + CHUNK_SIZE)
+      if (chunk.length > 1) {
+        const mediaGroup: InputMediaPhoto[] = chunk.map((imagePath, index) => {
+          const currentPage = i + index + 1
+          return {
+            type: 'photo',
+            media: new InputFile(imagePath, `page-${currentPage}.png`),
+            caption: index === 0 ? `🖼️ Pages ${i + 1}-${i + chunk.length} of ${totalPages}` : undefined,
+          }
+        })
+        await ctx.api.sendMediaGroup(ctx.chat!.id, mediaGroup)
+      }
+      else {
+        const currentPage = i + 1
+        await ctx.replyWithPhoto(new InputFile(chunk[0], `page-${currentPage}.png`), {
+          caption: `🖼️ Page ${currentPage} of ${totalPages}`,
+        })
+      }
+
+      if (i + CHUNK_SIZE < images.length) {
+        await setTimeout(1000)
+      }
+    }
+  }
+
   readonly command = CommandEnum.PdfToImages
   readonly description = '🖼️ Convert PDF pages to images'
   readonly events = {
@@ -71,31 +99,7 @@ export class PdfToImagesHandler extends BaseHandler {
           throw failedWrite.reason
         }
 
-        const CHUNK_SIZE = 10
-        for (let i = 0; i < images.length; i += CHUNK_SIZE) {
-          const chunk = images.slice(i, i + CHUNK_SIZE)
-          if (chunk.length > 1) {
-            const mediaGroup: InputMediaPhoto[] = chunk.map((imagePath, index) => {
-              const currentPage = i + index + 1
-              return {
-                type: 'photo',
-                media: new InputFile(imagePath, `page-${currentPage}.png`),
-                caption: index === 0 ? `🖼️ Pages ${i + 1}-${i + chunk.length} of ${totalPages}` : undefined,
-              }
-            })
-            await ctx.api.sendMediaGroup(ctx.chat!.id, mediaGroup)
-          }
-          else {
-            const currentPage = i + 1
-            await ctx.replyWithPhoto(new InputFile(chunk[0], `page-${currentPage}.png`), {
-              caption: `🖼️ Page ${currentPage} of ${totalPages}`,
-            })
-          }
-
-          if (i + CHUNK_SIZE < images.length) {
-            await setTimeout(1000)
-          }
-        }
+        await this.sendImageChunks(ctx, images, totalPages)
 
         await this.userRepository.incrementUsage(ctx.from!.id)
       }
