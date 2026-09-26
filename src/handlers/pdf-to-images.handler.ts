@@ -4,6 +4,7 @@ import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import { join } from 'node:path'
+import { setTimeout } from 'node:timers/promises'
 import { InputFile } from 'grammy'
 import { pdf } from 'pdf-to-img'
 import { CommandEnum } from '../enums/command.enum'
@@ -15,6 +16,34 @@ import { BaseHandler } from './base.handler'
 export class PdfToImagesHandler extends BaseHandler {
   constructor(private readonly userRepository: UserRepository) {
     super()
+  }
+
+  private async sendImageChunks(ctx: CustomContext, images: string[], totalPages: number) {
+    const CHUNK_SIZE = 10
+    for (let i = 0; i < images.length; i += CHUNK_SIZE) {
+      const chunk = images.slice(i, i + CHUNK_SIZE)
+      if (chunk.length > 1) {
+        const mediaGroup: InputMediaPhoto[] = chunk.map((imagePath, index) => {
+          const currentPage = i + index + 1
+          return {
+            type: 'photo',
+            media: new InputFile(imagePath, `page-${currentPage}.png`),
+            caption: index === 0 ? `🖼️ Pages ${i + 1}-${i + chunk.length} of ${totalPages}` : undefined,
+          }
+        })
+        await ctx.api.sendMediaGroup(ctx.chat!.id, mediaGroup)
+      }
+      else {
+        const currentPage = i + 1
+        await ctx.replyWithPhoto(new InputFile(chunk[0], `page-${currentPage}.png`), {
+          caption: `🖼️ Page ${currentPage} of ${totalPages}`,
+        })
+      }
+
+      if (i + CHUNK_SIZE < images.length) {
+        await setTimeout(1000)
+      }
+    }
   }
 
   readonly command = CommandEnum.PdfToImages
@@ -70,27 +99,7 @@ export class PdfToImagesHandler extends BaseHandler {
           throw failedWrite.reason
         }
 
-        const CHUNK_SIZE = 10
-        for (let i = 0; i < images.length; i += CHUNK_SIZE) {
-          const chunk = images.slice(i, i + CHUNK_SIZE)
-          if (chunk.length > 1) {
-            const mediaGroup: InputMediaPhoto[] = chunk.map((imagePath, index) => {
-              const currentPage = i + index + 1
-              return {
-                type: 'photo',
-                media: new InputFile(imagePath, `page-${currentPage}.png`),
-                caption: index === 0 ? `🖼️ Pages ${i + 1}-${i + chunk.length} of ${totalPages}` : undefined,
-              }
-            })
-            await ctx.api.sendMediaGroup(ctx.chat!.id, mediaGroup)
-          }
-          else {
-            const currentPage = i + 1
-            await ctx.replyWithPhoto(new InputFile(chunk[0], `page-${currentPage}.png`), {
-              caption: `🖼️ Page ${currentPage} of ${totalPages}`,
-            })
-          }
-        }
+        await this.sendImageChunks(ctx, images, totalPages)
 
         await this.userRepository.incrementUsage(ctx.from!.id)
       }

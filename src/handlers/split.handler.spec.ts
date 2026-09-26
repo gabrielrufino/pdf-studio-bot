@@ -7,6 +7,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CommandEnum } from '../enums/command.enum'
 import { SplitHandler } from './split.handler'
 
+vi.mock('node:timers/promises', () => ({
+  setTimeout: vi.fn().mockResolvedValue(undefined),
+}))
+
 describe(SplitHandler.name, () => {
   let handler: SplitHandler
   let mockUserRepository: UserRepository

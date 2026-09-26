@@ -3,6 +3,7 @@ import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import { join } from 'node:path'
+import { setTimeout } from 'node:timers/promises'
 import { InputFile } from 'grammy'
 import muhammara from 'muhammara'
 import { CommandEnum } from '../enums/command.enum'
@@ -71,6 +72,10 @@ export class SplitHandler extends BaseHandler {
           await ctx.replyWithDocument(pageFile, {
             caption: `📄 Page ${pageNumber} of ${pagesCount}`,
           })
+
+          if (index < outputFiles.length - 1) {
+            await setTimeout(1000)
+          }
         }
 
         await this.userRepository.incrementUsage(ctx.from!.id)

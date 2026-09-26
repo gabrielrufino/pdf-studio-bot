@@ -21,6 +21,9 @@ export class UserRepository extends BaseRepository<UserEntity> {
             is_blocked: {
               bsonType: 'bool',
             },
+            is_bot_blocked: {
+              bsonType: 'bool',
+            },
             plan_type: {
               bsonType: 'string',
               enum: Object.values(PlanTypeEnum),
@@ -66,6 +69,7 @@ export class UserRepository extends BaseRepository<UserEntity> {
       {
         $match: {
           is_blocked: { $ne: true },
+          is_bot_blocked: { $ne: true },
         },
       },
       {
