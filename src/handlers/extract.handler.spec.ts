@@ -17,7 +17,7 @@ describe(ExtractHandler.name, () => {
     vi.restoreAllMocks()
     mockUserRepository = {
       findByTelegramId: vi.fn().mockResolvedValue({ plan_type: 'free' }),
-      incrementUsage: vi.fn(),
+      incrementUsage: vi.fn().mockResolvedValue({}),
     } as unknown as UserRepository
     handler = new ExtractHandler(mockUserRepository)
     ctx = {
@@ -137,7 +137,7 @@ describe(ExtractHandler.name, () => {
             expect.objectContaining({ filename: 'extracted-1-3.pdf' }),
             { caption: 'extract_success' },
           )
-          expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
+          expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123, 3)
 
           spyWriter.mockRestore()
         }

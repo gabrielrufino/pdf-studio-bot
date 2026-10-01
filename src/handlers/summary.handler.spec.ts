@@ -27,7 +27,7 @@ const mockAi = {
 describe(SummaryHandler.name, () => {
   const mockUserRepository = {
     findByTelegramId: vi.fn(),
-    incrementUsage: vi.fn(),
+    incrementUsage: vi.fn().mockResolvedValue({}),
   } as unknown as UserRepository
 
   const handler = new SummaryHandler(mockUserRepository, mockAi)
@@ -118,7 +118,7 @@ describe(SummaryHandler.name, () => {
 
           await handler.events['msg:document'](ctx)
 
-          expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
+          expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123, 3)
 
           // Since page-1.pdf has 10 pages and <10MB, it should pass limits.
           expect(ctx.reply).toHaveBeenCalledWith('summary_summarizing')

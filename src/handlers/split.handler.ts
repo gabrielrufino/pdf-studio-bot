@@ -78,7 +78,7 @@ export class SplitHandler extends BaseHandler {
           }
         }
 
-        await this.userRepository.incrementUsage(ctx.from!.id)
+        await this.incrementUsage(ctx, this.userRepository)
       }
       catch (error) {
         if (error instanceof InvalidFileError || error instanceof LimitExceededError) {

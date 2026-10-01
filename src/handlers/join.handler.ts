@@ -101,7 +101,7 @@ export class JoinHandler extends BaseHandler {
       await ctx.replyWithDocument(new InputFile(outputPath, 'merged.pdf'), {
         caption: ctx.t('join_success'),
       })
-      await this.userRepository.incrementUsage(ctx.from!.id)
+      await this.incrementUsage(ctx, this.userRepository)
     }
     catch (error) {
       this.logger.error(error)

@@ -1,7 +1,8 @@
+import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { MAX_FILE_SIZE, MAX_PAGES, MAX_PRO_FILE_SIZE, MAX_PRO_PAGES } from '../config/constants'
+import { DAILY_LIMITS, MAX_FILE_SIZE, MAX_PAGES, MAX_PRO_FILE_SIZE, MAX_PRO_PAGES } from '../config/constants'
 import { CommandEnum } from '../enums/command.enum'
 import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { InvalidFileError } from '../errors/invalid-file.error'
@@ -34,6 +35,10 @@ describe(BaseHandler.name, () => {
 
     public async checkLimits(ctx: CustomContext, options: { fileSize?: number, pagesCount?: number }) {
       await super.checkLimits(ctx, options)
+    }
+
+    public async incrementUsage(ctx: CustomContext, userRepository: UserRepository) {
+      return super.incrementUsage(ctx, userRepository)
     }
   }
 
@@ -306,5 +311,72 @@ describe(BaseHandler.name, () => {
   it('should have usage limits enabled by default', () => {
     const handler = new TestHandler()
     expect(handler.hasUsageLimits).toBe(true)
+  })
+
+  describe('incrementUsage', () => {
+    it('should return false if ctx.from is undefined', async () => {
+      const handler = new TestHandler()
+      const ctx = {
+        user: { plan_type: PlanTypeEnum.Free },
+      } as unknown as CustomContext
+      const mockUserRepository = {
+        incrementUsage: vi.fn(),
+      } as unknown as UserRepository
+
+      const result = await handler.incrementUsage(ctx, mockUserRepository)
+      expect(result).toBe(false)
+      expect(mockUserRepository.incrementUsage).not.toHaveBeenCalled()
+    })
+
+    it('should call incrementUsage with free limit and update ctx.user on success for free/undefined plan', async () => {
+      const handler = new TestHandler()
+      const ctx = {
+        from: { id: 123 },
+        user: null,
+      } as unknown as CustomContext
+      const mockUserResult = { id: 123, daily_usage_count: 1, plan_type: PlanTypeEnum.Free }
+      const mockUserRepository = {
+        incrementUsage: vi.fn().mockResolvedValue(mockUserResult),
+      } as unknown as UserRepository
+
+      const result = await handler.incrementUsage(ctx, mockUserRepository)
+      expect(result).toBe(true)
+      expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123, DAILY_LIMITS[PlanTypeEnum.Free])
+      expect(ctx.user).toBe(mockUserResult)
+    })
+
+    it('should call incrementUsage with pro limit and update ctx.user on success for pro plan', async () => {
+      const handler = new TestHandler()
+      const ctx = {
+        from: { id: 123 },
+        user: { plan_type: PlanTypeEnum.Pro },
+      } as unknown as CustomContext
+      const mockUserResult = { id: 123, daily_usage_count: 1, plan_type: PlanTypeEnum.Pro }
+      const mockUserRepository = {
+        incrementUsage: vi.fn().mockResolvedValue(mockUserResult),
+      } as unknown as UserRepository
+
+      const result = await handler.incrementUsage(ctx, mockUserRepository)
+      expect(result).toBe(true)
+      expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123, DAILY_LIMITS[PlanTypeEnum.Pro])
+      expect(ctx.user).toBe(mockUserResult)
+    })
+
+    it('should notify limit exceeded and return false if repository returns null', async () => {
+      const handler = new TestHandler()
+      const ctx = {
+        t: (key: string) => key,
+        from: { id: 123 },
+        user: { plan_type: PlanTypeEnum.Free },
+        reply: vi.fn(),
+      } as unknown as CustomContext
+      const mockUserRepository = {
+        incrementUsage: vi.fn().mockResolvedValue(null),
+      } as unknown as UserRepository
+
+      const result = await handler.incrementUsage(ctx, mockUserRepository)
+      expect(result).toBe(false)
+      expect(ctx.reply).toHaveBeenCalledWith('free_limit_reached')
+    })
   })
 })

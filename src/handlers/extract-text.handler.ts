@@ -61,7 +61,7 @@ export class ExtractTextHandler extends BaseHandler {
           caption: ctx.t('extracttext_success'),
         })
 
-        await this.userRepository.incrementUsage(ctx.from!.id)
+        await this.incrementUsage(ctx, this.userRepository)
       }
       catch (error) {
         if (error instanceof InvalidFileError || error instanceof LimitExceededError) {
