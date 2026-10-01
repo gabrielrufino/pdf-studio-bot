@@ -37,6 +37,8 @@ describe(DownloadHandler.name, () => {
     mockBrowser = {
       getInstance: vi.fn().mockResolvedValue({
         newPage: vi.fn().mockResolvedValue({
+          setRequestInterception: vi.fn().mockResolvedValue(undefined),
+          on: vi.fn(),
           goto: vi.fn().mockResolvedValue({}),
           pdf: vi.fn().mockResolvedValue(Buffer.from('test pdf content')),
           title: vi.fn().mockResolvedValue('test title'),
@@ -47,7 +49,7 @@ describe(DownloadHandler.name, () => {
     } as unknown as Browser
 
     mockUserRepository = {
-      incrementUsage: vi.fn(),
+      incrementUsage: vi.fn().mockResolvedValue({}),
     } as unknown as UserRepository
 
     handler = new DownloadHandler(mockBrowser, mockUserRepository)
@@ -80,7 +82,7 @@ describe(DownloadHandler.name, () => {
 
         expect(mockBrowser.getInstance).toHaveBeenCalled()
         expect(ctx.replyWithDocument).toHaveBeenCalled()
-        expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
+        expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123, 3)
         expect(ctx.session.command).toBeNull()
         expect(ctx.session.params).toBeNull()
       })
@@ -95,6 +97,14 @@ describe(DownloadHandler.name, () => {
 
       it('should reply with error if URL is invalid (doesn\'t start with http)', async () => {
         ctx.message!.text = 'file:///etc/passwd'
+
+        await handler.events['msg:text'](ctx)
+
+        expect(ctx.reply).toHaveBeenCalledWith('download_error')
+      })
+
+      it('should reply with error if URL causes TypeError in new URL constructor (e.g. http://)', async () => {
+        ctx.message!.text = 'http://'
 
         await handler.events['msg:text'](ctx)
 
@@ -186,6 +196,71 @@ describe(DownloadHandler.name, () => {
         vi.spyOn((handler as any).logger, 'error')
         await handler.events['msg:text'](ctx)
         expect((handler as any).logger.error).toHaveBeenCalledWith(new Error('Private IP addresses are not allowed'))
+      })
+
+      it('should block private/local IPs and allow public IPs during request interception', async () => {
+        let requestHandler: ((req: any) => void) | undefined
+        const mockPage = await (await mockBrowser.getInstance()).newPage()
+        vi.spyOn(mockPage, 'on').mockImplementation((event: any, callback: any) => {
+          if (event === 'request') {
+            requestHandler = callback
+          }
+          return mockPage
+        })
+
+        await handler.events['msg:text'](ctx)
+
+        expect(requestHandler).toBeDefined()
+        if (requestHandler) {
+          // Case 1: Private IP hostname
+          const mockAbort = vi.fn().mockResolvedValue(undefined)
+          const mockContinue = vi.fn().mockResolvedValue(undefined)
+          const mockRequestPrivate = {
+            url: () => 'http://127.0.0.1/logo.png',
+            abort: mockAbort,
+            continue: mockContinue,
+          }
+          requestHandler(mockRequestPrivate)
+          expect(mockAbort).toHaveBeenCalledWith('aborted')
+          expect(mockContinue).not.toHaveBeenCalled()
+
+          // Case 2: Public IP hostname but resolves to private IP
+          const mockAbortDns = vi.fn().mockResolvedValue(undefined)
+          const mockContinueDns = vi.fn().mockResolvedValue(undefined)
+          const mockRequestDns = {
+            url: () => 'http://malicious-local.com/logo.png',
+            abort: mockAbortDns,
+            continue: mockContinueDns,
+          }
+          const dns = await import('node:dns/promises')
+          // Mock dns lookup to return a private IP
+          vi.mocked(dns.default.lookup).mockResolvedValueOnce([{ address: '10.0.0.1', family: 4 }] as any)
+
+          requestHandler(mockRequestDns)
+          // Wait for microtasks
+          await new Promise(resolve => setTimeout(resolve, 10))
+
+          expect(mockAbortDns).toHaveBeenCalledWith('aborted')
+          expect(mockContinueDns).not.toHaveBeenCalled()
+
+          // Case 3: Safe public IP
+          const mockAbortSafe = vi.fn().mockResolvedValue(undefined)
+          const mockContinueSafe = vi.fn().mockResolvedValue(undefined)
+          const mockRequestSafe = {
+            url: () => 'http://safe-public.com/logo.png',
+            abort: mockAbortSafe,
+            continue: mockContinueSafe,
+          }
+          // Mock dns lookup to return a public IP
+          vi.mocked(dns.default.lookup).mockResolvedValueOnce([{ address: '8.8.8.8', family: 4 }] as any)
+
+          requestHandler(mockRequestSafe)
+          // Wait for microtasks
+          await new Promise(resolve => setTimeout(resolve, 10))
+
+          expect(mockAbortSafe).not.toHaveBeenCalled()
+          expect(mockContinueSafe).toHaveBeenCalled()
+        }
       })
     })
   })

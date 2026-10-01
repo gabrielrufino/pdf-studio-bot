@@ -37,20 +37,60 @@ export class DownloadHandler extends BaseHandler {
       let page: Page | undefined
 
       try {
-        const urlSchema = z.url()
+        const urlSchema = z.string().url().refine((val) => {
+          try {
+            const url = new URL(val)
+            return ['http:', 'https:'].includes(url.protocol)
+          }
+          catch {
+            return false
+          }
+        })
         const parseResult = urlSchema.safeParse(ctx.message?.text)
-        if (!parseResult.success || !['http:', 'https:'].includes(new URL(parseResult.data).protocol)) {
+        if (!parseResult.success) {
           throw new SessionValidationError()
         }
 
         const params = this.validateParams(DownloadParamsSchema, ctx.session.params)
-        const url = ctx.message?.text
+        const url = parseResult.data
 
-        await this.validateUrl(url!)
+        await this.validateUrl(url)
 
         const browserInstance = await this.browser.getInstance()
         page = await browserInstance.newPage()
-        await page.goto(url!, {
+
+        await page.setRequestInterception(true)
+        page.on('request', (request) => {
+          const reqUrl = request.url()
+          try {
+            const parsed = new URL(reqUrl)
+            const hostname = parsed.hostname
+
+            if (this.isPrivateIP(hostname)) {
+              request.abort('aborted').catch(() => {})
+              return
+            }
+
+            dns.lookup(hostname, { all: true })
+              .then((addresses) => {
+                const hasPrivateIp = addresses.some(({ address }) => this.isPrivateIP(address))
+                if (hasPrivateIp) {
+                  request.abort('aborted').catch(() => {})
+                }
+                else {
+                  request.continue().catch(() => {})
+                }
+              })
+              .catch(() => {
+                request.abort('aborted').catch(() => {})
+              })
+          }
+          catch {
+            request.abort('aborted').catch(() => {})
+          }
+        })
+
+        await page.goto(url, {
           waitUntil: 'networkidle0',
         })
 
@@ -73,7 +113,7 @@ export class DownloadHandler extends BaseHandler {
         const document = new InputFile(filePath, `${sanitizedTitle}.pdf`)
 
         await ctx.replyWithDocument(document)
-        await this.userRepository.incrementUsage(ctx.from!.id)
+        await this.incrementUsage(ctx, this.userRepository)
       }
       catch (error) {
         this.logger.error(error)

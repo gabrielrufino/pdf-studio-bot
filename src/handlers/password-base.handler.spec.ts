@@ -35,7 +35,7 @@ describe(PasswordBaseHandler.name, () => {
     vi.spyOn(fs, 'writeFile').mockResolvedValue(undefined)
 
     mockUserRepository = {
-      incrementUsage: vi.fn(),
+      incrementUsage: vi.fn().mockResolvedValue({}),
     } as unknown as UserRepository
 
     handler = new TestPasswordHandler(mockUserRepository)
@@ -110,7 +110,7 @@ describe(PasswordBaseHandler.name, () => {
         expect(fs.mkdtemp).toHaveBeenCalled()
         expect(fs.chmod).toHaveBeenCalled()
         expect(ctx.replyWithDocument).toHaveBeenCalledWith(expect.any(InputFile), { caption: 'test_success' })
-        expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
+        expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123, 3)
         expect(fs.rm).toHaveBeenCalledWith('/tmp/input.pdf', expect.any(Object))
         expect(fs.rm).toHaveBeenCalledWith('/tmp/pdf-studio-bot-test-', expect.any(Object))
       })

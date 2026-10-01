@@ -120,7 +120,7 @@ export class ExtractHandler extends BaseHandler {
           caption: ctx.t('extract_success'),
         })
 
-        await this.userRepository.incrementUsage(ctx.from!.id)
+        await this.incrementUsage(ctx, this.userRepository)
       }
       catch (error) {
         this.logger.error(error)

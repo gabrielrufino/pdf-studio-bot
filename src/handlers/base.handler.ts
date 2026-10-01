@@ -1,9 +1,10 @@
 import type { FilterQuery } from 'grammy'
 import type { z } from 'zod'
 import type { CommandEnum } from '../enums/command.enum'
+import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
 import fs from 'node:fs/promises'
-import { MAX_FILE_SIZE, MAX_PAGES, MAX_PRO_FILE_SIZE, MAX_PRO_PAGES } from '../config/constants'
+import { DAILY_LIMITS, MAX_FILE_SIZE, MAX_PAGES, MAX_PRO_FILE_SIZE, MAX_PRO_PAGES } from '../config/constants'
 import { logger } from '../config/logger'
 import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { InvalidFileError } from '../errors/invalid-file.error'
@@ -80,6 +81,25 @@ export abstract class BaseHandler {
         throw new LimitExceededError()
       }
     }
+  }
+
+  protected async incrementUsage(ctx: CustomContext, userRepository: UserRepository): Promise<boolean> {
+    const isPro = ctx.user?.plan_type === PlanTypeEnum.Pro
+    const limit = isPro ? DAILY_LIMITS[PlanTypeEnum.Pro] : DAILY_LIMITS[PlanTypeEnum.Free]
+
+    const userId = ctx.from?.id
+    if (!userId) {
+      return false
+    }
+
+    const result = await userRepository.incrementUsage(userId, limit)
+    if (!result) {
+      await this.notifyLimitExceeded(ctx)
+      return false
+    }
+
+    ctx.user = result
+    return true
   }
 
   private async removeTemporaryFiles(ctx: CustomContext) {
