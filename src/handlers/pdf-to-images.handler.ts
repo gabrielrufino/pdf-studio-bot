@@ -56,6 +56,7 @@ export class PdfToImagesHandler extends BaseHandler {
 
       let inputPath: string | undefined
       let outputDir: string | undefined
+      let usageReserved = false
 
       try {
         await this.validatePDF(ctx)
@@ -79,6 +80,11 @@ export class PdfToImagesHandler extends BaseHandler {
 
         await this.checkLimits(ctx, { pagesCount: totalPages })
 
+        usageReserved = await this.incrementUsage(ctx, this.userRepository)
+        if (!usageReserved) {
+          return
+        }
+
         await ctx.reply(ctx.t('pdftoimages_converting'))
 
         outputDir = await fs.mkdtemp(join(os.tmpdir(), 'pdf-studio-bot-pdf-to-images-'))
@@ -100,10 +106,12 @@ export class PdfToImagesHandler extends BaseHandler {
         }
 
         await this.sendImageChunks(ctx, images, totalPages)
-
-        await this.incrementUsage(ctx, this.userRepository)
       }
       catch (error) {
+        if (usageReserved) {
+          await this.decrementUsage(ctx, this.userRepository)
+        }
+
         if (error instanceof InvalidFileError || error instanceof LimitExceededError) {
           return
         }

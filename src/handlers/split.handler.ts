@@ -23,6 +23,7 @@ export class SplitHandler extends BaseHandler {
     'msg:document': async (ctx: CustomContext) => {
       let outputDir: string | undefined
       let inputPath: string | undefined
+      let usageReserved = false
 
       try {
         await this.validatePDF(ctx)
@@ -48,6 +49,11 @@ export class SplitHandler extends BaseHandler {
         const pagesCount = pdfReader.getPagesCount()
 
         await this.checkLimits(ctx, { pagesCount })
+
+        usageReserved = await this.incrementUsage(ctx, this.userRepository)
+        if (!usageReserved) {
+          return
+        }
 
         await ctx.reply(ctx.t('split_splitting'))
 
@@ -77,10 +83,12 @@ export class SplitHandler extends BaseHandler {
             await setTimeout(1000)
           }
         }
-
-        await this.incrementUsage(ctx, this.userRepository)
       }
       catch (error) {
+        if (usageReserved) {
+          await this.decrementUsage(ctx, this.userRepository)
+        }
+
         if (error instanceof InvalidFileError || error instanceof LimitExceededError) {
           return
         }

@@ -22,6 +22,7 @@ describe(SplitHandler.name, () => {
     mockUserRepository = {
       findByTelegramId: vi.fn().mockResolvedValue({ plan_type: 'free' }),
       incrementUsage: vi.fn().mockResolvedValue({}),
+      decrementUsage: vi.fn().mockResolvedValue({}),
     } as unknown as UserRepository
     handler = new SplitHandler(mockUserRepository)
     ctx = { t: (key: string) => key, from: { id: 123 }, user: { plan_type: 'free' }, session: {

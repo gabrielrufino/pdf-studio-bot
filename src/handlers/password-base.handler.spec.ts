@@ -36,6 +36,7 @@ describe(PasswordBaseHandler.name, () => {
 
     mockUserRepository = {
       incrementUsage: vi.fn().mockResolvedValue({}),
+      decrementUsage: vi.fn().mockResolvedValue({}),
     } as unknown as UserRepository
 
     handler = new TestPasswordHandler(mockUserRepository)

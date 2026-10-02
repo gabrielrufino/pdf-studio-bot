@@ -40,6 +40,10 @@ describe(BaseHandler.name, () => {
     public async incrementUsage(ctx: CustomContext, userRepository: UserRepository) {
       return super.incrementUsage(ctx, userRepository)
     }
+
+    public async decrementUsage(ctx: CustomContext, userRepository: UserRepository) {
+      return super.decrementUsage(ctx, userRepository)
+    }
   }
 
   beforeEach(() => {
@@ -377,6 +381,51 @@ describe(BaseHandler.name, () => {
       const result = await handler.incrementUsage(ctx, mockUserRepository)
       expect(result).toBe(false)
       expect(ctx.reply).toHaveBeenCalledWith('free_limit_reached')
+    })
+  })
+
+  describe('decrementUsage', () => {
+    it('should return false if ctx.from is undefined', async () => {
+      const handler = new TestHandler()
+      const ctx = {} as unknown as CustomContext
+      const mockUserRepository = {
+        decrementUsage: vi.fn(),
+      } as unknown as UserRepository
+
+      const result = await handler.decrementUsage(ctx, mockUserRepository)
+      expect(result).toBe(false)
+      expect(mockUserRepository.decrementUsage).not.toHaveBeenCalled()
+    })
+
+    it('should call decrementUsage and update ctx.user on success', async () => {
+      const handler = new TestHandler()
+      const ctx = {
+        from: { id: 123 },
+        user: null,
+      } as unknown as CustomContext
+      const mockUserResult = { id: 123, daily_usage_count: 0, plan_type: PlanTypeEnum.Free }
+      const mockUserRepository = {
+        decrementUsage: vi.fn().mockResolvedValue(mockUserResult),
+      } as unknown as UserRepository
+
+      const result = await handler.decrementUsage(ctx, mockUserRepository)
+      expect(result).toBe(true)
+      expect(mockUserRepository.decrementUsage).toHaveBeenCalledWith(123)
+      expect(ctx.user).toBe(mockUserResult)
+    })
+
+    it('should return false if repository returns null', async () => {
+      const handler = new TestHandler()
+      const ctx = {
+        from: { id: 123 },
+        user: { plan_type: PlanTypeEnum.Free },
+      } as unknown as CustomContext
+      const mockUserRepository = {
+        decrementUsage: vi.fn().mockResolvedValue(null),
+      } as unknown as UserRepository
+
+      const result = await handler.decrementUsage(ctx, mockUserRepository)
+      expect(result).toBe(false)
     })
   })
 })

@@ -49,7 +49,13 @@ export abstract class PasswordBaseHandler extends BaseHandler {
       await ctx.reply(ctx.t(`${this.prefix}_processing`))
 
       let outputDir: string | undefined
+      let usageReserved = false
       try {
+        usageReserved = await this.incrementUsage(ctx, this.userRepository)
+        if (!usageReserved) {
+          return
+        }
+
         outputDir = await fs.mkdtemp(path.join(os.tmpdir(), `pdf-studio-bot-${this.prefix}-`))
         await fs.chmod(outputDir, 0o700)
         const output = path.join(outputDir, 'output.pdf')
@@ -63,13 +69,15 @@ export abstract class PasswordBaseHandler extends BaseHandler {
           caption: ctx.t(`${this.prefix}_success`),
         })
 
-        await this.incrementUsage(ctx, this.userRepository)
         await fs.rm(params.path, { force: true, recursive: true }).catch(error =>
           this.logger.error({ error, path: params.path }, 'Failed to remove temporary input file.'),
         )
         await this.resetSession(ctx)
       }
       catch (error) {
+        if (usageReserved) {
+          await this.decrementUsage(ctx, this.userRepository)
+        }
         this.logger.error(error)
         await ctx.reply(ctx.t(`${this.prefix}_error`))
       }

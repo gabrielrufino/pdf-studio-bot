@@ -127,4 +127,27 @@ export class UserRepository extends BaseRepository<UserEntity> {
 
     return result ? new UserEntity(result as any) : null
   }
+
+  @EnsureInitialized
+  public async decrementUsage(telegramId: number): Promise<UserEntity | null> {
+    const today = new Date().toISOString().split('T')[0]
+
+    const filter: any = {
+      'telegram_user.id': telegramId,
+      'is_blocked': { $ne: true },
+      'last_usage_date': today,
+      'daily_usage_count': { $gt: 0 },
+    }
+
+    const result = await this.collection.findOneAndUpdate(
+      filter,
+      {
+        $inc: { daily_usage_count: -1 },
+        $set: { updated_at: new Date() },
+      },
+      { returnDocument: 'after' },
+    )
+
+    return result ? new UserEntity(result as any) : null
+  }
 }

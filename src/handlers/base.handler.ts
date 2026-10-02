@@ -102,6 +102,21 @@ export abstract class BaseHandler {
     return true
   }
 
+  protected async decrementUsage(ctx: CustomContext, userRepository: UserRepository): Promise<boolean> {
+    const userId = ctx.from?.id
+    if (!userId) {
+      return false
+    }
+
+    const result = await userRepository.decrementUsage(userId)
+    if (!result) {
+      return false
+    }
+
+    ctx.user = result
+    return true
+  }
+
   private async removeTemporaryFiles(ctx: CustomContext) {
     const params = ctx.session.params
 

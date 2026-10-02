@@ -65,6 +65,7 @@ export class ExtractHandler extends BaseHandler {
     'msg:text': async (ctx: CustomContext) => {
       let outputPath: string | undefined
       let inputPath: string | undefined
+      let usageReserved = false
 
       try {
         if (!ctx.user) {
@@ -103,6 +104,11 @@ export class ExtractHandler extends BaseHandler {
           return
         }
 
+        usageReserved = await this.incrementUsage(ctx, this.userRepository)
+        if (!usageReserved) {
+          return
+        }
+
         await ctx.reply(ctx.t('extract_extracting'))
 
         outputPath = join(os.tmpdir(), `extract-${crypto.randomUUID()}.pdf`)
@@ -119,10 +125,11 @@ export class ExtractHandler extends BaseHandler {
         await ctx.replyWithDocument(extractedFile, {
           caption: ctx.t('extract_success'),
         })
-
-        await this.incrementUsage(ctx, this.userRepository)
       }
       catch (error) {
+        if (usageReserved) {
+          await this.decrementUsage(ctx, this.userRepository)
+        }
         this.logger.error(error)
         await ctx.reply(ctx.t('extract_error'))
       }

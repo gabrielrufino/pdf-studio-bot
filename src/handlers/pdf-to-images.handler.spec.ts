@@ -35,6 +35,7 @@ describe(PdfToImagesHandler.name, () => {
 
     mockUserRepository = {
       incrementUsage: vi.fn().mockResolvedValue({}),
+      decrementUsage: vi.fn().mockResolvedValue({}),
       findByTelegramId: vi.fn().mockResolvedValue({ plan_type: PlanTypeEnum.Pro }),
     } as unknown as UserRepository
 
@@ -188,8 +189,9 @@ describe(PdfToImagesHandler.name, () => {
           '/tmp/pdf-studio-bot-pdf-to-images-test',
           expect.objectContaining({ recursive: true }),
         )
-        // Usage must NOT have been incremented
-        expect(mockUserRepository.incrementUsage).not.toHaveBeenCalled()
+        // Usage must have been reserved and then decremented on failure
+        expect(mockUserRepository.incrementUsage).toHaveBeenCalled()
+        expect(mockUserRepository.decrementUsage).toHaveBeenCalled()
       })
 
       it('should not reply with generic error if file is not a PDF (InvalidFileError)', async () => {

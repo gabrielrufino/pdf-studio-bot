@@ -51,6 +51,7 @@ describe(RotateHandler.name, () => {
   beforeEach(() => {
     userRepository = {
       incrementUsage: vi.fn().mockResolvedValue({}),
+      decrementUsage: vi.fn().mockResolvedValue({}),
     } as unknown as UserRepository
 
     handler = new RotateHandler(userRepository)

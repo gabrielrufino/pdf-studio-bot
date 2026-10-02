@@ -35,6 +35,7 @@ export class DownloadHandler extends BaseHandler {
     'msg:text': async (ctx: CustomContext) => {
       let folder: string | undefined
       let page: Page | undefined
+      let usageReserved = false
 
       try {
         const urlSchema = z.string().url().refine((val) => {
@@ -55,6 +56,11 @@ export class DownloadHandler extends BaseHandler {
         const url = parseResult.data
 
         await this.validateUrl(url)
+
+        usageReserved = await this.incrementUsage(ctx, this.userRepository)
+        if (!usageReserved) {
+          return
+        }
 
         const browserInstance = await this.browser.getInstance()
         page = await browserInstance.newPage()
@@ -113,9 +119,11 @@ export class DownloadHandler extends BaseHandler {
         const document = new InputFile(filePath, `${sanitizedTitle}.pdf`)
 
         await ctx.replyWithDocument(document)
-        await this.incrementUsage(ctx, this.userRepository)
       }
       catch (error) {
+        if (usageReserved) {
+          await this.decrementUsage(ctx, this.userRepository)
+        }
         this.logger.error(error)
         await ctx.reply(ctx.t('download_error'))
       }

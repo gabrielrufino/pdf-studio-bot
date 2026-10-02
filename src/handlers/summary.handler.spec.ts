@@ -28,6 +28,7 @@ describe(SummaryHandler.name, () => {
   const mockUserRepository = {
     findByTelegramId: vi.fn(),
     incrementUsage: vi.fn().mockResolvedValue({}),
+    decrementUsage: vi.fn().mockResolvedValue({}),
   } as unknown as UserRepository
 
   const handler = new SummaryHandler(mockUserRepository, mockAi)

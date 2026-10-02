@@ -49,7 +49,10 @@ describe(ExtractTextHandler.name, () => {
   let ctx: any
 
   beforeEach(() => {
-    userRepository = { incrementUsage: vi.fn().mockResolvedValue({}) } as unknown as UserRepository
+    userRepository = {
+      incrementUsage: vi.fn().mockResolvedValue({}),
+      decrementUsage: vi.fn().mockResolvedValue({}),
+    } as unknown as UserRepository
     handler = new ExtractTextHandler(userRepository)
 
     ctx = {

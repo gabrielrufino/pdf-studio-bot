@@ -25,6 +25,7 @@ export class ExtractTextHandler extends BaseHandler {
     'msg:document': async (ctx: CustomContext) => {
       let inputPath: string | undefined
       let outputPath: string | undefined
+      let usageReserved = false
 
       try {
         await this.validatePDF(ctx)
@@ -35,6 +36,11 @@ export class ExtractTextHandler extends BaseHandler {
 
         const fileSize = ctx.message?.document?.file_size ?? 0
         await this.checkLimits(ctx, { fileSize })
+
+        usageReserved = await this.incrementUsage(ctx, this.userRepository)
+        if (!usageReserved) {
+          return
+        }
 
         const file = await ctx.getFile()
         inputPath = await file.download()
@@ -60,10 +66,12 @@ export class ExtractTextHandler extends BaseHandler {
         await ctx.replyWithDocument(extractedFile, {
           caption: ctx.t('extracttext_success'),
         })
-
-        await this.incrementUsage(ctx, this.userRepository)
       }
       catch (error) {
+        if (usageReserved) {
+          await this.decrementUsage(ctx, this.userRepository)
+        }
+
         if (error instanceof InvalidFileError || error instanceof LimitExceededError) {
           return
         }

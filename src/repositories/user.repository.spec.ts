@@ -173,20 +173,20 @@ describe(UserRepository.name, () => {
       const tooOldDateStr = tooOldDate.toISOString().split('T')[0]
 
       await userRepository.create(new UserEntity({
-        telegram_user: { id: 101, is_bot: false, first_name: 'Inactive' } as any,
+        telegram_user: { id: 101, is_bot: false, first_name: 'Inactive' },
         last_usage_date: inWindowDateStr,
       }))
       await userRepository.create(new UserEntity({
-        telegram_user: { id: 102, is_bot: false, first_name: 'Active' } as any,
+        telegram_user: { id: 102, is_bot: false, first_name: 'Active' },
         last_usage_date: new Date().toISOString().split('T')[0],
       }))
       await userRepository.create(new UserEntity({
-        telegram_user: { id: 103, is_bot: false, first_name: 'Also Inactive' } as any,
+        telegram_user: { id: 103, is_bot: false, first_name: 'Also Inactive' },
         last_usage_date: tooOldDateStr,
       }))
       // User with last_usage_date: null and created_at: 40 days ago (Inactive)
       await userRepository.create(new UserEntity({
-        telegram_user: { id: 104, is_bot: false, first_name: 'Never Active Old' } as any,
+        telegram_user: { id: 104, is_bot: false, first_name: 'Never Active Old' },
         last_usage_date: undefined,
         created_at: tooOldDate,
       }))
@@ -194,7 +194,7 @@ describe(UserRepository.name, () => {
       const recentDate = new Date()
       recentDate.setDate(recentDate.getDate() - 5)
       await userRepository.create(new UserEntity({
-        telegram_user: { id: 105, is_bot: false, first_name: 'Never Active New' } as any,
+        telegram_user: { id: 105, is_bot: false, first_name: 'Never Active New' },
         last_usage_date: undefined,
         created_at: recentDate,
       }))
@@ -211,7 +211,7 @@ describe(UserRepository.name, () => {
 
     it('should not return users with recent activity', async () => {
       await userRepository.create(new UserEntity({
-        telegram_user: { id: 107, is_bot: false, first_name: 'Active User' } as any,
+        telegram_user: { id: 107, is_bot: false, first_name: 'Active User' },
         last_usage_date: new Date().toISOString().split('T')[0],
       }))
 
@@ -220,6 +220,45 @@ describe(UserRepository.name, () => {
       for await (const user of cursor) inactiveUsers.push(user)
 
       expect(inactiveUsers).toHaveLength(0)
+    })
+  })
+
+  describe(UserRepository.prototype.decrementUsage.name, () => {
+    it('should decrement usage for an existing user', async () => {
+      await userRepository.create(new UserEntity({
+        telegram_user: { id: 200, is_bot: false, first_name: 'Test' },
+        daily_usage_count: 2,
+        last_usage_date: new Date().toISOString().split('T')[0],
+      }))
+
+      const user = await userRepository.decrementUsage(200)
+
+      expect(user).toBeDefined()
+      expect(user?.daily_usage_count).toBe(1)
+    })
+
+    it('should return null if user does not have any usage today', async () => {
+      await userRepository.create(new UserEntity({
+        telegram_user: { id: 201, is_bot: false, first_name: 'Test' },
+        daily_usage_count: 0,
+        last_usage_date: new Date().toISOString().split('T')[0],
+      }))
+
+      const user = await userRepository.decrementUsage(201)
+
+      expect(user).toBeNull()
+    })
+
+    it('should return null if last usage was on a different day', async () => {
+      await userRepository.create(new UserEntity({
+        telegram_user: { id: 202, is_bot: false, first_name: 'Test' },
+        daily_usage_count: 3,
+        last_usage_date: '2000-01-01',
+      }))
+
+      const user = await userRepository.decrementUsage(202)
+
+      expect(user).toBeNull()
     })
   })
 })

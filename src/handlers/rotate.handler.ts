@@ -58,6 +58,7 @@ export class RotateHandler extends BaseHandler {
     'callback_query': async (ctx: CustomContext) => {
       let inputPath: string | undefined
       let outputPath: string | undefined
+      let usageReserved = false
 
       try {
         if (!ctx.user) {
@@ -88,6 +89,11 @@ export class RotateHandler extends BaseHandler {
         const fileSize = file.file_size ?? 0
         await this.checkLimits(ctx, { fileSize })
 
+        usageReserved = await this.incrementUsage(ctx, this.userRepository)
+        if (!usageReserved) {
+          return
+        }
+
         inputPath = await file.download()
 
         if (!inputPath) {
@@ -116,10 +122,12 @@ export class RotateHandler extends BaseHandler {
         await ctx.replyWithDocument(rotatedFile, {
           caption: ctx.t('rotate_success'),
         })
-
-        await this.incrementUsage(ctx, this.userRepository)
       }
       catch (error) {
+        if (usageReserved) {
+          await this.decrementUsage(ctx, this.userRepository)
+        }
+
         if (error instanceof LimitExceededError) {
           return
         }
