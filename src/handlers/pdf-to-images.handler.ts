@@ -56,7 +56,6 @@ export class PdfToImagesHandler extends BaseHandler {
 
       let inputPath: string | undefined
       let outputDir: string | undefined
-      let usageReserved = false
 
       try {
         await this.validatePDF(ctx)
@@ -80,38 +79,31 @@ export class PdfToImagesHandler extends BaseHandler {
 
         await this.checkLimits(ctx, { pagesCount: totalPages })
 
-        usageReserved = await this.incrementUsage(ctx, this.userRepository)
-        if (!usageReserved) {
-          return
-        }
+        await this.runWithUsage(ctx, this.userRepository, async () => {
+          await ctx.reply(ctx.t('pdftoimages_converting'))
 
-        await ctx.reply(ctx.t('pdftoimages_converting'))
+          outputDir = await fs.mkdtemp(join(os.tmpdir(), 'pdf-studio-bot-pdf-to-images-'))
+          await fs.chmod(outputDir, 0o700)
 
-        outputDir = await fs.mkdtemp(join(os.tmpdir(), 'pdf-studio-bot-pdf-to-images-'))
-        await fs.chmod(outputDir, 0o700)
+          const images: string[] = []
+          const writePromises: Promise<void>[] = []
+          let pageNumber = 1
+          for await (const image of document) {
+            const imagePath = join(outputDir, `page-${pageNumber}.png`)
+            writePromises.push(fs.writeFile(imagePath, image))
+            images.push(imagePath)
+            pageNumber++
+          }
+          const writeResults = await Promise.allSettled(writePromises)
+          const failedWrite = writeResults.find((result): result is PromiseRejectedResult => result.status === 'rejected')
+          if (failedWrite) {
+            throw failedWrite.reason
+          }
 
-        const images: string[] = []
-        const writePromises: Promise<void>[] = []
-        let pageNumber = 1
-        for await (const image of document) {
-          const imagePath = join(outputDir, `page-${pageNumber}.png`)
-          writePromises.push(fs.writeFile(imagePath, image))
-          images.push(imagePath)
-          pageNumber++
-        }
-        const writeResults = await Promise.allSettled(writePromises)
-        const failedWrite = writeResults.find((result): result is PromiseRejectedResult => result.status === 'rejected')
-        if (failedWrite) {
-          throw failedWrite.reason
-        }
-
-        await this.sendImageChunks(ctx, images, totalPages)
+          await this.sendImageChunks(ctx, images, totalPages)
+        })
       }
       catch (error) {
-        if (usageReserved) {
-          await this.decrementUsage(ctx, this.userRepository)
-        }
-
         if (error instanceof InvalidFileError || error instanceof LimitExceededError) {
           return
         }

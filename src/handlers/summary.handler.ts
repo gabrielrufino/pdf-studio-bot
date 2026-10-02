@@ -26,7 +26,6 @@ export class SummaryHandler extends BaseHandler {
     'msg:document': async (ctx: CustomContext) => {
       let uploadedFileName: string | undefined
       let inputPath: string | undefined
-      let usageReserved = false
 
       try {
         await this.validatePDF(ctx)
@@ -47,24 +46,17 @@ export class SummaryHandler extends BaseHandler {
 
         await this.verifyLimits(ctx, inputPath)
 
-        usageReserved = await this.incrementUsage(ctx, this.userRepository)
-        if (!usageReserved) {
-          return
-        }
+        await this.runWithUsage(ctx, this.userRepository, async () => {
+          const processingMessage = await ctx.reply(ctx.t('summary_summarizing'))
 
-        const processingMessage = await ctx.reply(ctx.t('summary_summarizing'))
+          const text = await this.performSummarization(inputPath!, ctx.t('summary_prompt'), (fileName) => {
+            uploadedFileName = fileName
+          })
 
-        const text = await this.performSummarization(inputPath, ctx.t('summary_prompt'), (fileName) => {
-          uploadedFileName = fileName
+          await this.sendSummaryResponse(ctx, processingMessage.message_id, text)
         })
-
-        await this.sendSummaryResponse(ctx, processingMessage.message_id, text)
       }
       catch (error) {
-        if (usageReserved) {
-          await this.decrementUsage(ctx, this.userRepository)
-        }
-
         if (error instanceof InvalidFileError || error instanceof LimitExceededError)
           return
 

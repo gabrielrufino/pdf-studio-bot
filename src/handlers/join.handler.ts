@@ -83,37 +83,30 @@ export class JoinHandler extends BaseHandler {
       return
     }
 
-    let usageReserved = false
     let outputDir: string | undefined
 
     try {
-      usageReserved = await this.incrementUsage(ctx, this.userRepository)
-      if (!usageReserved) {
-        return
-      }
+      await this.runWithUsage(ctx, this.userRepository, async () => {
+        await ctx.reply(ctx.t('join_merging'))
 
-      await ctx.reply(ctx.t('join_merging'))
+        outputDir = await fs.mkdtemp(join(os.tmpdir(), 'pdf-studio-bot-join-'))
+        await fs.chmod(outputDir, 0o700)
+        const outputPath = join(outputDir, 'merged.pdf')
 
-      outputDir = await fs.mkdtemp(join(os.tmpdir(), 'pdf-studio-bot-join-'))
-      await fs.chmod(outputDir, 0o700)
-      const outputPath = join(outputDir, 'merged.pdf')
+        const pdfWriter = muhammara.createWriter(outputPath)
 
-      const pdfWriter = muhammara.createWriter(outputPath)
+        for (const path of paths) {
+          pdfWriter.appendPDFPagesFromPDF(path)
+        }
 
-      for (const path of paths) {
-        pdfWriter.appendPDFPagesFromPDF(path)
-      }
+        pdfWriter.end()
 
-      pdfWriter.end()
-
-      await ctx.replyWithDocument(new InputFile(outputPath, 'merged.pdf'), {
-        caption: ctx.t('join_success'),
+        await ctx.replyWithDocument(new InputFile(outputPath, 'merged.pdf'), {
+          caption: ctx.t('join_success'),
+        })
       })
     }
     catch (error) {
-      if (usageReserved) {
-        await this.decrementUsage(ctx, this.userRepository)
-      }
       this.logger.error(error)
       await ctx.reply(ctx.t('join_error'))
     }

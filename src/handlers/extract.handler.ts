@@ -65,7 +65,6 @@ export class ExtractHandler extends BaseHandler {
     'msg:text': async (ctx: CustomContext) => {
       let outputPath: string | undefined
       let inputPath: string | undefined
-      let usageReserved = false
 
       try {
         if (!ctx.user) {
@@ -104,32 +103,26 @@ export class ExtractHandler extends BaseHandler {
           return
         }
 
-        usageReserved = await this.incrementUsage(ctx, this.userRepository)
-        if (!usageReserved) {
-          return
-        }
+        await this.runWithUsage(ctx, this.userRepository, async () => {
+          await ctx.reply(ctx.t('extract_extracting'))
 
-        await ctx.reply(ctx.t('extract_extracting'))
+          outputPath = join(os.tmpdir(), `extract-${crypto.randomUUID()}.pdf`)
+          const pdfWriter = muhammara.createWriter(outputPath)
+          const copyCtx = pdfWriter.createPDFCopyingContext(inputPath!)
 
-        outputPath = join(os.tmpdir(), `extract-${crypto.randomUUID()}.pdf`)
-        const pdfWriter = muhammara.createWriter(outputPath)
-        const copyCtx = pdfWriter.createPDFCopyingContext(inputPath)
+          for (let i = startPage - 1; i < endPage; i++) {
+            copyCtx.appendPDFPageFromPDF(i)
+          }
 
-        for (let i = startPage - 1; i < endPage; i++) {
-          copyCtx.appendPDFPageFromPDF(i)
-        }
+          pdfWriter.end()
 
-        pdfWriter.end()
-
-        const extractedFile = new InputFile(outputPath, `extracted-${startPage}-${endPage}.pdf`)
-        await ctx.replyWithDocument(extractedFile, {
-          caption: ctx.t('extract_success'),
+          const extractedFile = new InputFile(outputPath, `extracted-${startPage}-${endPage}.pdf`)
+          await ctx.replyWithDocument(extractedFile, {
+            caption: ctx.t('extract_success'),
+          })
         })
       }
       catch (error) {
-        if (usageReserved) {
-          await this.decrementUsage(ctx, this.userRepository)
-        }
         this.logger.error(error)
         await ctx.reply(ctx.t('extract_error'))
       }

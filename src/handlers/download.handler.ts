@@ -35,7 +35,6 @@ export class DownloadHandler extends BaseHandler {
     'msg:text': async (ctx: CustomContext) => {
       let folder: string | undefined
       let page: Page | undefined
-      let usageReserved = false
 
       try {
         const urlSchema = z.string().url().refine((val) => {
@@ -57,73 +56,67 @@ export class DownloadHandler extends BaseHandler {
 
         await this.validateUrl(url)
 
-        usageReserved = await this.incrementUsage(ctx, this.userRepository)
-        if (!usageReserved) {
-          return
-        }
+        await this.runWithUsage(ctx, this.userRepository, async () => {
+          const browserInstance = await this.browser.getInstance()
+          page = await browserInstance.newPage()
 
-        const browserInstance = await this.browser.getInstance()
-        page = await browserInstance.newPage()
+          await page.setRequestInterception(true)
+          page.on('request', (request) => {
+            const reqUrl = request.url()
+            try {
+              const parsed = new URL(reqUrl)
+              const hostname = parsed.hostname
 
-        await page.setRequestInterception(true)
-        page.on('request', (request) => {
-          const reqUrl = request.url()
-          try {
-            const parsed = new URL(reqUrl)
-            const hostname = parsed.hostname
-
-            if (this.isPrivateIP(hostname)) {
-              request.abort('aborted').catch(() => {})
-              return
-            }
-
-            dns.lookup(hostname, { all: true })
-              .then((addresses) => {
-                const hasPrivateIp = addresses.some(({ address }) => this.isPrivateIP(address))
-                if (hasPrivateIp) {
-                  request.abort('aborted').catch(() => {})
-                }
-                else {
-                  request.continue().catch(() => {})
-                }
-              })
-              .catch(() => {
+              if (this.isPrivateIP(hostname)) {
                 request.abort('aborted').catch(() => {})
-              })
+                return
+              }
+
+              dns.lookup(hostname, { all: true })
+                .then((addresses) => {
+                  const hasPrivateIp = addresses.some(({ address }) => this.isPrivateIP(address))
+                  if (hasPrivateIp) {
+                    request.abort('aborted').catch(() => {})
+                  }
+                  else {
+                    request.continue().catch(() => {})
+                  }
+                })
+                .catch(() => {
+                  request.abort('aborted').catch(() => {})
+                })
+            }
+            catch {
+              request.abort('aborted').catch(() => {})
+            }
+          })
+
+          await page.goto(url, {
+            waitUntil: 'networkidle0',
+          })
+
+          folder = await fs.mkdtemp(path.join(os.tmpdir(), 'pdffromlink-'))
+          await fs.chmod(folder, 0o700)
+          const filePath = path.join(folder, 'file.pdf')
+
+          ctx.session.params = {
+            ...params,
+            path: folder,
           }
-          catch {
-            request.abort('aborted').catch(() => {})
-          }
+
+          await page.pdf({
+            path: filePath,
+            ...DownloadHandler.PDF_CONFIG,
+          })
+
+          const title = await page.title()
+          const sanitizedTitle = title.replace(/[/\\[\]{}()<>:;|=,*?"']/g, '').trim() || 'document'
+          const document = new InputFile(filePath, `${sanitizedTitle}.pdf`)
+
+          await ctx.replyWithDocument(document)
         })
-
-        await page.goto(url, {
-          waitUntil: 'networkidle0',
-        })
-
-        folder = await fs.mkdtemp(path.join(os.tmpdir(), 'pdffromlink-'))
-        await fs.chmod(folder, 0o700)
-        const filePath = path.join(folder, 'file.pdf')
-
-        ctx.session.params = {
-          ...params,
-          path: folder,
-        }
-
-        await page.pdf({
-          path: filePath,
-          ...DownloadHandler.PDF_CONFIG,
-        })
-
-        const title = await page.title()
-        const sanitizedTitle = title.replace(/[/\\[\]{}()<>:;|=,*?"']/g, '').trim() || 'document'
-        const document = new InputFile(filePath, `${sanitizedTitle}.pdf`)
-
-        await ctx.replyWithDocument(document)
       }
       catch (error) {
-        if (usageReserved) {
-          await this.decrementUsage(ctx, this.userRepository)
-        }
         this.logger.error(error)
         await ctx.reply(ctx.t('download_error'))
       }

@@ -44,6 +44,14 @@ describe(BaseHandler.name, () => {
     public async decrementUsage(ctx: CustomContext, userRepository: UserRepository) {
       return super.decrementUsage(ctx, userRepository)
     }
+
+    public async runWithUsage(
+      ctx: CustomContext,
+      userRepository: UserRepository,
+      action: () => Promise<void>,
+    ) {
+      return super.runWithUsage(ctx, userRepository, action)
+    }
   }
 
   beforeEach(() => {
@@ -426,6 +434,56 @@ describe(BaseHandler.name, () => {
 
       const result = await handler.decrementUsage(ctx, mockUserRepository)
       expect(result).toBe(false)
+    })
+  })
+
+  describe('runWithUsage', () => {
+    it('should not call action if incrementUsage returns false', async () => {
+      const handler = new TestHandler()
+      const ctx = {
+        t: (key: string) => key,
+        from: { id: 123 },
+        user: { plan_type: PlanTypeEnum.Free },
+        reply: vi.fn(),
+      } as unknown as CustomContext
+      const mockUserRepository = {
+        incrementUsage: vi.fn().mockResolvedValue(null),
+      } as unknown as UserRepository
+      const action = vi.fn().mockResolvedValue(undefined)
+
+      await handler.runWithUsage(ctx, mockUserRepository, action)
+      expect(action).not.toHaveBeenCalled()
+    })
+
+    it('should call action if incrementUsage succeeds', async () => {
+      const handler = new TestHandler()
+      const ctx = {
+        from: { id: 123 },
+        user: { plan_type: PlanTypeEnum.Free },
+      } as unknown as CustomContext
+      const mockUserRepository = {
+        incrementUsage: vi.fn().mockResolvedValue({ id: 123 }),
+      } as unknown as UserRepository
+      const action = vi.fn().mockResolvedValue(undefined)
+
+      await handler.runWithUsage(ctx, mockUserRepository, action)
+      expect(action).toHaveBeenCalled()
+    })
+
+    it('should call decrementUsage if action throws error', async () => {
+      const handler = new TestHandler()
+      const ctx = {
+        from: { id: 123 },
+        user: { plan_type: PlanTypeEnum.Free },
+      } as unknown as CustomContext
+      const mockUserRepository = {
+        incrementUsage: vi.fn().mockResolvedValue({ id: 123 }),
+        decrementUsage: vi.fn().mockResolvedValue({ id: 123 }),
+      } as unknown as UserRepository
+      const action = vi.fn().mockRejectedValue(new Error('Action failed'))
+
+      await expect(handler.runWithUsage(ctx, mockUserRepository, action)).rejects.toThrow('Action failed')
+      expect(mockUserRepository.decrementUsage).toHaveBeenCalledWith(123)
     })
   })
 })

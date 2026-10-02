@@ -117,6 +117,27 @@ export abstract class BaseHandler {
     return true
   }
 
+  protected async runWithUsage(
+    ctx: CustomContext,
+    userRepository: UserRepository,
+    action: () => Promise<void>,
+  ): Promise<void> {
+    let usageReserved = false
+    try {
+      usageReserved = await this.incrementUsage(ctx, userRepository)
+      if (!usageReserved) {
+        return
+      }
+      await action()
+    }
+    catch (error) {
+      if (usageReserved) {
+        await this.decrementUsage(ctx, userRepository)
+      }
+      throw error
+    }
+  }
+
   private async removeTemporaryFiles(ctx: CustomContext) {
     const params = ctx.session.params
 

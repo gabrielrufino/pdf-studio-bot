@@ -58,7 +58,6 @@ export class RotateHandler extends BaseHandler {
     'callback_query': async (ctx: CustomContext) => {
       let inputPath: string | undefined
       let outputPath: string | undefined
-      let usageReserved = false
 
       try {
         if (!ctx.user) {
@@ -89,45 +88,38 @@ export class RotateHandler extends BaseHandler {
         const fileSize = file.file_size ?? 0
         await this.checkLimits(ctx, { fileSize })
 
-        usageReserved = await this.incrementUsage(ctx, this.userRepository)
-        if (!usageReserved) {
-          return
-        }
+        await this.runWithUsage(ctx, this.userRepository, async () => {
+          inputPath = await file.download()
 
-        inputPath = await file.download()
+          if (!inputPath) {
+            throw new Error('Failed to download file')
+          }
 
-        if (!inputPath) {
-          throw new Error('Failed to download file')
-        }
+          const pdfBytes = await fs.readFile(inputPath)
+          const pdfDoc = await PDFDocument.load(pdfBytes)
 
-        const pdfBytes = await fs.readFile(inputPath)
-        const pdfDoc = await PDFDocument.load(pdfBytes)
+          const pagesCount = pdfDoc.getPageCount()
+          await this.checkLimits(ctx, { pagesCount })
 
-        const pagesCount = pdfDoc.getPageCount()
-        await this.checkLimits(ctx, { pagesCount })
+          const pages = pdfDoc.getPages()
+          for (const page of pages) {
+            const currentRotation = page.getRotation().angle
+            const newRotation = ((currentRotation + degreesValue) % 360 + 360) % 360
+            page.setRotation(degrees(newRotation))
+          }
 
-        const pages = pdfDoc.getPages()
-        for (const page of pages) {
-          const currentRotation = page.getRotation().angle
-          const newRotation = ((currentRotation + degreesValue) % 360 + 360) % 360
-          page.setRotation(degrees(newRotation))
-        }
+          const savedPdfBytes = await pdfDoc.save()
 
-        const savedPdfBytes = await pdfDoc.save()
+          outputPath = join(os.tmpdir(), `rotate-${crypto.randomUUID()}.pdf`)
+          await fs.writeFile(outputPath, savedPdfBytes)
 
-        outputPath = join(os.tmpdir(), `rotate-${crypto.randomUUID()}.pdf`)
-        await fs.writeFile(outputPath, savedPdfBytes)
-
-        const rotatedFile = new InputFile(outputPath, 'rotated.pdf')
-        await ctx.replyWithDocument(rotatedFile, {
-          caption: ctx.t('rotate_success'),
+          const rotatedFile = new InputFile(outputPath, 'rotated.pdf')
+          await ctx.replyWithDocument(rotatedFile, {
+            caption: ctx.t('rotate_success'),
+          })
         })
       }
       catch (error) {
-        if (usageReserved) {
-          await this.decrementUsage(ctx, this.userRepository)
-        }
-
         if (error instanceof LimitExceededError) {
           return
         }
