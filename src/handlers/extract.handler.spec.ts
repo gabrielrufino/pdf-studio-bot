@@ -47,7 +47,7 @@ describe(ExtractHandler.name, () => {
     expect(handler.command).toBe(CommandEnum.Extract)
   })
 
-  describe('onCommand', () => {
+  describe(ExtractHandler.prototype.onCommand.name, () => {
     it('should set session command and ask for PDF file', async () => {
       await handler.onCommand(ctx)
 

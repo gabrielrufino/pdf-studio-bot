@@ -83,7 +83,7 @@ describe(BaseHandler.name, () => {
     expect(ctx.session.params).toBeNull()
   })
 
-  describe('validatePDF', () => {
+  describe(TestHandler.prototype.validatePDF, () => {
     it('should not throw if mime type is application/pdf', async () => {
       const handler = new TestHandler()
       const ctx: any = { t: (key: string) => key, message: {
@@ -325,7 +325,7 @@ describe(BaseHandler.name, () => {
     expect(handler.hasUsageLimits).toBe(true)
   })
 
-  describe('incrementUsage', () => {
+  describe(TestHandler.prototype.incrementUsage, () => {
     it('should return false if ctx.from is undefined', async () => {
       const handler = new TestHandler()
       const ctx = {
@@ -392,7 +392,7 @@ describe(BaseHandler.name, () => {
     })
   })
 
-  describe('decrementUsage', () => {
+  describe(TestHandler.prototype.decrementUsage, () => {
     it('should return false if ctx.from is undefined', async () => {
       const handler = new TestHandler()
       const ctx = {} as unknown as CustomContext
@@ -437,7 +437,7 @@ describe(BaseHandler.name, () => {
     })
   })
 
-  describe('runWithUsage', () => {
+  describe(TestHandler.prototype.runWithUsage, () => {
     it('should not call action if incrementUsage returns false', async () => {
       const handler = new TestHandler()
       const ctx = {

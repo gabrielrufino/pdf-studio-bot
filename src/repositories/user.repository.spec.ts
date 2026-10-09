@@ -157,7 +157,7 @@ describe(UserRepository.name, () => {
     })
   })
 
-  describe('findInactiveUsers', () => {
+  describe(UserRepository.prototype.findInactiveUsers.name, () => {
     beforeEach(async () => {
       const db = client.db('pdf_studio_test')
       await db.collection('users').deleteMany({})

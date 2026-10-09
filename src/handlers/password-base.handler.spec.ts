@@ -61,7 +61,7 @@ describe(PasswordBaseHandler.name, () => {
     vi.restoreAllMocks()
   })
 
-  describe('onCommand', () => {
+  describe(PasswordBaseHandler.prototype.onCommand.name, () => {
     it('should set session command and ask for file', async () => {
       await handler.onCommand(ctx)
       expect(ctx.session.command).toBe(handler.command)

@@ -77,7 +77,7 @@ describe(ExtractTextHandler.name, () => {
     vi.clearAllMocks()
   })
 
-  describe('onCommand', () => {
+  describe(ExtractTextHandler.prototype.onCommand.name, () => {
     it('should ask for file', async () => {
       await handler.onCommand(ctx)
 

@@ -91,7 +91,7 @@ describe(RotateHandler.name, () => {
     })
   })
 
-  describe('onCommand', () => {
+  describe(RotateHandler.prototype.onCommand.name, () => {
     it('should prompt for file', async () => {
       ctx.session.command = null
       await handler.onCommand(ctx)
