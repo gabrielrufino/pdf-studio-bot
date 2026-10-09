@@ -12,7 +12,6 @@ Your personal PDF assistant on Telegram. Fast, secure, and multi-language.
 - **Rotate PDF**: Rotate your PDF files by 90, 180, or -90 degrees.
 - **Merge PDFs**: Combine multiple PDF files (up to 10) into a single document.
 - **PDF to Images**: Convert PDF pages into high-resolution PNG images.
-- **AI Summary**: Get concise, structured summaries of your PDF documents using Google Gemini AI.
 - **Multi-language Support**: Available in English, Spanish, and Portuguese.
 - **PRO Subscription**: Upgrade via Telegram Stars for higher daily limits (up to 50 operations/day).
 - **Feedback & Support**: Send feedback, feature suggestions, or issue reports directly to the developer.

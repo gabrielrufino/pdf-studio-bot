@@ -30,8 +30,6 @@ describe('logger', () => {
       deep: { nested: { BOT_TOKEN: 'secret3' } },
       very: { deep: { nested: { BOT_TOKEN: 'secret4' } } },
       ultra: { very: { deep: { nested: { BOT_TOKEN: 'secret5' } } } },
-      GOOGLE_GENAI_API_KEY: 'secret_key',
-      auth: { GOOGLE_GENAI_API_KEY: 'secret_key_2' },
       token: 'tok1',
       apiKey: 'api1',
       header: { Authorization: 'Bearer x' },
@@ -44,9 +42,6 @@ describe('logger', () => {
     expect(log.deep.nested.BOT_TOKEN).toBe('[REDACTED]')
     expect(log.very.deep.nested.BOT_TOKEN).toBe('[REDACTED]')
     expect(log.ultra.very.deep.nested.BOT_TOKEN).toBe('[REDACTED]')
-
-    expect(log.GOOGLE_GENAI_API_KEY).toBe('[REDACTED]')
-    expect(log.auth.GOOGLE_GENAI_API_KEY).toBe('[REDACTED]')
 
     expect(log.token).toBe('[REDACTED]')
     expect(log.apiKey).toBe('[REDACTED]')

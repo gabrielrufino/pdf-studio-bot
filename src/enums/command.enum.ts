@@ -13,7 +13,6 @@ export enum CommandEnum {
   ExtractText = 'extracttext',
   Split = 'split',
   Start = 'start',
-  Summary = 'summary',
   Test = 'test',
   Version = 'version',
 }

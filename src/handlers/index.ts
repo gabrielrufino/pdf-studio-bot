@@ -1,5 +1,4 @@
 import type { BaseHandler } from './base.handler'
-import { ai } from '../config/ai'
 import { browser } from '../config/browser'
 import { configurationRepository, feedbackRepository, paymentRepository, userRepository } from '../repositories'
 import { DownloadHandler } from './download.handler'
@@ -16,7 +15,6 @@ import { RemovePasswordHandler } from './remove-password.handler'
 import { RotateHandler } from './rotate.handler'
 import { SplitHandler } from './split.handler'
 import { StartHandler } from './start.handler'
-import { SummaryHandler } from './summary.handler'
 import { VersionHandler } from './version.handler'
 
 const coreHandlers: Array<BaseHandler> = [
@@ -33,7 +31,6 @@ const coreHandlers: Array<BaseHandler> = [
   new ExtractTextHandler(userRepository),
   new SplitHandler(userRepository),
   new StartHandler(userRepository),
-  new SummaryHandler(userRepository, ai),
   new VersionHandler(),
 ]
 
