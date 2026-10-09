@@ -48,7 +48,7 @@ describe(BaseHandler.name, () => {
     public async runWithUsage(
       ctx: CustomContext,
       userRepository: UserRepository,
-      action: () => Promise<void>,
+      action: (markDelivered: () => void) => Promise<void>,
     ) {
       return super.runWithUsage(ctx, userRepository, action)
     }
@@ -484,6 +484,25 @@ describe(BaseHandler.name, () => {
 
       await expect(handler.runWithUsage(ctx, mockUserRepository, action)).rejects.toThrow('Action failed')
       expect(mockUserRepository.decrementUsage).toHaveBeenCalledWith(123)
+    })
+
+    it('should not call decrementUsage if action throws error after markDelivered', async () => {
+      const handler = new TestHandler()
+      const ctx = {
+        from: { id: 123 },
+        user: { plan_type: PlanTypeEnum.Free },
+      } as unknown as CustomContext
+      const mockUserRepository = {
+        incrementUsage: vi.fn().mockResolvedValue({ id: 123 }),
+        decrementUsage: vi.fn().mockResolvedValue({ id: 123 }),
+      } as unknown as UserRepository
+      const action = vi.fn().mockImplementation(async (markDelivered) => {
+        markDelivered()
+        throw new Error('Action failed after delivery')
+      })
+
+      await expect(handler.runWithUsage(ctx, mockUserRepository, action)).rejects.toThrow('Action failed after delivery')
+      expect(mockUserRepository.decrementUsage).not.toHaveBeenCalled()
     })
   })
 })

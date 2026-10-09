@@ -49,7 +49,7 @@ export class SplitHandler extends BaseHandler {
 
         await this.checkLimits(ctx, { pagesCount })
 
-        await this.runWithUsage(ctx, this.userRepository, async () => {
+        await this.runWithUsage(ctx, this.userRepository, async (markDelivered) => {
           await ctx.reply(ctx.t('split_splitting'))
 
           const outputFiles = Array.from({ length: pagesCount }, (_, i) => {
@@ -73,6 +73,7 @@ export class SplitHandler extends BaseHandler {
             await ctx.replyWithDocument(pageFile, {
               caption: `📄 Page ${pageNumber} of ${pagesCount}`,
             })
+            markDelivered()
 
             if (index < outputFiles.length - 1) {
               await setTimeout(1000)

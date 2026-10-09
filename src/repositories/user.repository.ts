@@ -1,4 +1,4 @@
-import type { Db } from 'mongodb'
+import type { Db, Filter } from 'mongodb'
 import { EnsureInitialized } from '../decorators/ensure-initialized.decorator'
 import { UserEntity } from '../entities/user.entity'
 import { LanguageEnum } from '../enums/language.enum'
@@ -78,7 +78,7 @@ export class UserRepository extends BaseRepository<UserEntity> {
       ],
     }
 
-    const cursor = this.collection.find(filter as unknown as import('mongodb').Filter<UserEntity>)
+    const cursor = this.collection.find(filter as unknown as Filter<UserEntity>)
 
     return (async function* () {
       for await (const user of cursor) {

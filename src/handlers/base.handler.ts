@@ -120,18 +120,21 @@ export abstract class BaseHandler {
   protected async runWithUsage(
     ctx: CustomContext,
     userRepository: UserRepository,
-    action: () => Promise<void>,
+    action: (markDelivered: () => void) => Promise<void>,
   ): Promise<void> {
     let usageReserved = false
+    let delivered = false
     try {
       usageReserved = await this.incrementUsage(ctx, userRepository)
       if (!usageReserved) {
         return
       }
-      await action()
+      await action(() => {
+        delivered = true
+      })
     }
     catch (error) {
-      if (usageReserved) {
+      if (usageReserved && !delivered) {
         await this.decrementUsage(ctx, userRepository)
       }
       throw error
