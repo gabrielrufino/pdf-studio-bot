@@ -44,7 +44,13 @@ export class SplitHandler extends BaseHandler {
           throw new Error('Failed to download file')
         }
 
-        const pdfReader = muhammara.createReader(inputPath)
+        const sourcePath = inputPath
+        const targetDir = outputDir
+        if (!sourcePath || !targetDir) {
+          throw new Error('Input path or output directory is missing')
+        }
+
+        const pdfReader = muhammara.createReader(sourcePath)
         const pagesCount = pdfReader.getPagesCount()
 
         await this.checkLimits(ctx, { pagesCount })
@@ -53,12 +59,12 @@ export class SplitHandler extends BaseHandler {
           await ctx.reply(ctx.t('split_splitting'))
 
           const outputFiles = Array.from({ length: pagesCount }, (_, i) => {
-            const outPath = join(outputDir!, `page-${String(i + 1).padStart(3, '0')}.pdf`)
+            const outPath = join(targetDir, `page-${String(i + 1).padStart(3, '0')}.pdf`)
 
             const pdfWriter = muhammara.createWriter(outPath)
 
             pdfWriter
-              .createPDFCopyingContext(inputPath!)
+              .createPDFCopyingContext(sourcePath)
               .appendPDFPageFromPDF(i)
 
             pdfWriter.end()

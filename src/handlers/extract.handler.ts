@@ -79,6 +79,12 @@ export class ExtractHandler extends BaseHandler {
           return
         }
 
+        const sourcePath = inputPath
+        if (!sourcePath) {
+          await ctx.reply(ctx.t('extract_send_file'))
+          return
+        }
+
         const rangeText = ctx.message?.text?.trim() || ''
         const match = rangeText.match(/^(\d+)\s*-\s*(\d+)$/)
         if (!match) {
@@ -94,7 +100,7 @@ export class ExtractHandler extends BaseHandler {
           return
         }
 
-        const pdfReader = muhammara.createReader(inputPath)
+        const pdfReader = muhammara.createReader(sourcePath)
         const totalPages = pdfReader.getPagesCount()
         await this.checkLimits(ctx, { pagesCount: totalPages })
 
@@ -108,7 +114,7 @@ export class ExtractHandler extends BaseHandler {
 
           outputPath = join(os.tmpdir(), `extract-${crypto.randomUUID()}.pdf`)
           const pdfWriter = muhammara.createWriter(outputPath)
-          const copyCtx = pdfWriter.createPDFCopyingContext(inputPath!)
+          const copyCtx = pdfWriter.createPDFCopyingContext(sourcePath)
 
           for (let i = startPage - 1; i < endPage; i++) {
             copyCtx.appendPDFPageFromPDF(i)
