@@ -33,87 +33,18 @@ export class DownloadHandler extends BaseHandler {
   readonly description = '🌐 Download a PDF from a URL'
   readonly events = {
     'msg:text': async (ctx: CustomContext) => {
-      let folder: string | undefined
       let page: Page | undefined
 
       try {
-        const urlSchema = z.string().url().refine((val) => {
-          try {
-            const url = new URL(val)
-            return ['http:', 'https:'].includes(url.protocol)
-          }
-          catch {
-            return false
-          }
-        })
-        const parseResult = urlSchema.safeParse(ctx.message?.text)
-        if (!parseResult.success) {
-          throw new SessionValidationError()
-        }
-
+        const url = this.parseUrl(ctx.message?.text)
         const params = this.validateParams(DownloadParamsSchema, ctx.session.params)
-        const url = parseResult.data
 
         await this.validateUrl(url)
 
         await this.runWithUsage(ctx, this.userRepository, async () => {
           const browserInstance = await this.browser.getInstance()
           page = await browserInstance.newPage()
-
-          await page.setRequestInterception(true)
-          page.on('request', (request) => {
-            const reqUrl = request.url()
-            try {
-              const parsed = new URL(reqUrl)
-              const hostname = parsed.hostname
-
-              if (this.isPrivateIP(hostname)) {
-                request.abort('aborted').catch(() => {})
-                return
-              }
-
-              dns.lookup(hostname, { all: true })
-                .then((addresses) => {
-                  const hasPrivateIp = addresses.some(({ address }) => this.isPrivateIP(address))
-                  if (hasPrivateIp) {
-                    request.abort('aborted').catch(() => {})
-                  }
-                  else {
-                    request.continue().catch(() => {})
-                  }
-                })
-                .catch(() => {
-                  request.abort('aborted').catch(() => {})
-                })
-            }
-            catch {
-              request.abort('aborted').catch(() => {})
-            }
-          })
-
-          await page.goto(url, {
-            waitUntil: 'networkidle0',
-          })
-
-          folder = await fs.mkdtemp(path.join(os.tmpdir(), 'pdffromlink-'))
-          await fs.chmod(folder, 0o700)
-          const filePath = path.join(folder, 'file.pdf')
-
-          ctx.session.params = {
-            ...params,
-            path: folder,
-          }
-
-          await page.pdf({
-            path: filePath,
-            ...DownloadHandler.PDF_CONFIG,
-          })
-
-          const title = await page.title()
-          const sanitizedTitle = title.replace(/[/\\[\]{}()<>:;|=,*?"']/g, '').trim() || 'document'
-          const document = new InputFile(filePath, `${sanitizedTitle}.pdf`)
-
-          await ctx.replyWithDocument(document)
+          await this.processDownload(page, url, ctx, params)
         })
       }
       catch (error) {
@@ -127,6 +58,91 @@ export class DownloadHandler extends BaseHandler {
         await this.resetSession(ctx)
       }
     },
+  }
+
+  private parseUrl(text?: string): string {
+    const urlSchema = z.string().url().refine((val) => {
+      try {
+        const url = new URL(val)
+        return ['http:', 'https:'].includes(url.protocol)
+      }
+      catch {
+        return false
+      }
+    })
+    const parseResult = urlSchema.safeParse(text)
+    if (!parseResult.success) {
+      throw new SessionValidationError()
+    }
+    return parseResult.data
+  }
+
+  private setupRequestInterception(page: Page): void {
+    page.on('request', (request) => {
+      const reqUrl = request.url()
+      try {
+        const parsed = new URL(reqUrl)
+        const hostname = parsed.hostname
+
+        if (this.isPrivateIP(hostname)) {
+          request.abort('aborted').catch(() => {})
+          return
+        }
+
+        dns.lookup(hostname, { all: true })
+          .then((addresses) => {
+            const hasPrivateIp = addresses.some(({ address }) => this.isPrivateIP(address))
+            if (hasPrivateIp) {
+              request.abort('aborted').catch(() => {})
+            }
+            else {
+              request.continue().catch(() => {})
+            }
+          })
+          .catch(() => {
+            request.abort('aborted').catch(() => {})
+          })
+      }
+      catch {
+        request.abort('aborted').catch(() => {})
+      }
+    })
+  }
+
+  private async processDownload(
+    page: Page,
+    url: string,
+    ctx: CustomContext,
+    params: Record<string, unknown>,
+  ): Promise<string> {
+    await page.setRequestInterception(true)
+    this.setupRequestInterception(page)
+
+    await page.goto(url, {
+      waitUntil: 'networkidle0',
+    })
+
+    const folder = await fs.mkdtemp(path.join(os.tmpdir(), 'pdffromlink-'))
+    await fs.chmod(folder, 0o700)
+    const filePath = path.join(folder, 'file.pdf')
+
+    ctx.session.params = {
+      ...params,
+      path: folder,
+    }
+
+    await page.pdf({
+      path: filePath,
+      ...DownloadHandler.PDF_CONFIG,
+    })
+
+    const title = await page.title()
+    const sanitizedTitle = title.replace(/[/\\[\]{}()<>:;|=,*?"']/g, '').trim() || 'document'
+    const document = new InputFile(filePath, `${sanitizedTitle}.pdf`)
+
+    await ctx.replyWithDocument(document)
+
+    return folder
   }
 
   async onCommand(ctx: CustomContext): Promise<void> {
