@@ -44,41 +44,49 @@ export class SplitHandler extends BaseHandler {
           throw new Error('Failed to download file')
         }
 
-        const pdfReader = muhammara.createReader(inputPath)
+        const sourcePath = inputPath
+        const targetDir = outputDir
+        if (!sourcePath || !targetDir) {
+          throw new Error('Input path or output directory is missing')
+        }
+
+        const pdfReader = muhammara.createReader(sourcePath)
         const pagesCount = pdfReader.getPagesCount()
 
         await this.checkLimits(ctx, { pagesCount })
 
-        await ctx.reply(ctx.t('split_splitting'))
+        await this.runWithUsage(ctx, this.userRepository, async (markDelivered) => {
+          await ctx.reply(ctx.t('split_splitting'))
 
-        const outputFiles = Array.from({ length: pagesCount }, (_, i) => {
-          const outPath = join(outputDir!, `page-${String(i + 1).padStart(3, '0')}.pdf`)
+          const outputFiles = Array.from({ length: pagesCount }, (_, i) => {
+            const outPath = join(targetDir, `page-${String(i + 1).padStart(3, '0')}.pdf`)
 
-          const pdfWriter = muhammara.createWriter(outPath)
+            const pdfWriter = muhammara.createWriter(outPath)
 
-          pdfWriter
-            .createPDFCopyingContext(inputPath!)
-            .appendPDFPageFromPDF(i)
+            pdfWriter
+              .createPDFCopyingContext(sourcePath)
+              .appendPDFPageFromPDF(i)
 
-          pdfWriter.end()
+            pdfWriter.end()
 
-          return outPath
-        })
-
-        for (const [index, outputPath] of outputFiles.entries()) {
-          const pageNumber = index + 1
-          const pageFile = new InputFile(outputPath, `page-${pageNumber}.pdf`)
-
-          await ctx.replyWithDocument(pageFile, {
-            caption: `📄 Page ${pageNumber} of ${pagesCount}`,
+            return outPath
           })
 
-          if (index < outputFiles.length - 1) {
-            await setTimeout(1000)
-          }
-        }
+          await outputFiles.reduce(async (prevPromise, outputPath, index) => {
+            await prevPromise
+            const pageNumber = index + 1
+            const pageFile = new InputFile(outputPath, `page-${pageNumber}.pdf`)
 
-        await this.userRepository.incrementUsage(ctx.from!.id)
+            await ctx.replyWithDocument(pageFile, {
+              caption: `📄 Page ${pageNumber} of ${pagesCount}`,
+            })
+            markDelivered()
+
+            if (index < outputFiles.length - 1) {
+              await setTimeout(1000)
+            }
+          }, Promise.resolve())
+        })
       }
       catch (error) {
         if (error instanceof InvalidFileError || error instanceof LimitExceededError) {

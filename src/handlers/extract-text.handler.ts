@@ -36,32 +36,32 @@ export class ExtractTextHandler extends BaseHandler {
         const fileSize = ctx.message?.document?.file_size ?? 0
         await this.checkLimits(ctx, { fileSize })
 
-        const file = await ctx.getFile()
-        inputPath = await file.download()
+        await this.runWithUsage(ctx, this.userRepository, async () => {
+          const file = await ctx.getFile()
+          inputPath = await file.download()
 
-        if (!inputPath) {
-          throw new Error('Failed to download file')
-        }
+          if (!inputPath) {
+            throw new Error('Failed to download file')
+          }
 
-        await ctx.reply(ctx.t('extracttext_extracting'))
+          await ctx.reply(ctx.t('extracttext_extracting'))
 
-        const parser = new PDFParse({ url: inputPath })
-        const result = await parser.getText()
-        const text = result.text
+          const parser = new PDFParse({ url: inputPath })
+          const result = await parser.getText()
+          const text = result.text
 
-        if (typeof text !== 'string') {
-          throw new TypeError('Failed to parse text from PDF')
-        }
+          if (typeof text !== 'string') {
+            throw new TypeError('Failed to parse text from PDF')
+          }
 
-        outputPath = join(os.tmpdir(), `extract-text-${crypto.randomUUID()}.txt`)
-        await fs.writeFile(outputPath, text)
+          outputPath = join(os.tmpdir(), `extract-text-${crypto.randomUUID()}.txt`)
+          await fs.writeFile(outputPath, text)
 
-        const extractedFile = new InputFile(outputPath, 'extracted-text.txt')
-        await ctx.replyWithDocument(extractedFile, {
-          caption: ctx.t('extracttext_success'),
+          const extractedFile = new InputFile(outputPath, 'extracted-text.txt')
+          await ctx.replyWithDocument(extractedFile, {
+            caption: ctx.t('extracttext_success'),
+          })
         })
-
-        await this.userRepository.incrementUsage(ctx.from!.id)
       }
       catch (error) {
         if (error instanceof InvalidFileError || error instanceof LimitExceededError) {

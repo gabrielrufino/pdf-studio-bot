@@ -1,4 +1,6 @@
+import type { LookupAddress } from 'node:dns'
 import type fs from 'node:fs/promises'
+import type { HTTPRequest } from 'puppeteer'
 import type { Browser } from '../config/browser'
 import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
@@ -37,6 +39,8 @@ describe(DownloadHandler.name, () => {
     mockBrowser = {
       getInstance: vi.fn().mockResolvedValue({
         newPage: vi.fn().mockResolvedValue({
+          setRequestInterception: vi.fn().mockResolvedValue(undefined),
+          on: vi.fn(),
           goto: vi.fn().mockResolvedValue({}),
           pdf: vi.fn().mockResolvedValue(Buffer.from('test pdf content')),
           title: vi.fn().mockResolvedValue('test title'),
@@ -47,7 +51,8 @@ describe(DownloadHandler.name, () => {
     } as unknown as Browser
 
     mockUserRepository = {
-      incrementUsage: vi.fn(),
+      incrementUsage: vi.fn().mockResolvedValue({}),
+      decrementUsage: vi.fn().mockResolvedValue({}),
     } as unknown as UserRepository
 
     handler = new DownloadHandler(mockBrowser, mockUserRepository)
@@ -80,7 +85,7 @@ describe(DownloadHandler.name, () => {
 
         expect(mockBrowser.getInstance).toHaveBeenCalled()
         expect(ctx.replyWithDocument).toHaveBeenCalled()
-        expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
+        expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123, 3)
         expect(ctx.session.command).toBeNull()
         expect(ctx.session.params).toBeNull()
       })
@@ -94,7 +99,19 @@ describe(DownloadHandler.name, () => {
       })
 
       it('should reply with error if URL is invalid (doesn\'t start with http)', async () => {
-        ctx.message!.text = 'file:///etc/passwd'
+        if (ctx.message) {
+          ctx.message.text = 'file:///etc/passwd'
+        }
+
+        await handler.events['msg:text'](ctx)
+
+        expect(ctx.reply).toHaveBeenCalledWith('download_error')
+      })
+
+      it('should reply with error if URL causes TypeError in new URL constructor (e.g. http://)', async () => {
+        if (ctx.message) {
+          ctx.message.text = 'http://'
+        }
 
         await handler.events['msg:text'](ctx)
 
@@ -102,7 +119,9 @@ describe(DownloadHandler.name, () => {
       })
 
       it('should work with http protocol', async () => {
-        ctx.message!.text = 'http://example.com'
+        if (ctx.message) {
+          ctx.message.text = 'http://example.com'
+        }
         await handler.events['msg:text'](ctx)
 
         expect(ctx.replyWithDocument).toHaveBeenCalled()
@@ -112,13 +131,16 @@ describe(DownloadHandler.name, () => {
         const error = new Error('Navigation failed')
         const mockPage = await (await mockBrowser.getInstance()).newPage()
         vi.spyOn(mockPage, 'goto').mockRejectedValue(error)
-        vi.spyOn((handler as any).logger, 'error')
+        // @ts-expect-error logger is protected
+        vi.spyOn(handler.logger, 'error')
 
         await handler.events['msg:text'](ctx)
 
-        expect((handler as any).logger.error).toHaveBeenCalledWith(error)
+        // @ts-expect-error logger is protected
+        expect(handler.logger.error).toHaveBeenCalledWith(error)
         expect(ctx.reply).toHaveBeenCalledWith('download_error')
         expect(mockPage.close).toHaveBeenCalled()
+        expect(mockUserRepository.decrementUsage).toHaveBeenCalledWith(123)
       })
 
       it.each([
@@ -128,7 +150,9 @@ describe(DownloadHandler.name, () => {
         ['IPv4 mapped IPv6 private addresses', '[::ffff:127.0.0.1]'],
         ['malformed IPv6 brackets gracefully (starting but not ending)', '[127.0.0.1'],
       ])('should block %s', async (_, host) => {
-        ctx.message!.text = `http://${host}`
+        if (ctx.message) {
+          ctx.message.text = `http://${host}`
+        }
 
         await handler.events['msg:text'](ctx)
 
@@ -139,9 +163,11 @@ describe(DownloadHandler.name, () => {
         ['private IP', '10.0.0.1', 4],
         ['IPv6 private IP', 'fd00::1', 6],
       ])('should block URL that resolves to %s', async (_, ip, family) => {
-        ctx.message!.text = 'http://private-host.com'
+        if (ctx.message) {
+          ctx.message.text = 'http://private-host.com'
+        }
         const dns = await import('node:dns/promises')
-        vi.mocked(dns.default.lookup).mockResolvedValueOnce([{ address: ip, family }] as any)
+        vi.mocked(dns.default.lookup).mockResolvedValueOnce([{ address: ip, family } as LookupAddress] as unknown as LookupAddress)
 
         await handler.events['msg:text'](ctx)
 
@@ -151,9 +177,11 @@ describe(DownloadHandler.name, () => {
       it('should handle page.close error', async () => {
         const mockPage = await (await mockBrowser.getInstance()).newPage()
         vi.spyOn(mockPage, 'close').mockRejectedValue(new Error('Close failed'))
-        vi.spyOn((handler as any).logger, 'error')
+        // @ts-expect-error logger is protected
+        vi.spyOn(handler.logger, 'error')
         await handler.events['msg:text'](ctx)
-        expect((handler as any).logger.error).toHaveBeenCalledWith(
+        // @ts-expect-error logger is protected
+        expect(handler.logger.error).toHaveBeenCalledWith(
           expect.objectContaining({ error: expect.any(Error) }),
           'Failed to close page.',
         )
@@ -169,7 +197,9 @@ describe(DownloadHandler.name, () => {
       })
 
       it('should fail on generic dns resolution errors', async () => {
-        ctx.message!.text = 'http://unknown-host.com'
+        if (ctx.message) {
+          ctx.message.text = 'http://unknown-host.com'
+        }
         const dns = await import('node:dns/promises')
         vi.mocked(dns.default.lookup).mockRejectedValueOnce(new Error('ENOTFOUND'))
         await handler.events['msg:text'](ctx)
@@ -182,10 +212,79 @@ describe(DownloadHandler.name, () => {
         ['linkLocal addresses', '169.254.1.1'],
         ['unspecified addresses', '0.0.0.0'],
       ])('should log error for %s', async (_, ip) => {
-        ctx.message!.text = `http://${ip}`
-        vi.spyOn((handler as any).logger, 'error')
+        if (ctx.message) {
+          ctx.message.text = `http://${ip}`
+        }
+        // @ts-expect-error logger is protected
+        vi.spyOn(handler.logger, 'error')
         await handler.events['msg:text'](ctx)
-        expect((handler as any).logger.error).toHaveBeenCalledWith(new Error('Private IP addresses are not allowed'))
+        // @ts-expect-error logger is protected
+        expect(handler.logger.error).toHaveBeenCalledWith(new Error('Private IP addresses are not allowed'))
+      })
+
+      it('should block private/local IPs and allow public IPs during request interception', async () => {
+        let requestHandler: ((req: HTTPRequest) => void | Promise<void>) | undefined
+        const mockPage = await (await mockBrowser.getInstance()).newPage()
+        vi.spyOn(mockPage, 'on').mockImplementation((event, callback) => {
+          if (event === 'request') {
+            requestHandler = callback as (req: HTTPRequest) => void | Promise<void>
+          }
+          return mockPage
+        })
+
+        await handler.events['msg:text'](ctx)
+
+        expect(requestHandler).toBeDefined()
+        if (requestHandler) {
+          // Case 1: Private IP hostname
+          const mockAbort = vi.fn().mockResolvedValue(undefined)
+          const mockContinue = vi.fn().mockResolvedValue(undefined)
+          const mockRequestPrivate = {
+            url: () => 'http://127.0.0.1/logo.png',
+            abort: mockAbort,
+            continue: mockContinue,
+          }
+          requestHandler(mockRequestPrivate as unknown as HTTPRequest)
+          expect(mockAbort).toHaveBeenCalledWith('aborted')
+          expect(mockContinue).not.toHaveBeenCalled()
+
+          // Case 2: Public IP hostname but resolves to private IP
+          const mockAbortDns = vi.fn().mockResolvedValue(undefined)
+          const mockContinueDns = vi.fn().mockResolvedValue(undefined)
+          const mockRequestDns = {
+            url: () => 'http://malicious-local.com/logo.png',
+            abort: mockAbortDns,
+            continue: mockContinueDns,
+          }
+          const dns = await import('node:dns/promises')
+          // Mock dns lookup to return a private IP
+          vi.mocked(dns.default.lookup).mockResolvedValueOnce([{ address: '10.0.0.1', family: 4 } as LookupAddress] as unknown as LookupAddress)
+
+          requestHandler(mockRequestDns as unknown as HTTPRequest)
+          // Wait for microtasks
+          await new Promise(resolve => setTimeout(resolve, 10))
+
+          expect(mockAbortDns).toHaveBeenCalledWith('aborted')
+          expect(mockContinueDns).not.toHaveBeenCalled()
+
+          // Case 3: Safe public IP
+          const mockAbortSafe = vi.fn().mockResolvedValue(undefined)
+          const mockContinueSafe = vi.fn().mockResolvedValue(undefined)
+          const mockRequestSafe = {
+            url: () => 'http://safe-public.com/logo.png',
+            abort: mockAbortSafe,
+            continue: mockContinueSafe,
+          }
+          // Mock dns lookup to return a public IP
+          vi.mocked(dns.default.lookup).mockResolvedValueOnce([{ address: '8.8.8.8', family: 4 } as LookupAddress] as unknown as LookupAddress)
+
+          requestHandler(mockRequestSafe as unknown as HTTPRequest)
+          // Wait for microtasks
+          await new Promise(resolve => setTimeout(resolve, 10))
+
+          expect(mockAbortSafe).not.toHaveBeenCalled()
+          expect(mockContinueSafe).toHaveBeenCalled()
+        }
       })
     })
   })

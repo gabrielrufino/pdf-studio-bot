@@ -14,7 +14,6 @@ export class HelpMessage {
     CommandEnum.RemovePassword,
     CommandEnum.Rotate,
     CommandEnum.Split,
-    CommandEnum.Summary,
     CommandEnum.Language,
   ])
 

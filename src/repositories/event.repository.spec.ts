@@ -5,7 +5,7 @@ import { EventEntity } from '../entities/event.entity'
 import { EventEnum } from '../enums/event.enum'
 import { EventRepository } from './event.repository'
 
-describe('eventRepository', () => {
+describe(EventRepository.name, () => {
   let eventRepository: EventRepository
   let mongod: MongoMemoryServer
   let client: MongoClient

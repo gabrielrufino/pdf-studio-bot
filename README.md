@@ -32,9 +32,6 @@ Try it now and experience the convenience: just click the button above 🚀
 - **🖼️ Convert PDF to Images**
   Extract and convert PDF pages into high-resolution images (PNG) sent directly to your chat.
 
-- **📝 AI-Powered Summary**
-  Get concise, structured summaries of your PDF documents powered by Google Gemini AI.
-
 - **🌐 Multi-Language Support**
   Available in English, Portuguese, and Spanish with seamless in-app switching.
 
@@ -70,7 +67,6 @@ Try it now and experience the convenience: just click the button above 🚀
 - `/pdftoimages` - Convert PDF pages to high-quality images
 - `/putpassword` - Protect a PDF with a password
 - `/removepassword` - Remove password protection from a PDF
-- `/summary` - Generate an AI summary of a PDF document
 - `/language` - Change bot language (English, Portuguese, Spanish)
 - `/pro` - Upgrade to PRO plan with Telegram Stars
 - `/feedback` - Send us your feedback and suggestions
@@ -81,7 +77,6 @@ Try it now and experience the convenience: just click the button above 🚀
 - **TypeScript** - Type-safe development
 - **grammY** - Modern Telegram Bot framework
 - **@grammyjs/runner** - Concurrent update processing
-- **Google GenAI** - Google Gemini AI for document summarization
 - **MongoDB** - Database for users, configurations, and feedback
 - **Muhammara** - PDF manipulation and encryption library
 - **Puppeteer** - Headless browser for URL-to-PDF conversion
@@ -93,7 +88,7 @@ Try it now and experience the convenience: just click the button above 🚀
 
 ```
 src/
-├── config/          # Configuration files (ai, bot, browser, database, logger)
+├── config/          # Configuration files (bot, browser, database, logger)
 ├── decorators/      # Decorators (initialization check)
 ├── entities/        # Data models (User, Feedback, Payment, Configuration, Message, Event)
 ├── enums/           # Enumerations (Commands, Languages, Plans, Currencies, Events)

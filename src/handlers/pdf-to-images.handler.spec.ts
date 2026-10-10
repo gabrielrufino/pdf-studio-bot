@@ -34,7 +34,8 @@ describe(PdfToImagesHandler.name, () => {
     vi.clearAllMocks()
 
     mockUserRepository = {
-      incrementUsage: vi.fn(),
+      incrementUsage: vi.fn().mockResolvedValue({}),
+      decrementUsage: vi.fn().mockResolvedValue({}),
       findByTelegramId: vi.fn().mockResolvedValue({ plan_type: PlanTypeEnum.Pro }),
     } as unknown as UserRepository
 
@@ -90,7 +91,7 @@ describe(PdfToImagesHandler.name, () => {
         expect(pdf).toHaveBeenCalledWith('/tmp/test.pdf')
         expect(ctx.reply).toHaveBeenCalledWith('pdftoimages_converting')
         expect(ctx.api.sendMediaGroup).toHaveBeenCalledWith(456, expect.any(Array))
-        expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
+        expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123, 50)
       })
 
       it('should convert PDF to images and send them as a photo if only one page', async () => {
@@ -105,7 +106,7 @@ describe(PdfToImagesHandler.name, () => {
         await handler.events['msg:document'](ctx)
 
         expect(ctx.replyWithPhoto).toHaveBeenCalled()
-        expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123)
+        expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123, 50)
       })
 
       it('should notify limit exceeded for free users', async () => {
@@ -188,8 +189,9 @@ describe(PdfToImagesHandler.name, () => {
           '/tmp/pdf-studio-bot-pdf-to-images-test',
           expect.objectContaining({ recursive: true }),
         )
-        // Usage must NOT have been incremented
-        expect(mockUserRepository.incrementUsage).not.toHaveBeenCalled()
+        // Usage must have been reserved and then decremented on failure
+        expect(mockUserRepository.incrementUsage).toHaveBeenCalled()
+        expect(mockUserRepository.decrementUsage).toHaveBeenCalled()
       })
 
       it('should not reply with generic error if file is not a PDF (InvalidFileError)', async () => {

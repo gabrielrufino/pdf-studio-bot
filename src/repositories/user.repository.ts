@@ -1,4 +1,4 @@
-import type { Db } from 'mongodb'
+import type { Db, Filter } from 'mongodb'
 import { EnsureInitialized } from '../decorators/ensure-initialized.decorator'
 import { UserEntity } from '../entities/user.entity'
 import { LanguageEnum } from '../enums/language.enum'
@@ -50,7 +50,7 @@ export class UserRepository extends BaseRepository<UserEntity> {
           },
         },
       },
-      indexes: ['telegram_user.id'],
+      indexes: ['telegram_user.id', 'last_usage_date', 'created_at'],
     })
   }
 
@@ -64,37 +64,21 @@ export class UserRepository extends BaseRepository<UserEntity> {
   public async findInactiveUsers(days: number): Promise<AsyncIterableIterator<UserEntity>> {
     const endWindow = new Date()
     endWindow.setDate(endWindow.getDate() - days) // 30 days ago
+    const endWindowStr = endWindow.toISOString().split('T')[0]
 
-    const cursor = this.collection.aggregate([
-      {
-        $match: {
-          is_blocked: { $ne: true },
-          is_bot_blocked: { $ne: true },
+    const filter: Record<string, unknown> = {
+      is_blocked: { $ne: true },
+      is_bot_blocked: { $ne: true },
+      $or: [
+        { last_usage_date: { $lt: endWindowStr, $ne: null } },
+        {
+          last_usage_date: null,
+          created_at: { $lt: endWindow },
         },
-      },
-      {
-        $lookup: {
-          from: 'messages',
-          let: { userId: '$telegram_user.id' },
-          pipeline: [
-            {
-              $match: {
-                $expr: { $eq: ['$telegram_user.id', '$$userId'] },
-              },
-            },
-            { $sort: { created_at: -1 } },
-            { $limit: 1 },
-          ],
-          as: 'last_message',
-        },
-      },
-      { $unwind: '$last_message' },
-      {
-        $match: {
-          'last_message.created_at': { $lt: endWindow },
-        },
-      },
-    ])
+      ],
+    }
+
+    const cursor = this.collection.find(filter as unknown as Filter<UserEntity>)
 
     return (async function* () {
       for await (const user of cursor) {
@@ -138,6 +122,29 @@ export class UserRepository extends BaseRepository<UserEntity> {
           },
         },
       ],
+      { returnDocument: 'after' },
+    )
+
+    return result ? new UserEntity(result as any) : null
+  }
+
+  @EnsureInitialized
+  public async decrementUsage(telegramId: number): Promise<UserEntity | null> {
+    const today = new Date().toISOString().split('T')[0]
+
+    const filter: any = {
+      'telegram_user.id': telegramId,
+      'is_blocked': { $ne: true },
+      'last_usage_date': today,
+      'daily_usage_count': { $gt: 0 },
+    }
+
+    const result = await this.collection.findOneAndUpdate(
+      filter,
+      {
+        $inc: { daily_usage_count: -1 },
+        $set: { updated_at: new Date() },
+      },
       { returnDocument: 'after' },
     )
 

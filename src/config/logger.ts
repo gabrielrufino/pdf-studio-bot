@@ -3,7 +3,6 @@ import pino from 'pino'
 
 export const SENSITIVE_KEYS = new Set([
   'BOT_TOKEN',
-  'GOOGLE_GENAI_API_KEY',
   'token',
   'apiKey',
   'Authorization',

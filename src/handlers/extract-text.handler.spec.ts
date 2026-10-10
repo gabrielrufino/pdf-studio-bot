@@ -49,7 +49,10 @@ describe(ExtractTextHandler.name, () => {
   let ctx: any
 
   beforeEach(() => {
-    userRepository = { incrementUsage: vi.fn() } as unknown as UserRepository
+    userRepository = {
+      incrementUsage: vi.fn().mockResolvedValue({}),
+      decrementUsage: vi.fn().mockResolvedValue({}),
+    } as unknown as UserRepository
     handler = new ExtractTextHandler(userRepository)
 
     ctx = {
@@ -74,7 +77,7 @@ describe(ExtractTextHandler.name, () => {
     vi.clearAllMocks()
   })
 
-  describe('onCommand', () => {
+  describe(ExtractTextHandler.prototype.onCommand.name, () => {
     it('should ask for file', async () => {
       await handler.onCommand(ctx)
 
@@ -97,7 +100,7 @@ describe(ExtractTextHandler.name, () => {
 
         expect(fs.writeFile).toHaveBeenCalledWith(expect.stringMatching(/\/tmp\/extract-text-[a-f0-9-]+\.txt/), 'extracted text')
         expect(ctx.replyWithDocument).toHaveBeenCalledWith(expect.any(Object), { caption: 'extracttext_success' })
-        expect(userRepository.incrementUsage).toHaveBeenCalledWith(123)
+        expect(userRepository.incrementUsage).toHaveBeenCalledWith(123, 3)
         expect(fs.rm).toHaveBeenCalledWith('/tmp/input.pdf', { force: true, recursive: true })
         expect(fs.rm).toHaveBeenCalledWith(expect.stringMatching(/\/tmp\/extract-text-[a-f0-9-]+\.txt/), { force: true, recursive: true })
         expect(ctx.session.command).toBeNull()

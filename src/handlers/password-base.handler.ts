@@ -41,7 +41,8 @@ export abstract class PasswordBaseHandler extends BaseHandler {
     'msg:text': async (ctx: CustomContext) => {
       const params = this.validateParams(PasswordParamsSchema, ctx.session.params)
 
-      if (!params.path) {
+      const inputPath = params.path
+      if (!inputPath) {
         await ctx.reply(ctx.t(`${this.prefix}_send_file`))
         return
       }
@@ -50,24 +51,26 @@ export abstract class PasswordBaseHandler extends BaseHandler {
 
       let outputDir: string | undefined
       try {
-        outputDir = await fs.mkdtemp(path.join(os.tmpdir(), `pdf-studio-bot-${this.prefix}-`))
-        await fs.chmod(outputDir, 0o700)
-        const output = path.join(outputDir, 'output.pdf')
+        await this.runWithUsage(ctx, this.userRepository, async (markDelivered) => {
+          outputDir = await fs.mkdtemp(path.join(os.tmpdir(), `pdf-studio-bot-${this.prefix}-`))
+          await fs.chmod(outputDir, 0o700)
+          const output = path.join(outputDir, 'output.pdf')
 
-        const password = ctx.message?.text
-        await ctx.deleteMessage().catch(error => this.logger.error(error, 'Failed to delete message.'))
+          const password = ctx.message?.text
+          await ctx.deleteMessage().catch(error => this.logger.error(error, 'Failed to delete message.'))
 
-        await this.processPDF(params.path, output, password)
+          await this.processPDF(inputPath, output, password)
 
-        await ctx.replyWithDocument(new InputFile(output), {
-          caption: ctx.t(`${this.prefix}_success`),
+          await ctx.replyWithDocument(new InputFile(output), {
+            caption: ctx.t(`${this.prefix}_success`),
+          })
+          markDelivered()
+
+          await fs.rm(inputPath, { force: true, recursive: true }).catch(error =>
+            this.logger.error({ error, path: inputPath }, 'Failed to remove temporary input file.'),
+          )
+          await this.resetSession(ctx)
         })
-
-        await this.userRepository.incrementUsage(ctx.from!.id)
-        await fs.rm(params.path, { force: true, recursive: true }).catch(error =>
-          this.logger.error({ error, path: params.path }, 'Failed to remove temporary input file.'),
-        )
-        await this.resetSession(ctx)
       }
       catch (error) {
         this.logger.error(error)

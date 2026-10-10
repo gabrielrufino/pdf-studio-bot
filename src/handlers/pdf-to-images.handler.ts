@@ -20,8 +20,12 @@ export class PdfToImagesHandler extends BaseHandler {
 
   private async sendImageChunks(ctx: CustomContext, images: string[], totalPages: number) {
     const CHUNK_SIZE = 10
-    for (let i = 0; i < images.length; i += CHUNK_SIZE) {
-      const chunk = images.slice(i, i + CHUNK_SIZE)
+    const numChunks = Math.ceil(images.length / CHUNK_SIZE)
+    const chunks = Array.from({ length: numChunks }, (_, index) => images.slice(index * CHUNK_SIZE, (index + 1) * CHUNK_SIZE))
+
+    await chunks.reduce(async (prevPromise, chunk, chunkIndex) => {
+      await prevPromise
+      const i = chunkIndex * CHUNK_SIZE
       if (chunk.length > 1) {
         const mediaGroup: InputMediaPhoto[] = chunk.map((imagePath, index) => {
           const currentPage = i + index + 1
@@ -40,10 +44,10 @@ export class PdfToImagesHandler extends BaseHandler {
         })
       }
 
-      if (i + CHUNK_SIZE < images.length) {
+      if (chunkIndex < chunks.length - 1) {
         await setTimeout(1000)
       }
-    }
+    }, Promise.resolve())
   }
 
   readonly command = CommandEnum.PdfToImages
@@ -79,29 +83,29 @@ export class PdfToImagesHandler extends BaseHandler {
 
         await this.checkLimits(ctx, { pagesCount: totalPages })
 
-        await ctx.reply(ctx.t('pdftoimages_converting'))
+        await this.runWithUsage(ctx, this.userRepository, async () => {
+          await ctx.reply(ctx.t('pdftoimages_converting'))
 
-        outputDir = await fs.mkdtemp(join(os.tmpdir(), 'pdf-studio-bot-pdf-to-images-'))
-        await fs.chmod(outputDir, 0o700)
+          outputDir = await fs.mkdtemp(join(os.tmpdir(), 'pdf-studio-bot-pdf-to-images-'))
+          await fs.chmod(outputDir, 0o700)
 
-        const images: string[] = []
-        const writePromises: Promise<void>[] = []
-        let pageNumber = 1
-        for await (const image of document) {
-          const imagePath = join(outputDir, `page-${pageNumber}.png`)
-          writePromises.push(fs.writeFile(imagePath, image))
-          images.push(imagePath)
-          pageNumber++
-        }
-        const writeResults = await Promise.allSettled(writePromises)
-        const failedWrite = writeResults.find((result): result is PromiseRejectedResult => result.status === 'rejected')
-        if (failedWrite) {
-          throw failedWrite.reason
-        }
+          const images: string[] = []
+          const writePromises: Promise<void>[] = []
+          let pageNumber = 1
+          for await (const image of document) {
+            const imagePath = join(outputDir, `page-${pageNumber}.png`)
+            writePromises.push(fs.writeFile(imagePath, image))
+            images.push(imagePath)
+            pageNumber++
+          }
+          const writeResults = await Promise.allSettled(writePromises)
+          const failedWrite = writeResults.find((result): result is PromiseRejectedResult => result.status === 'rejected')
+          if (failedWrite) {
+            throw failedWrite.reason
+          }
 
-        await this.sendImageChunks(ctx, images, totalPages)
-
-        await this.userRepository.incrementUsage(ctx.from!.id)
+          await this.sendImageChunks(ctx, images, totalPages)
+        })
       }
       catch (error) {
         if (error instanceof InvalidFileError || error instanceof LimitExceededError) {

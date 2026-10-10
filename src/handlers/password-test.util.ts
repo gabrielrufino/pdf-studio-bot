@@ -34,7 +34,8 @@ export function createMockContext(text = 'password123'): CustomContext {
 
 export function createMockUserRepository(): UserRepository {
   return {
-    incrementUsage: vi.fn(),
+    incrementUsage: vi.fn().mockResolvedValue({}),
+    decrementUsage: vi.fn().mockResolvedValue({}),
   } as unknown as UserRepository
 }
 

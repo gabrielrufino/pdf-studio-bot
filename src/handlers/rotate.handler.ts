@@ -88,36 +88,36 @@ export class RotateHandler extends BaseHandler {
         const fileSize = file.file_size ?? 0
         await this.checkLimits(ctx, { fileSize })
 
-        inputPath = await file.download()
+        await this.runWithUsage(ctx, this.userRepository, async () => {
+          inputPath = await file.download()
 
-        if (!inputPath) {
-          throw new Error('Failed to download file')
-        }
+          if (!inputPath) {
+            throw new Error('Failed to download file')
+          }
 
-        const pdfBytes = await fs.readFile(inputPath)
-        const pdfDoc = await PDFDocument.load(pdfBytes)
+          const pdfBytes = await fs.readFile(inputPath)
+          const pdfDoc = await PDFDocument.load(pdfBytes)
 
-        const pagesCount = pdfDoc.getPageCount()
-        await this.checkLimits(ctx, { pagesCount })
+          const pagesCount = pdfDoc.getPageCount()
+          await this.checkLimits(ctx, { pagesCount })
 
-        const pages = pdfDoc.getPages()
-        for (const page of pages) {
-          const currentRotation = page.getRotation().angle
-          const newRotation = ((currentRotation + degreesValue) % 360 + 360) % 360
-          page.setRotation(degrees(newRotation))
-        }
+          const pages = pdfDoc.getPages()
+          for (const page of pages) {
+            const currentRotation = page.getRotation().angle
+            const newRotation = ((currentRotation + degreesValue) % 360 + 360) % 360
+            page.setRotation(degrees(newRotation))
+          }
 
-        const savedPdfBytes = await pdfDoc.save()
+          const savedPdfBytes = await pdfDoc.save()
 
-        outputPath = join(os.tmpdir(), `rotate-${crypto.randomUUID()}.pdf`)
-        await fs.writeFile(outputPath, savedPdfBytes)
+          outputPath = join(os.tmpdir(), `rotate-${crypto.randomUUID()}.pdf`)
+          await fs.writeFile(outputPath, savedPdfBytes)
 
-        const rotatedFile = new InputFile(outputPath, 'rotated.pdf')
-        await ctx.replyWithDocument(rotatedFile, {
-          caption: ctx.t('rotate_success'),
+          const rotatedFile = new InputFile(outputPath, 'rotated.pdf')
+          await ctx.replyWithDocument(rotatedFile, {
+            caption: ctx.t('rotate_success'),
+          })
         })
-
-        await this.userRepository.incrementUsage(ctx.from!.id)
       }
       catch (error) {
         if (error instanceof LimitExceededError) {

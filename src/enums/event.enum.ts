@@ -13,7 +13,6 @@ export enum EventEnum {
   CommandRotate = 'command_rotate',
   CommandSplit = 'command_split',
   CommandStart = 'command_start',
-  CommandSummary = 'command_summary',
   CommandTest = 'command_test',
   CommandVersion = 'command_version',
 
@@ -31,7 +30,6 @@ export enum EventEnum {
   ButtonRotate = 'button_rotate',
   ButtonSplit = 'button_split',
   ButtonStart = 'button_start',
-  ButtonSummary = 'button_summary',
   ButtonTest = 'button_test',
   ButtonVersion = 'button_version',
 

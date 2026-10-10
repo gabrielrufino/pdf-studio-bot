@@ -50,7 +50,8 @@ describe(RotateHandler.name, () => {
 
   beforeEach(() => {
     userRepository = {
-      incrementUsage: vi.fn().mockResolvedValue(undefined),
+      incrementUsage: vi.fn().mockResolvedValue({}),
+      decrementUsage: vi.fn().mockResolvedValue({}),
     } as unknown as UserRepository
 
     handler = new RotateHandler(userRepository)
@@ -90,7 +91,7 @@ describe(RotateHandler.name, () => {
     })
   })
 
-  describe('onCommand', () => {
+  describe(RotateHandler.prototype.onCommand.name, () => {
     it('should prompt for file', async () => {
       ctx.session.command = null
       await handler.onCommand(ctx)
@@ -132,7 +133,7 @@ describe(RotateHandler.name, () => {
       expect(fs.rm).toHaveBeenCalledWith('/tmp/test.pdf', { force: true })
       expect(fs.rm).toHaveBeenCalledWith(expect.stringMatching(/rotate-[a-f0-9-]+\.pdf$/), { force: true })
 
-      expect(userRepository.incrementUsage).toHaveBeenCalledWith(1)
+      expect(userRepository.incrementUsage).toHaveBeenCalledWith(1, 3)
       expect(ctx.session.command).toBeNull()
       expect(ctx.session.params).toBeNull()
     })

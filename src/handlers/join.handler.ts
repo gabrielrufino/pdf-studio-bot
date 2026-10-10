@@ -83,33 +83,38 @@ export class JoinHandler extends BaseHandler {
       return
     }
 
-    const outputDir = await fs.mkdtemp(join(os.tmpdir(), 'pdf-studio-bot-join-'))
-    await fs.chmod(outputDir, 0o700)
-    const outputPath = join(outputDir, 'merged.pdf')
+    let outputDir: string | undefined
 
     try {
-      await ctx.reply(ctx.t('join_merging'))
+      await this.runWithUsage(ctx, this.userRepository, async () => {
+        await ctx.reply(ctx.t('join_merging'))
 
-      const pdfWriter = muhammara.createWriter(outputPath)
+        outputDir = await fs.mkdtemp(join(os.tmpdir(), 'pdf-studio-bot-join-'))
+        await fs.chmod(outputDir, 0o700)
+        const outputPath = join(outputDir, 'merged.pdf')
 
-      for (const path of paths) {
-        pdfWriter.appendPDFPagesFromPDF(path)
-      }
+        const pdfWriter = muhammara.createWriter(outputPath)
 
-      pdfWriter.end()
+        for (const path of paths) {
+          pdfWriter.appendPDFPagesFromPDF(path)
+        }
 
-      await ctx.replyWithDocument(new InputFile(outputPath, 'merged.pdf'), {
-        caption: ctx.t('join_success'),
+        pdfWriter.end()
+
+        await ctx.replyWithDocument(new InputFile(outputPath, 'merged.pdf'), {
+          caption: ctx.t('join_success'),
+        })
       })
-      await this.userRepository.incrementUsage(ctx.from!.id)
     }
     catch (error) {
       this.logger.error(error)
       await ctx.reply(ctx.t('join_error'))
     }
     finally {
-      await fs.rm(outputDir, { force: true, recursive: true }).catch(error =>
-        this.logger.error({ error, path: outputDir }, 'Failed to remove temporary folder.'))
+      if (outputDir) {
+        await fs.rm(outputDir, { force: true, recursive: true }).catch(error =>
+          this.logger.error({ error, path: outputDir }, 'Failed to remove temporary folder.'))
+      }
 
       await this.resetSession(ctx)
     }
