@@ -72,7 +72,8 @@ export class SplitHandler extends BaseHandler {
             return outPath
           })
 
-          for (const [index, outputPath] of outputFiles.entries()) {
+          await outputFiles.reduce(async (prevPromise, outputPath, index) => {
+            await prevPromise
             const pageNumber = index + 1
             const pageFile = new InputFile(outputPath, `page-${pageNumber}.pdf`)
 
@@ -84,7 +85,7 @@ export class SplitHandler extends BaseHandler {
             if (index < outputFiles.length - 1) {
               await setTimeout(1000)
             }
-          }
+          }, Promise.resolve())
         })
       }
       catch (error) {

@@ -20,8 +20,12 @@ export class PdfToImagesHandler extends BaseHandler {
 
   private async sendImageChunks(ctx: CustomContext, images: string[], totalPages: number) {
     const CHUNK_SIZE = 10
-    for (let i = 0; i < images.length; i += CHUNK_SIZE) {
-      const chunk = images.slice(i, i + CHUNK_SIZE)
+    const numChunks = Math.ceil(images.length / CHUNK_SIZE)
+    const chunks = Array.from({ length: numChunks }, (_, index) => images.slice(index * CHUNK_SIZE, (index + 1) * CHUNK_SIZE))
+
+    await chunks.reduce(async (prevPromise, chunk, chunkIndex) => {
+      await prevPromise
+      const i = chunkIndex * CHUNK_SIZE
       if (chunk.length > 1) {
         const mediaGroup: InputMediaPhoto[] = chunk.map((imagePath, index) => {
           const currentPage = i + index + 1
@@ -40,10 +44,10 @@ export class PdfToImagesHandler extends BaseHandler {
         })
       }
 
-      if (i + CHUNK_SIZE < images.length) {
+      if (chunkIndex < chunks.length - 1) {
         await setTimeout(1000)
       }
-    }
+    }, Promise.resolve())
   }
 
   readonly command = CommandEnum.PdfToImages
