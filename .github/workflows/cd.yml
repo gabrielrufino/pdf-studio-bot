@@ -37,3 +37,23 @@ jobs:
           CD_TARGET_REPO: ${{ secrets.CD_TARGET_REPO }}
         run: |
           gh workflow run cd.yml --repo "$CD_TARGET_REPO" --ref main
+
+  deploy-website:
+    name: Deploy Website
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: './website'
+      - id: deployment
+        uses: actions/deploy-pages@v5
