@@ -61,14 +61,17 @@ describe(ProHandler.name, () => {
 
   describe(ProHandler.prototype.onCommand.name, () => {
     it('should show subscription info if user is already PRO', async () => {
-      const existingUser = createMockUser({ plan_type: PlanTypeEnum.Pro, plan_started_at: new Date('2026-01-01') })
+      const startDate = new Date('2026-01-01')
+      const existingUser = createMockUser({ plan_type: PlanTypeEnum.Pro, plan_started_at: startDate })
       vi.spyOn(userRepository, 'findByTelegramId').mockResolvedValueOnce(existingUser)
 
-      const ctx = createMockContext()
+      const ctx = createMockContext({
+        t: (key: string) => key === 'subscription_info' ? 'Active since {date}' : key,
+      })
 
       await handler.onCommand(ctx)
 
-      expect(ctx.reply).toHaveBeenCalledWith('subscription_info', { parse_mode: 'HTML' })
+      expect(ctx.reply).toHaveBeenCalledWith(`Active since ${startDate.toLocaleDateString()}`, { parse_mode: 'HTML' })
       expect(ctx.session.command).toBeNull()
     })
 
