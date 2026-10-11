@@ -2,6 +2,7 @@ import type { BaseHandler } from '../handlers/base.handler'
 import type { CustomContext } from '../types/custom-context.type'
 import { InlineKeyboard } from 'grammy'
 import { CommandEnum } from '../enums/command.enum'
+import { PlanTypeEnum } from '../enums/plan-type.enum'
 
 export class HelpMessage {
   private static readonly OPERATIONS = new Set<string>([
@@ -38,28 +39,35 @@ export class HelpMessage {
       HelpMessage.cache.set(this.handlers, handlersCache)
     }
 
+    const isPro = this.ctx.user?.plan_type === PlanTypeEnum.Pro
     const language = this.ctx.session?.language || 'en'
-    if (handlersCache[language]) {
-      return handlersCache[language]
+    const cacheKey = `${language}_${isPro ? 'pro' : 'free'}`
+    if (handlersCache[cacheKey]) {
+      return handlersCache[cacheKey]
     }
-
-    const keyboard = new InlineKeyboard()
 
     const operationHandlers = this.handlers.filter(h => HelpMessage.OPERATIONS.has(h.command))
     const informationHandlers = this.handlers.filter(h => HelpMessage.INFORMATION.has(h.command))
 
-    const allHandlers = [...operationHandlers, ...informationHandlers]
-
-    allHandlers.forEach((h) => {
-      keyboard.text(this.ctx.t(`operation_${h.command}`), h.command).row()
-    })
+    const keyboard = [
+      ...operationHandlers,
+      ...informationHandlers,
+    ].reduce(
+      (kb, h) => {
+        const commandKey = h.command === CommandEnum.Pro && isPro
+          ? 'operation_subscription'
+          : `operation_${h.command}`
+        return kb.text(this.ctx.t(commandKey), h.command).row()
+      },
+      new InlineKeyboard(),
+    )
 
     const result = {
       text: this.ctx.t('help_select_operation'),
       reply_markup: keyboard,
     }
 
-    handlersCache[language] = result
+    handlersCache[cacheKey] = result
 
     return result
   }
