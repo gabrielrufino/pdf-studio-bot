@@ -83,5 +83,6 @@
   "compress_send_file": "🗜️ Envíame el archivo PDF que deseas comprimir.",
   "compress_compressing": "🔄 Comprimiendo tu archivo PDF...",
   "compress_success": "✅ ¡Aquí tienes tu archivo PDF comprimido!",
-  "compress_error": "❌ Ocurrió un error al comprimir tu archivo PDF. Por favor, inténtalo de nuevo más tarde."
+  "compress_error": "❌ Ocurrió un error al comprimir tu archivo PDF. Por favor, inténtalo de nuevo más tarde.",
+  "compress_no_reduction": "⚠️ No se pudo comprimir más el archivo. El resultado sería del mismo tamaño o mayor que el original."
 }

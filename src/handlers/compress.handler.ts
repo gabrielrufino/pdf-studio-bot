@@ -53,6 +53,11 @@ export class CompressHandler extends BaseHandler {
 
           const compressedPdfBytes = await pdfDoc.save({ useObjectStreams: true })
 
+          if (compressedPdfBytes.length >= pdfBytes.length) {
+            await ctx.reply(ctx.t('compress_no_reduction'))
+            return
+          }
+
           outputPath = join(os.tmpdir(), `compress-${crypto.randomUUID()}.pdf`)
           await fs.writeFile(outputPath, compressedPdfBytes)
 

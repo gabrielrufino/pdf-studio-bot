@@ -3,6 +3,7 @@ import type { CustomContext } from '../types/custom-context.type'
 import { Buffer } from 'node:buffer'
 import fs from 'node:fs/promises'
 
+import { PDFDocument } from 'pdf-lib'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { logger } from '../config/logger'
 import { PlanTypeEnum } from '../enums/plan-type.enum'
@@ -90,6 +91,10 @@ describe(CompressHandler.name, () => {
     describe('msg:document', () => {
       it('should successfully compress PDF and send the document', async () => {
         vi.mocked(fs.readFile).mockResolvedValue(Buffer.from('pdf data'))
+        vi.mocked(PDFDocument.load).mockResolvedValue({
+          getPageCount: vi.fn().mockReturnValue(1),
+          save: vi.fn().mockResolvedValue(Buffer.from('small')),
+        } as any)
 
         const downloadMock = vi.fn().mockResolvedValue('/tmp/input.pdf')
         ctx.getFile = vi.fn().mockResolvedValue({ download: downloadMock })
@@ -103,6 +108,24 @@ describe(CompressHandler.name, () => {
         expect(userRepository.incrementUsage).toHaveBeenCalledWith(123, 3)
         expect(ctx.session.command).toBeNull()
         expect(ctx.session.params).toBeNull()
+      })
+
+      it('should reply with no_reduction message when compressed file is not smaller', async () => {
+        vi.mocked(fs.readFile).mockResolvedValue(Buffer.from('pdf data'))
+        vi.mocked(PDFDocument.load).mockResolvedValue({
+          getPageCount: vi.fn().mockReturnValue(1),
+          save: vi.fn().mockResolvedValue(Buffer.from('this is larger than the original file')),
+        } as any)
+
+        const downloadMock = vi.fn().mockResolvedValue('/tmp/input.pdf')
+        ctx.getFile = vi.fn().mockResolvedValue({ download: downloadMock })
+
+        await handler.events['msg:document']!(ctx)
+
+        expect(ctx.reply).toHaveBeenCalledWith('compress_compressing')
+        expect(ctx.reply).toHaveBeenCalledWith('compress_no_reduction')
+        expect(ctx.replyWithDocument).not.toHaveBeenCalled()
+        expect(userRepository.incrementUsage).toHaveBeenCalledWith(123, 3)
       })
 
       it('should reply with error when user not found', async () => {
