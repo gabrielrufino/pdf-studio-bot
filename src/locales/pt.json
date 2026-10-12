@@ -78,5 +78,10 @@
   "extracttext_send_file": "📝 Me envie um arquivo PDF e eu extrairei o texto para você!",
   "extracttext_extracting": "🔄 Extraindo texto do seu PDF...",
   "extracttext_success": "✅ Aqui está o texto extraído do seu PDF!",
-  "extracttext_error": "❌ Ocorreu um erro ao extrair texto do seu PDF. Por favor, tente novamente mais tarde."
+  "extracttext_error": "❌ Ocorreu um erro ao extrair texto do seu PDF. Por favor, tente novamente mais tarde.",
+  "operation_compress": "🗜️ Comprimir",
+  "compress_send_file": "🗜️ Envie-me o arquivo PDF que deseja comprimir.",
+  "compress_compressing": "🔄 Comprimindo seu arquivo PDF...",
+  "compress_success": "✅ Aqui está o seu arquivo PDF comprimido!",
+  "compress_error": "❌ Ocorreu um erro ao comprimir seu arquivo PDF. Por favor, tente novamente mais tarde."
 }

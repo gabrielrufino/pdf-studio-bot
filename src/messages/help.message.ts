@@ -6,6 +6,7 @@ import { PlanTypeEnum } from '../enums/plan-type.enum'
 
 export class HelpMessage {
   private static readonly OPERATIONS = new Set<string>([
+    CommandEnum.Compress,
     CommandEnum.Download,
     CommandEnum.Extract,
     CommandEnum.ExtractText,
