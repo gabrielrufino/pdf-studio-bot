@@ -1,4 +1,5 @@
 export enum CommandEnum {
+  Compress = 'compress',
   Download = 'download',
   Feedback = 'feedback',
   Help = 'help',

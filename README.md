@@ -11,6 +11,9 @@ Try it now and experience the convenience: just click the button above 🚀
 - **📥 Download PDFs from URL**
   Convert any webpage, article, or documentation URL into a clean A4 PDF file.
 
+- **🗜️ Compress PDF**
+  Reduce the file size of your PDFs while maintaining high quality.
+
 - **🔒 Add Password to PDF**
   Protect your confidential documents by encrypting any PDF file with a password.
 
@@ -60,6 +63,7 @@ Try it now and experience the convenience: just click the button above 🚀
 - `/start` - Start using the bot and view the welcome guide
 - `/help` - Show the interactive list of available commands and operations
 - `/download` - Download and convert a webpage URL into a PDF
+- `/compress` - Reduce the file size of a PDF document
 - `/join` - Join multiple PDF files into a single document
 - `/split` - Split a PDF into individual pages
 - `/extract` - Extract a specific range of pages from a PDF

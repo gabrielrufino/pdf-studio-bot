@@ -10,6 +10,7 @@
   "operation_join": "➕ Join",
   "operation_pdftoimages": "🖼️ PDF to Images",
   "operation_pro": "💎 Pro",
+  "operation_subscription": "💎 My Subscription",
   "operation_putpassword": "🔐 Put Password",
   "operation_removepassword": "🔓 Remove Password",
   "operation_split": "✂️ Split",
@@ -52,6 +53,7 @@
   "feedback_send_message": "💬 Please send your feedback. It will be sent directly to the developer.",
   "feedback_success": "✅ Thank you for your feedback!",
   "pro_already_pro": "🌟 You are already a Pro user!",
+  "subscription_info": "💎 <b>Your Pro Subscription</b>\n\n✨ Status: Active\n📅 Since: {date}\n🚀 Limit: 50 operations/day",
   "pro_upgrade": "💎 Upgrade to Pro for more daily usage and features!",
   "pro_success": "🎉 Thank you for subscribing to PRO! You now have full access to all features.",
   "version_info": "🤖 <b>PDF Studio Bot</b>\n\nVersion: {version}\nDeveloper: @gabrielrufino",
@@ -76,5 +78,11 @@
   "extracttext_send_file": "📝 Send me a PDF file and I will extract the text for you!",
   "extracttext_extracting": "🔄 Extracting text from your PDF...",
   "extracttext_success": "✅ Here is the extracted text from your PDF!",
-  "extracttext_error": "❌ An error occurred while extracting text from your PDF. Please try again later."
+  "extracttext_error": "❌ An error occurred while extracting text from your PDF. Please try again later.",
+  "operation_compress": "🗜️ Compress",
+  "compress_send_file": "🗜️ Send me the PDF file you want to compress.",
+  "compress_compressing": "🔄 Compressing your PDF file...",
+  "compress_success": "✅ Here is your compressed PDF file!",
+  "compress_error": "❌ An error occurred while compressing your PDF file. Please try again later.",
+  "compress_no_reduction": "⚠️ The file could not be compressed further. The result would be the same size or larger than the original."
 }

@@ -1,4 +1,5 @@
 export enum EventEnum {
+  CommandCompress = 'command_compress',
   CommandDownload = 'command_download',
   CommandExtract = 'command_extract',
   CommandExtractText = 'command_extracttext',
@@ -16,6 +17,7 @@ export enum EventEnum {
   CommandTest = 'command_test',
   CommandVersion = 'command_version',
 
+  ButtonCompress = 'button_compress',
   ButtonDownload = 'button_download',
   ButtonExtract = 'button_extract',
   ButtonExtractText = 'button_extracttext',

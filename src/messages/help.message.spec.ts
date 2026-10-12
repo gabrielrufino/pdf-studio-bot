@@ -121,5 +121,23 @@ describe(HelpMessage.name, () => {
 
       expect(t.mock.calls.length).toBe(callCountAfterFirst)
     })
+
+    it('should use operation_subscription for pro users and operation_pro for free users', () => {
+      const proHandlers = [
+        { command: 'pro', description: 'Get PRO access' },
+      ] as any
+
+      const freeCtx = { session: { language: 'en' }, user: { plan_type: 'free' }, t: (key: string) => key } as any
+      const proCtx = { session: { language: 'en' }, user: { plan_type: 'pro' }, t: (key: string) => key } as any
+
+      const freeResult = new HelpMessage(proHandlers, freeCtx).build()
+      const proResult = new HelpMessage(proHandlers, proCtx).build()
+
+      const freeKeyboard = freeResult.reply_markup as InlineKeyboard
+      const proKeyboard = proResult.reply_markup as InlineKeyboard
+
+      expect(freeKeyboard.inline_keyboard[0][0].text).toBe('operation_pro')
+      expect(proKeyboard.inline_keyboard[0][0].text).toBe('operation_subscription')
+    })
   })
 })

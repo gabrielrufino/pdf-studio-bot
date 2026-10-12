@@ -1,6 +1,7 @@
 import type { BaseHandler } from './base.handler'
 import { browser } from '../config/browser'
 import { configurationRepository, feedbackRepository, paymentRepository, userRepository } from '../repositories'
+import { CompressHandler } from './compress.handler'
 import { DownloadHandler } from './download.handler'
 import { ExtractTextHandler } from './extract-text.handler'
 import { ExtractHandler } from './extract.handler'
@@ -18,6 +19,7 @@ import { StartHandler } from './start.handler'
 import { VersionHandler } from './version.handler'
 
 const coreHandlers: Array<BaseHandler> = [
+  new CompressHandler(userRepository),
   new DownloadHandler(browser, userRepository),
   new FeedbackHandler(feedbackRepository),
   new JoinHandler(userRepository),
