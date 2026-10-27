@@ -55,14 +55,9 @@ export class DownloadHandler extends BaseHandler {
           const isPdfUrl = parsedUrl.pathname.toLowerCase().endsWith('.pdf')
 
           if (isPdfUrl) {
-            const response = await fetch(url)
-            if (!response.ok) {
-              throw new Error(`Failed to fetch PDF: ${response.statusText}`)
-            }
-            const arrayBuffer = await response.arrayBuffer()
-            const buffer = Buffer.from(arrayBuffer)
+            const pdfBytes = await this.downloadPdfWithSsrpProtection(url)
             const filePath = path.join(folder, 'file.pdf')
-            await fs.writeFile(filePath, buffer)
+            await fs.writeFile(filePath, pdfBytes)
 
             const filenameFromUrl = path.basename(parsedUrl.pathname) || 'document.pdf'
             const sanitizedFilename = filenameFromUrl.replace(/[/\\[\]{}()<>:;|=,*?"']/g, '').trim() || 'document.pdf'
@@ -104,6 +99,41 @@ export class DownloadHandler extends BaseHandler {
       throw new SessionValidationError()
     }
     return parseResult.data
+  }
+
+  private async downloadPdfWithSsrpProtection(url: string): Promise<Buffer> {
+    const MAX_REDIRECTS = 5
+    const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024 // 50MB hard cap
+    let currentUrl = url
+
+    for (let i = 0; i < MAX_REDIRECTS; i++) {
+      const parsed = new URL(currentUrl)
+      await this.validateUrl(parsed.href)
+
+      const response = await fetch(currentUrl, { redirect: 'manual' })
+
+      if (response.status >= 300 && response.status < 400 && response.headers.get('location')) {
+        currentUrl = new URL(response.headers.get('location')!, parsed.href).href
+        continue
+      }
+
+      const contentLength = response.headers.get('content-length')
+      if (contentLength) {
+        const length = parseInt(contentLength, 10)
+        if (length > MAX_FILE_SIZE_BYTES) {
+          throw new Error(`PDF download exceeds maximum allowed size`)
+        }
+      }
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch PDF: ${response.statusText}`)
+      }
+
+      const arrayBuffer = await response.arrayBuffer()
+      return Buffer.from(arrayBuffer)
+    }
+
+    throw new Error('Too many redirects')
   }
 
   private setupRequestInterception(page: Page): void {

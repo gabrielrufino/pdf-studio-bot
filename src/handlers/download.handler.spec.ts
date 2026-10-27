@@ -87,12 +87,17 @@ describe(DownloadHandler.name, () => {
         const fetchMock = vi.fn().mockResolvedValue({
           ok: true,
           arrayBuffer: vi.fn().mockResolvedValue(Buffer.from('pdf bytes')),
+          headers: new Map(),
+          status: 200,
         })
         vi.stubGlobal('fetch', fetchMock)
 
         await handler.events['msg:text'](ctx)
 
-        expect(fetchMock).toHaveBeenCalledWith('https://example.com/document.pdf')
+        expect(fetchMock).toHaveBeenCalledWith(
+          'https://example.com/document.pdf',
+          { redirect: 'manual' },
+        )
         expect(mockBrowser.getInstance).not.toHaveBeenCalled()
         expect(ctx.replyWithDocument).toHaveBeenCalledWith(
           expect.objectContaining({ filename: 'document.pdf' }),
@@ -109,11 +114,17 @@ describe(DownloadHandler.name, () => {
         const fetchMock = vi.fn().mockResolvedValue({
           ok: true,
           arrayBuffer: vi.fn().mockResolvedValue(Buffer.from('pdf bytes')),
+          headers: new Map(),
+          status: 200,
         })
         vi.stubGlobal('fetch', fetchMock)
 
         await handler.events['msg:text'](ctx)
 
+        expect(fetchMock).toHaveBeenCalledWith(
+          'https://example.com/report.pdf?v=1&token=abc',
+          { redirect: 'manual' },
+        )
         expect(mockBrowser.getInstance).not.toHaveBeenCalled()
         expect(ctx.replyWithDocument).toHaveBeenCalledWith(
           expect.objectContaining({ filename: 'report.pdf' }),
@@ -122,11 +133,85 @@ describe(DownloadHandler.name, () => {
         vi.unstubAllGlobals()
       })
 
+      it('should follow a single HTTP redirect for PDF download', async () => {
+        if (ctx.message) {
+          ctx.message.text = 'https://example.com/redirect.pdf'
+        }
+        const firstResponse = {
+          ok: true,
+          status: 302,
+          headers: new Map<string, string>([['location', 'https://cdn.example.com/final.pdf']]),
+        }
+        const secondResponse = {
+          ok: true,
+          arrayBuffer: vi.fn().mockResolvedValue(Buffer.from('pdf bytes')),
+          headers: new Map(),
+          status: 200,
+        }
+        const fetchMock = vi.fn().mockResolvedValueOnce(firstResponse).mockResolvedValueOnce(secondResponse)
+        vi.stubGlobal('fetch', fetchMock)
+
+        await handler.events['msg:text'](ctx)
+
+        expect(fetchMock).toHaveBeenCalledTimes(2)
+        expect(fetchMock).toHaveBeenLastCalledWith('https://cdn.example.com/final.pdf', { redirect: 'manual' })
+        expect(mockBrowser.getInstance).not.toHaveBeenCalled()
+        expect(ctx.replyWithDocument).toHaveBeenCalled()
+
+        vi.unstubAllGlobals()
+      })
+
+      it('should reply with error when too many redirects occur', async () => {
+        if (ctx.message) {
+          ctx.message.text = 'https://example.com/chase.pdf'
+        }
+        const redirectUrl = 'https://example.com/loop.pdf'
+        const redirectResponse = {
+          ok: true,
+          status: 302,
+          headers: new Map<string, string>([['location', redirectUrl]]),
+        }
+        const fetchMock = vi.fn().mockResolvedValue(redirectResponse)
+        vi.stubGlobal('fetch', fetchMock)
+
+        await handler.events['msg:text'](ctx)
+
+        expect(fetchMock).toHaveBeenCalledTimes(5)
+        expect(ctx.reply).toHaveBeenCalledWith('download_error')
+        expect(mockBrowser.getInstance).not.toHaveBeenCalled()
+
+        vi.unstubAllGlobals()
+      })
+
+      it('should reject downloads exceeding max file size', async () => {
+        if (ctx.message) {
+          ctx.message.text = 'https://example.com/huge.pdf'
+        }
+        const fetchMock = vi.fn().mockResolvedValue({
+          ok: true,
+          headers: new Map<string, string>([['content-length', '60000000']]),
+          status: 200,
+        })
+        vi.stubGlobal('fetch', fetchMock)
+
+        await handler.events['msg:text'](ctx)
+
+        expect(ctx.reply).toHaveBeenCalledWith('download_error')
+        expect(mockBrowser.getInstance).not.toHaveBeenCalled()
+
+        vi.unstubAllGlobals()
+      })
+
       it('should reply with error when direct PDF download fails', async () => {
         if (ctx.message) {
           ctx.message.text = 'https://example.com/missing.pdf'
         }
-        const fetchMock = vi.fn().mockResolvedValue({ ok: false, statusText: 'Not Found' })
+        const fetchMock = vi.fn().mockResolvedValue({
+          ok: false,
+          statusText: 'Not Found',
+          headers: new Map(),
+          status: 404,
+        })
         vi.stubGlobal('fetch', fetchMock)
 
         await handler.events['msg:text'](ctx)
