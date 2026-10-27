@@ -113,15 +113,22 @@ export class DownloadHandler extends BaseHandler {
       const response = await fetch(currentUrl, { redirect: 'manual' })
 
       if (response.status >= 300 && response.status < 400 && response.headers.get('location')) {
-        currentUrl = new URL(response.headers.get('location')!, parsed.href).href
+        const locationHeader = response.headers.get('location')!
+        const nextUrl = new URL(locationHeader, parsed.href)
+
+        if (!['http:', 'https:'].includes(nextUrl.protocol)) {
+          throw new Error('Only HTTP/HTTPS redirects are allowed')
+        }
+
+        currentUrl = nextUrl.href
         continue
       }
 
       const contentLength = response.headers.get('content-length')
       if (contentLength) {
-        const length = parseInt(contentLength, 10)
-        if (length > MAX_FILE_SIZE_BYTES) {
-          throw new Error(`PDF download exceeds maximum allowed size`)
+        const parsedLength = parseInt(contentLength, 10)
+        if (parsedLength > MAX_FILE_SIZE_BYTES) {
+          throw new Error('PDF download exceeds maximum allowed size')
         }
       }
 
@@ -130,6 +137,10 @@ export class DownloadHandler extends BaseHandler {
       }
 
       const arrayBuffer = await response.arrayBuffer()
+      if (arrayBuffer.byteLength > MAX_FILE_SIZE_BYTES) {
+        throw new Error('PDF download exceeds maximum allowed size')
+      }
+
       return Buffer.from(arrayBuffer)
     }
 
