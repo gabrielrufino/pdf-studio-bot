@@ -64,6 +64,22 @@ describe(DownloadHandler.name, () => {
     }, reply: vi.fn(), replyWithDocument: vi.fn() } as unknown as CustomContext
   })
 
+  const setUrl = (url: string) => {
+    if (ctx.message) {
+      ctx.message.text = url
+    }
+  }
+
+  const mockFetch = (response: object) => {
+    const fetchMock = vi.fn().mockResolvedValue(response)
+    vi.stubGlobal('fetch', fetchMock)
+    return fetchMock
+  }
+
+  const runEvent = () => handler.events['msg:text'](ctx)
+
+  const unstubFetch = () => vi.unstubAllGlobals()
+
   it('should have correct command', () => {
     expect(handler.command).toBe(CommandEnum.Download)
   })
@@ -81,18 +97,15 @@ describe(DownloadHandler.name, () => {
   describe('events', () => {
     describe('msg:text', () => {
       it('should download direct PDF file when URL ends with .pdf', async () => {
-        if (ctx.message) {
-          ctx.message.text = 'https://example.com/document.pdf'
-        }
-        const fetchMock = vi.fn().mockResolvedValue({
+        setUrl('https://example.com/document.pdf')
+        const fetchMock = mockFetch({
           ok: true,
           arrayBuffer: vi.fn().mockResolvedValue(Buffer.from('pdf bytes')),
           headers: new Map(),
           status: 200,
         })
-        vi.stubGlobal('fetch', fetchMock)
 
-        await handler.events['msg:text'](ctx)
+        await runEvent()
 
         expect(fetchMock).toHaveBeenCalledWith(
           'https://example.com/document.pdf',
@@ -104,22 +117,19 @@ describe(DownloadHandler.name, () => {
         )
         expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123, 3)
 
-        vi.unstubAllGlobals()
+        unstubFetch()
       })
 
       it('should handle uppercase .PDF extensions', async () => {
-        if (ctx.message) {
-          ctx.message.text = 'https://example.com/document.PDF'
-        }
-        const fetchMock = vi.fn().mockResolvedValue({
+        setUrl('https://example.com/document.PDF')
+        const fetchMock = mockFetch({
           ok: true,
           arrayBuffer: vi.fn().mockResolvedValue(Buffer.from('pdf bytes')),
           headers: new Map(),
           status: 200,
         })
-        vi.stubGlobal('fetch', fetchMock)
 
-        await handler.events['msg:text'](ctx)
+        await runEvent()
 
         expect(fetchMock).toHaveBeenCalledWith(
           'https://example.com/document.PDF',
@@ -128,22 +138,19 @@ describe(DownloadHandler.name, () => {
         expect(mockBrowser.getInstance).not.toHaveBeenCalled()
         expect(ctx.replyWithDocument).toHaveBeenCalled()
 
-        vi.unstubAllGlobals()
+        unstubFetch()
       })
 
       it('should download PDF file with query params', async () => {
-        if (ctx.message) {
-          ctx.message.text = 'https://example.com/report.pdf?v=1&token=abc'
-        }
-        const fetchMock = vi.fn().mockResolvedValue({
+        setUrl('https://example.com/report.pdf?v=1&token=abc')
+        const fetchMock = mockFetch({
           ok: true,
           arrayBuffer: vi.fn().mockResolvedValue(Buffer.from('pdf bytes')),
           headers: new Map(),
           status: 200,
         })
-        vi.stubGlobal('fetch', fetchMock)
 
-        await handler.events['msg:text'](ctx)
+        await runEvent()
 
         expect(fetchMock).toHaveBeenCalledWith(
           'https://example.com/report.pdf?v=1&token=abc',
@@ -154,13 +161,11 @@ describe(DownloadHandler.name, () => {
           expect.objectContaining({ filename: 'report.pdf' }),
         )
 
-        vi.unstubAllGlobals()
+        unstubFetch()
       })
 
       it('should follow a single HTTP redirect for PDF download', async () => {
-        if (ctx.message) {
-          ctx.message.text = 'https://example.com/redirect.pdf'
-        }
+        setUrl('https://example.com/redirect.pdf')
         const firstResponse = {
           ok: true,
           status: 302,
@@ -175,20 +180,18 @@ describe(DownloadHandler.name, () => {
         const fetchMock = vi.fn().mockResolvedValueOnce(firstResponse).mockResolvedValueOnce(secondResponse)
         vi.stubGlobal('fetch', fetchMock)
 
-        await handler.events['msg:text'](ctx)
+        await runEvent()
 
         expect(fetchMock).toHaveBeenCalledTimes(2)
         expect(fetchMock).toHaveBeenLastCalledWith('https://cdn.example.com/final.pdf', { redirect: 'manual' })
         expect(mockBrowser.getInstance).not.toHaveBeenCalled()
         expect(ctx.replyWithDocument).toHaveBeenCalled()
 
-        vi.unstubAllGlobals()
+        unstubFetch()
       })
 
       it('should reply with error when too many redirects occur', async () => {
-        if (ctx.message) {
-          ctx.message.text = 'https://example.com/chase.pdf'
-        }
+        setUrl('https://example.com/chase.pdf')
         const redirectUrl = 'https://example.com/loop.pdf'
         const redirectResponse = {
           ok: true,
@@ -198,107 +201,92 @@ describe(DownloadHandler.name, () => {
         const fetchMock = vi.fn().mockResolvedValue(redirectResponse)
         vi.stubGlobal('fetch', fetchMock)
 
-        await handler.events['msg:text'](ctx)
+        await runEvent()
 
         expect(fetchMock).toHaveBeenCalledTimes(5)
         expect(ctx.reply).toHaveBeenCalledWith('download_error')
         expect(mockBrowser.getInstance).not.toHaveBeenCalled()
 
-        vi.unstubAllGlobals()
+        unstubFetch()
       })
 
       it('should reject downloads with non-HTTP(S) redirect targets', async () => {
-        if (ctx.message) {
-          ctx.message.text = 'https://example.com/redirect.pdf'
-        }
-        const fetchMock = vi.fn().mockResolvedValue({
+        setUrl('https://example.com/redirect.pdf')
+        const fetchMock = mockFetch({
           ok: true,
           status: 302,
           headers: new Map<string, string>([['location', 'ftp://evil.com/file.pdf']]),
         })
-        vi.stubGlobal('fetch', fetchMock)
 
-        await handler.events['msg:text'](ctx)
+        await runEvent()
 
         expect(fetchMock).toHaveBeenCalledTimes(1)
         expect(ctx.reply).toHaveBeenCalledWith('download_error')
         expect(mockBrowser.getInstance).not.toHaveBeenCalled()
 
-        vi.unstubAllGlobals()
+        unstubFetch()
       })
 
       it('should reject downloads exceeding max file size', async () => {
-        if (ctx.message) {
-          ctx.message.text = 'https://example.com/huge.pdf'
-        }
-        const fetchMock = vi.fn().mockResolvedValue({
+        setUrl('https://example.com/huge.pdf')
+        mockFetch({
           ok: true,
           headers: new Map<string, string>([['content-length', '60000000']]),
           status: 200,
         })
-        vi.stubGlobal('fetch', fetchMock)
 
-        await handler.events['msg:text'](ctx)
+        await runEvent()
 
         expect(ctx.reply).toHaveBeenCalledWith('download_error')
         expect(mockBrowser.getInstance).not.toHaveBeenCalled()
 
-        vi.unstubAllGlobals()
+        unstubFetch()
       })
 
       it('should reply with error when direct PDF download fails', async () => {
-        if (ctx.message) {
-          ctx.message.text = 'https://example.com/missing.pdf'
-        }
-        const fetchMock = vi.fn().mockResolvedValue({
+        setUrl('https://example.com/missing.pdf')
+        mockFetch({
           ok: false,
           statusText: 'Not Found',
           headers: new Map(),
           status: 404,
         })
-        vi.stubGlobal('fetch', fetchMock)
 
-        await handler.events['msg:text'](ctx)
+        await runEvent()
 
         expect(ctx.reply).toHaveBeenCalledWith('download_error')
         expect(mockBrowser.getInstance).not.toHaveBeenCalled()
 
-        vi.unstubAllGlobals()
+        unstubFetch()
       })
 
       it('should reply with error if session is invalid', async () => {
         ctx.session.params = null
 
-        await handler.events['msg:text'](ctx)
+        await runEvent()
 
         expect(ctx.reply).toHaveBeenCalledWith('download_error')
       })
 
       it('should reply with error if URL is invalid (doesn\'t start with http)', async () => {
-        if (ctx.message) {
-          ctx.message.text = 'file:///etc/passwd'
-        }
+        setUrl('file:///etc/passwd')
 
-        await handler.events['msg:text'](ctx)
+        await runEvent()
 
         expect(ctx.reply).toHaveBeenCalledWith('download_error')
       })
 
       it('should reply with error if URL causes TypeError in new URL constructor (e.g. http://)', async () => {
-        if (ctx.message) {
-          ctx.message.text = 'http://'
-        }
+        setUrl('http://')
 
-        await handler.events['msg:text'](ctx)
+        await runEvent()
 
         expect(ctx.reply).toHaveBeenCalledWith('download_error')
       })
 
       it('should work with http protocol', async () => {
-        if (ctx.message) {
-          ctx.message.text = 'http://example.com'
-        }
-        await handler.events['msg:text'](ctx)
+        setUrl('http://example.com')
+        await runEvent()
 
         expect(ctx.replyWithDocument).toHaveBeenCalled()
       })
@@ -310,7 +298,7 @@ describe(DownloadHandler.name, () => {
         // @ts-expect-error logger is protected
         vi.spyOn(handler.logger, 'error')
 
-        await handler.events['msg:text'](ctx)
+        await runEvent()
 
         // @ts-expect-error logger is protected
         expect(handler.logger.error).toHaveBeenCalledWith(error)
@@ -326,11 +314,9 @@ describe(DownloadHandler.name, () => {
         ['IPv4 mapped IPv6 private addresses', '[::ffff:127.0.0.1]'],
         ['malformed IPv6 brackets gracefully (starting but not ending)', '[127.0.0.1'],
       ])('should block %s', async (_, host) => {
-        if (ctx.message) {
-          ctx.message.text = `http://${host}`
-        }
+        setUrl(`http://${host}`)
 
-        await handler.events['msg:text'](ctx)
+        await runEvent()
 
         expect(ctx.reply).toHaveBeenCalledWith('download_error')
       })
@@ -339,13 +325,11 @@ describe(DownloadHandler.name, () => {
         ['private IP', '10.0.0.1', 4],
         ['IPv6 private IP', 'fd00::1', 6],
       ])('should block URL that resolves to %s', async (_, ip, family) => {
-        if (ctx.message) {
-          ctx.message.text = 'http://private-host.com'
-        }
+        setUrl('http://private-host.com')
         const dns = await import('node:dns/promises')
         vi.mocked(dns.default.lookup).mockResolvedValueOnce([{ address: ip, family } as LookupAddress] as unknown as LookupAddress)
 
-        await handler.events['msg:text'](ctx)
+        await runEvent()
 
         expect(ctx.reply).toHaveBeenCalledWith('download_error')
       })
@@ -355,7 +339,7 @@ describe(DownloadHandler.name, () => {
         vi.spyOn(mockPage, 'close').mockRejectedValue(new Error('Close failed'))
         // @ts-expect-error logger is protected
         vi.spyOn(handler.logger, 'error')
-        await handler.events['msg:text'](ctx)
+        await runEvent()
         // @ts-expect-error logger is protected
         expect(handler.logger.error).toHaveBeenCalledWith(
           expect.objectContaining({ error: expect.any(Error) }),
@@ -366,19 +350,17 @@ describe(DownloadHandler.name, () => {
       it('should fallback to document if title is fully sanitized away', async () => {
         const mockPage = await (await mockBrowser.getInstance()).newPage()
         vi.spyOn(mockPage, 'title').mockResolvedValue('*?()')
-        await handler.events['msg:text'](ctx)
+        await runEvent()
         expect(ctx.replyWithDocument).toHaveBeenCalledWith(
           expect.objectContaining({ filename: 'document.pdf' }),
         )
       })
 
       it('should fail on generic dns resolution errors', async () => {
-        if (ctx.message) {
-          ctx.message.text = 'http://unknown-host.com'
-        }
+        setUrl('http://unknown-host.com')
         const dns = await import('node:dns/promises')
         vi.mocked(dns.default.lookup).mockRejectedValueOnce(new Error('ENOTFOUND'))
-        await handler.events['msg:text'](ctx)
+        await runEvent()
         expect(ctx.reply).toHaveBeenCalledWith('download_error')
         expect(ctx.replyWithDocument).not.toHaveBeenCalled()
       })
@@ -388,12 +370,10 @@ describe(DownloadHandler.name, () => {
         ['linkLocal addresses', '169.254.1.1'],
         ['unspecified addresses', '0.0.0.0'],
       ])('should log error for %s', async (_, ip) => {
-        if (ctx.message) {
-          ctx.message.text = `http://${ip}`
-        }
+        setUrl(`http://${ip}`)
         // @ts-expect-error logger is protected
         vi.spyOn(handler.logger, 'error')
-        await handler.events['msg:text'](ctx)
+        await runEvent()
         // @ts-expect-error logger is protected
         expect(handler.logger.error).toHaveBeenCalledWith(new Error('Private IP addresses are not allowed'))
       })
@@ -408,7 +388,7 @@ describe(DownloadHandler.name, () => {
           return mockPage
         })
 
-        await handler.events['msg:text'](ctx)
+        await runEvent()
 
         expect(requestHandler).toBeDefined()
         if (requestHandler) {

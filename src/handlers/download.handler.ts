@@ -16,6 +16,8 @@ import { SessionValidationError } from '../errors/session-validation.error'
 import { DownloadParamsSchema } from '../schemas/download-params.schema'
 import { BaseHandler } from './base.handler'
 
+const SANITIZE_FILENAME_REGEX = /[/\\[\]{}()<>:;|=,*?"']/g
+
 export class DownloadHandler extends BaseHandler {
   constructor(
     private readonly browser: Browser,
@@ -60,7 +62,7 @@ export class DownloadHandler extends BaseHandler {
             await fs.writeFile(filePath, pdfBytes)
 
             const filenameFromUrl = path.basename(parsedUrl.pathname) || 'document.pdf'
-            const sanitizedFilename = filenameFromUrl.replace(/[/\\[\]{}()<>:;|=,*?"']/g, '').trim() || 'document.pdf'
+            const sanitizedFilename = filenameFromUrl.replace(SANITIZE_FILENAME_REGEX, '').trim() || 'document.pdf'
             const document = new InputFile(filePath, sanitizedFilename)
             await ctx.replyWithDocument(document)
             return
@@ -201,7 +203,7 @@ export class DownloadHandler extends BaseHandler {
     })
 
     const title = await page.title()
-    const sanitizedTitle = title.replace(/[/\\[\]{}()<>:;|=,*?"']/g, '').trim() || 'document'
+    const sanitizedTitle = title.replace(SANITIZE_FILENAME_REGEX, '').trim() || 'document'
     const document = new InputFile(filePath, `${sanitizedTitle}.pdf`)
 
     await ctx.replyWithDocument(document)
