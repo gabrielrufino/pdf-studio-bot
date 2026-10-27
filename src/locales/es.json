@@ -30,7 +30,7 @@
   "join_merging": "🔄 Uniendo tus archivos PDF...",
   "join_success": "✅ ¡Aquí está tu archivo PDF unido!",
   "join_error": "❌ Ocurrió un error al unir tus archivos PDF. Por favor, inténtalo de nuevo más tarde.",
-  "download_send_url": "🌐 ¡Envíame una URL y la convertiré a PDF!\n\n📝 Soportado: sitios web, artículos, documentación\n⚠️ Nota: Algunos sitios pueden bloquear el acceso automatizado",
+  "download_send_url": "🌐 ¡Envíame una URL y la convertiré a PDF!\n\n📝 Soportado: sitios web, artículos, documentación, enlaces PDF directos\n⚠️ Nota: Algunos sitios pueden bloquear el acceso automatizado",
   "download_error": "❌ Ocurrió un error al convertir la URL a PDF.",
   "pdftoimages_send_file": "🖼️ ¡Envíame un archivo PDF y convertiré sus páginas en imágenes!",
   "pdftoimages_converting": "🔄 Convirtiendo tu PDF a imágenes...",

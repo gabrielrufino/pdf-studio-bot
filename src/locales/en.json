@@ -30,7 +30,7 @@
   "join_merging": "🔄 Merging your PDF files...",
   "join_success": "✅ Here is your joined PDF file!",
   "join_error": "❌ An error occurred while joining your PDF files. Please try again later.",
-  "download_send_url": "🌐 Send me a URL and I'll convert it to PDF!\n\n📝 Supported: websites, articles, documentation\n⚠️ Note: Some sites may block automated access",
+  "download_send_url": "🌐 Send me a URL and I'll convert it to PDF!\n\n📝 Supported: websites, articles, documentation, direct PDF links\n⚠️ Note: Some sites may block automated access",
   "download_error": "❌ An error occurred while converting the URL to PDF.",
   "pdftoimages_send_file": "🖼️ Send me a PDF file and I'll convert its pages to images!",
   "pdftoimages_converting": "🔄 Converting your PDF to images...",
