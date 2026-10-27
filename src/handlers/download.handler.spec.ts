@@ -107,6 +107,30 @@ describe(DownloadHandler.name, () => {
         vi.unstubAllGlobals()
       })
 
+      it('should handle uppercase .PDF extensions', async () => {
+        if (ctx.message) {
+          ctx.message.text = 'https://example.com/document.PDF'
+        }
+        const fetchMock = vi.fn().mockResolvedValue({
+          ok: true,
+          arrayBuffer: vi.fn().mockResolvedValue(Buffer.from('pdf bytes')),
+          headers: new Map(),
+          status: 200,
+        })
+        vi.stubGlobal('fetch', fetchMock)
+
+        await handler.events['msg:text'](ctx)
+
+        expect(fetchMock).toHaveBeenCalledWith(
+          'https://example.com/document.PDF',
+          { redirect: 'manual' },
+        )
+        expect(mockBrowser.getInstance).not.toHaveBeenCalled()
+        expect(ctx.replyWithDocument).toHaveBeenCalled()
+
+        vi.unstubAllGlobals()
+      })
+
       it('should download PDF file with query params', async () => {
         if (ctx.message) {
           ctx.message.text = 'https://example.com/report.pdf?v=1&token=abc'
@@ -177,6 +201,26 @@ describe(DownloadHandler.name, () => {
         await handler.events['msg:text'](ctx)
 
         expect(fetchMock).toHaveBeenCalledTimes(5)
+        expect(ctx.reply).toHaveBeenCalledWith('download_error')
+        expect(mockBrowser.getInstance).not.toHaveBeenCalled()
+
+        vi.unstubAllGlobals()
+      })
+
+      it('should reject downloads with non-HTTP(S) redirect targets', async () => {
+        if (ctx.message) {
+          ctx.message.text = 'https://example.com/redirect.pdf'
+        }
+        const fetchMock = vi.fn().mockResolvedValue({
+          ok: true,
+          status: 302,
+          headers: new Map<string, string>([['location', 'ftp://evil.com/file.pdf']]),
+        })
+        vi.stubGlobal('fetch', fetchMock)
+
+        await handler.events['msg:text'](ctx)
+
+        expect(fetchMock).toHaveBeenCalledTimes(1)
         expect(ctx.reply).toHaveBeenCalledWith('download_error')
         expect(mockBrowser.getInstance).not.toHaveBeenCalled()
 

@@ -55,7 +55,7 @@ export class DownloadHandler extends BaseHandler {
           const isPdfUrl = parsedUrl.pathname.toLowerCase().endsWith('.pdf')
 
           if (isPdfUrl) {
-            const pdfBytes = await this.downloadPdfWithSsrpProtection(url)
+            const pdfBytes = await this.downloadPdfWithSsrfProtection(url)
             const filePath = path.join(folder, 'file.pdf')
             await fs.writeFile(filePath, pdfBytes)
 
@@ -101,7 +101,7 @@ export class DownloadHandler extends BaseHandler {
     return parseResult.data
   }
 
-  private async downloadPdfWithSsrpProtection(url: string): Promise<Buffer> {
+  private async downloadPdfWithSsrfProtection(url: string): Promise<Buffer> {
     const MAX_REDIRECTS = 5
     const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024 // 50MB hard cap
     let currentUrl = url
