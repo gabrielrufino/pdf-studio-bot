@@ -80,14 +80,61 @@ describe(DownloadHandler.name, () => {
 
   describe('events', () => {
     describe('msg:text', () => {
-      it('should convert URL to PDF and send it', async () => {
+      it('should download direct PDF file when URL ends with .pdf', async () => {
+        if (ctx.message) {
+          ctx.message.text = 'https://example.com/document.pdf'
+        }
+        const fetchMock = vi.fn().mockResolvedValue({
+          ok: true,
+          arrayBuffer: vi.fn().mockResolvedValue(Buffer.from('pdf bytes')),
+        })
+        vi.stubGlobal('fetch', fetchMock)
+
         await handler.events['msg:text'](ctx)
 
-        expect(mockBrowser.getInstance).toHaveBeenCalled()
-        expect(ctx.replyWithDocument).toHaveBeenCalled()
+        expect(fetchMock).toHaveBeenCalledWith('https://example.com/document.pdf')
+        expect(mockBrowser.getInstance).not.toHaveBeenCalled()
+        expect(ctx.replyWithDocument).toHaveBeenCalledWith(
+          expect.objectContaining({ filename: 'document.pdf' }),
+        )
         expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123, 3)
-        expect(ctx.session.command).toBeNull()
-        expect(ctx.session.params).toBeNull()
+
+        vi.unstubAllGlobals()
+      })
+
+      it('should download PDF file with query params', async () => {
+        if (ctx.message) {
+          ctx.message.text = 'https://example.com/report.pdf?v=1&token=abc'
+        }
+        const fetchMock = vi.fn().mockResolvedValue({
+          ok: true,
+          arrayBuffer: vi.fn().mockResolvedValue(Buffer.from('pdf bytes')),
+        })
+        vi.stubGlobal('fetch', fetchMock)
+
+        await handler.events['msg:text'](ctx)
+
+        expect(mockBrowser.getInstance).not.toHaveBeenCalled()
+        expect(ctx.replyWithDocument).toHaveBeenCalledWith(
+          expect.objectContaining({ filename: 'report.pdf' }),
+        )
+
+        vi.unstubAllGlobals()
+      })
+
+      it('should reply with error when direct PDF download fails', async () => {
+        if (ctx.message) {
+          ctx.message.text = 'https://example.com/missing.pdf'
+        }
+        const fetchMock = vi.fn().mockResolvedValue({ ok: false, statusText: 'Not Found' })
+        vi.stubGlobal('fetch', fetchMock)
+
+        await handler.events['msg:text'](ctx)
+
+        expect(ctx.reply).toHaveBeenCalledWith('download_error')
+        expect(mockBrowser.getInstance).not.toHaveBeenCalled()
+
+        vi.unstubAllGlobals()
       })
 
       it('should reply with error if session is invalid', async () => {

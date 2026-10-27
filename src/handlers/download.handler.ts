@@ -2,6 +2,7 @@ import type { Page, PDFOptions } from 'puppeteer'
 import type { Browser } from '../config/browser'
 import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
+import { Buffer } from 'node:buffer'
 import dns from 'node:dns/promises'
 import fs from 'node:fs/promises'
 import { isIP } from 'node:net'
@@ -42,6 +43,34 @@ export class DownloadHandler extends BaseHandler {
         await this.validateUrl(url)
 
         await this.runWithUsage(ctx, this.userRepository, async () => {
+          const folder = await fs.mkdtemp(path.join(os.tmpdir(), 'pdffromlink-'))
+          await fs.chmod(folder, 0o700)
+
+          ctx.session.params = {
+            ...params,
+            path: folder,
+          }
+
+          const parsedUrl = new URL(url)
+          const isPdfUrl = parsedUrl.pathname.toLowerCase().endsWith('.pdf')
+
+          if (isPdfUrl) {
+            const response = await fetch(url)
+            if (!response.ok) {
+              throw new Error(`Failed to fetch PDF: ${response.statusText}`)
+            }
+            const arrayBuffer = await response.arrayBuffer()
+            const buffer = Buffer.from(arrayBuffer)
+            const filePath = path.join(folder, 'file.pdf')
+            await fs.writeFile(filePath, buffer)
+
+            const filenameFromUrl = path.basename(parsedUrl.pathname) || 'document.pdf'
+            const sanitizedFilename = filenameFromUrl.replace(/[/\\[\]{}()<>:;|=,*?"']/g, '').trim() || 'document.pdf'
+            const document = new InputFile(filePath, sanitizedFilename)
+            await ctx.replyWithDocument(document)
+            return
+          }
+
           const browserInstance = await this.browser.getInstance()
           page = await browserInstance.newPage()
           await this.processDownload(page, url, ctx, params)
@@ -113,7 +142,7 @@ export class DownloadHandler extends BaseHandler {
     page: Page,
     url: string,
     ctx: CustomContext,
-    params: Record<string, unknown>,
+    _params: Record<string, unknown>,
   ): Promise<string> {
     await page.setRequestInterception(true)
     this.setupRequestInterception(page)
@@ -122,14 +151,8 @@ export class DownloadHandler extends BaseHandler {
       waitUntil: 'networkidle0',
     })
 
-    const folder = await fs.mkdtemp(path.join(os.tmpdir(), 'pdffromlink-'))
-    await fs.chmod(folder, 0o700)
+    const folder = (ctx.session.params as { path: string }).path
     const filePath = path.join(folder, 'file.pdf')
-
-    ctx.session.params = {
-      ...params,
-      path: folder,
-    }
 
     await page.pdf({
       path: filePath,
