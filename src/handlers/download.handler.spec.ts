@@ -123,7 +123,7 @@ describe(DownloadHandler.name, () => {
 
           await runEvent()
 
-          expect(fetchMock).toHaveBeenCalledWith(url, { redirect: 'manual' })
+          expect(fetchMock).toHaveBeenCalledWith(url, expect.objectContaining({ redirect: 'manual' }))
           expect(mockBrowser.getInstance).not.toHaveBeenCalled()
           expect(ctx.replyWithDocument).toHaveBeenCalledWith(
             expect.objectContaining({ filename: expectedFilename }),
@@ -152,7 +152,7 @@ describe(DownloadHandler.name, () => {
           await runEvent()
 
           expect(fetchMock).toHaveBeenCalledTimes(2)
-          expect(fetchMock).toHaveBeenLastCalledWith('https://cdn.example.com/final.pdf', { redirect: 'manual' })
+          expect(fetchMock).toHaveBeenLastCalledWith('https://cdn.example.com/final.pdf', expect.objectContaining({ redirect: 'manual' }))
           expect(mockBrowser.getInstance).not.toHaveBeenCalled()
           expect(ctx.replyWithDocument).toHaveBeenCalled()
         })

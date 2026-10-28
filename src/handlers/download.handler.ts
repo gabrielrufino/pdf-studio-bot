@@ -105,6 +105,7 @@ export class DownloadHandler extends BaseHandler {
 
   private static readonly MAX_REDIRECTS = 5
   private static readonly MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024 // 50MB hard cap
+  private static readonly FETCH_TIMEOUT_MS = 30_000
 
   private async downloadPdfWithSsrfProtection(url: string): Promise<Buffer> {
     let currentUrl = url
@@ -113,7 +114,10 @@ export class DownloadHandler extends BaseHandler {
       const parsed = new URL(currentUrl)
       await this.validateUrl(parsed.href)
 
-      const response = await fetch(currentUrl, { redirect: 'manual' })
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), DownloadHandler.FETCH_TIMEOUT_MS)
+      const response = await fetch(currentUrl, { redirect: 'manual', signal: controller.signal })
+      clearTimeout(timeoutId)
 
       const redirectUrl = this.getRedirectUrl(response, parsed)
       if (redirectUrl) {
