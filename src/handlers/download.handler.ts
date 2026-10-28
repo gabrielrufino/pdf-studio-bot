@@ -157,7 +157,7 @@ export class DownloadHandler extends BaseHandler {
   private validateResponse(response: Response): void {
     const contentLength = response.headers.get('content-length')
     if (contentLength) {
-      const parsedLength = parseInt(contentLength, 10)
+      const parsedLength = Number.parseInt(contentLength, 10)
       if (parsedLength > DownloadHandler.MAX_FILE_SIZE_BYTES) {
         throw new Error('PDF download exceeds maximum allowed size')
       }
