@@ -33,8 +33,12 @@ describe(DownloadHandler.name, () => {
   let mockBrowser: Browser
   let mockUserRepository: UserRepository
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks()
+
+    // Ensure the DNS mock always returns a public IP by default, regardless of previous test modifications.
+    const dns = await import('node:dns/promises')
+    ;(vi.mocked(dns.default.lookup) as ReturnType<typeof vi.fn>).mockResolvedValue([{ address: '1.1.1.1', family: 4 }])
 
     mockBrowser = {
       getInstance: vi.fn().mockResolvedValue({
@@ -70,6 +74,13 @@ describe(DownloadHandler.name, () => {
     }
   }
 
+  const createDirectPdfResponse = () => ({
+    ok: true,
+    arrayBuffer: vi.fn().mockResolvedValue(Buffer.from('pdf bytes')),
+    headers: new Map(),
+    status: 200,
+  })
+
   const mockFetch = (response: object) => {
     const fetchMock = vi.fn().mockResolvedValue(response)
     vi.stubGlobal('fetch', fetchMock)
@@ -78,15 +89,12 @@ describe(DownloadHandler.name, () => {
 
   const runEvent = () => handler.events['msg:text'](ctx)
 
-  afterEach(() => {
+  afterEach(async () => {
     vi.unstubAllGlobals()
-  })
 
-  const directPdfFetchMock = () => mockFetch({
-    ok: true,
-    arrayBuffer: vi.fn().mockResolvedValue(Buffer.from('pdf bytes')),
-    headers: new Map(),
-    status: 200,
+    // Reset DNS mock state left over from tests that override it.
+    const dns = await import('node:dns/promises')
+    ;(vi.mocked(dns.default.lookup) as ReturnType<typeof vi.fn>).mockResolvedValue([{ address: '1.1.1.1', family: 4 }])
   })
 
   it('should have correct command', () => {
@@ -112,7 +120,7 @@ describe(DownloadHandler.name, () => {
           ['PDF with query params', 'https://example.com/report.pdf?v=1&token=abc', 'report.pdf'],
         ])('should download %s', async (_, url, expectedFilename) => {
           setUrl(url)
-          const fetchMock = directPdfFetchMock()
+          const fetchMock = mockFetch(createDirectPdfResponse())
 
           await runEvent()
 
@@ -216,15 +224,12 @@ describe(DownloadHandler.name, () => {
       describe('ssrf protection for direct PDF downloads', () => {
         it('should reject .pdf URLs with private IP host', async () => {
           setUrl('https://127.0.0.1/file.pdf')
-          mockFetch({
-            ok: true,
-            arrayBuffer: vi.fn().mockResolvedValue(Buffer.from('pdf bytes')),
-            headers: new Map(),
-            status: 200,
-          })
+          // Set up a fetch mock; validateUrl will reject the direct IP before fetch is called.
+          mockFetch(createDirectPdfResponse())
 
           await runEvent()
 
+          // validateUrl rejects direct private IPs before fetch is called.
           expect(ctx.reply).toHaveBeenCalledWith('download_error')
           expect(mockBrowser.getInstance).not.toHaveBeenCalled()
         })
@@ -232,13 +237,8 @@ describe(DownloadHandler.name, () => {
         it('should reject .pdf URL that resolves to private IP', async () => {
           setUrl('https://private-host.com/file.pdf')
           const dns = await import('node:dns/promises')
-          vi.mocked(dns.default.lookup).mockResolvedValueOnce([{ address: '10.0.0.1', family: 4 } as LookupAddress] as unknown as LookupAddress)
-          mockFetch({
-            ok: true,
-            arrayBuffer: vi.fn().mockResolvedValue(Buffer.from('pdf bytes')),
-            headers: new Map(),
-            status: 200,
-          })
+          ;(vi.mocked(dns.default.lookup) as ReturnType<typeof vi.fn>).mockResolvedValue([{ address: '10.0.0.1', family: 4 }])
+          mockFetch(createDirectPdfResponse())
 
           await runEvent()
 
@@ -258,7 +258,55 @@ describe(DownloadHandler.name, () => {
 
           await runEvent()
 
-          expect(fetchMock).toHaveBeenCalled()
+          expect(fetchMock).toHaveBeenCalledTimes(1)
+          expect(ctx.reply).toHaveBeenCalledWith('download_error')
+          expect(mockBrowser.getInstance).not.toHaveBeenCalled()
+        })
+
+        it('should reject .pdf URL that redirects through multiple hops to a private IP', async () => {
+          setUrl('https://example.com/final.pdf')
+          const firstRedirect = {
+            ok: true,
+            status: 302,
+            headers: new Map<string, string>([['location', 'https://cdn.example.com/step.pdf']]),
+          }
+          const secondRedirect = {
+            ok: true,
+            status: 302,
+            headers: new Map<string, string>([['location', 'http://192.168.0.1/internal.pdf']]),
+          }
+          const fetchMock = vi.fn().mockResolvedValueOnce(firstRedirect).mockResolvedValueOnce(secondRedirect)
+          vi.stubGlobal('fetch', fetchMock)
+
+          await runEvent()
+
+          expect(fetchMock).toHaveBeenCalledTimes(2)
+          expect(ctx.reply).toHaveBeenCalledWith('download_error')
+          expect(mockBrowser.getInstance).not.toHaveBeenCalled()
+        })
+
+        it('should reject .pdf URL whose redirect host resolves to a private IP', async () => {
+          setUrl('https://public-host.com/download.pdf')
+          const redirectResponse = {
+            ok: true,
+            status: 302,
+            headers: new Map<string, string>([['location', 'https://resolved-private.com/file.pdf']]),
+          }
+          const fetchMock = vi.fn().mockResolvedValue(redirectResponse)
+          vi.stubGlobal('fetch', fetchMock)
+
+          // Override DNS to resolve resolved-private.com to a private IP while keeping public-host.com public.
+          const dnsModule = await import('node:dns/promises')
+          ;(vi.mocked(dnsModule.default.lookup) as ReturnType<typeof vi.fn>).mockImplementation(async (hostname: string) => {
+            if (hostname === 'resolved-private.com') {
+              return [{ address: '10.10.10.10', family: 4 }]
+            }
+            return [{ address: '1.1.1.1', family: 4 }]
+          })
+
+          await runEvent()
+
+          expect(fetchMock).toHaveBeenCalledTimes(1)
           expect(ctx.reply).toHaveBeenCalledWith('download_error')
           expect(mockBrowser.getInstance).not.toHaveBeenCalled()
         })
@@ -334,7 +382,7 @@ describe(DownloadHandler.name, () => {
         it('should fail on generic dns resolution errors', async () => {
           setUrl('http://unknown-host.com')
           const dns = await import('node:dns/promises')
-          vi.mocked(dns.default.lookup).mockRejectedValueOnce(new Error('ENOTFOUND'))
+          ;(vi.mocked(dns.default.lookup) as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('ENOTFOUND'))
           await runEvent()
           expect(ctx.reply).toHaveBeenCalledWith('download_error')
           expect(ctx.replyWithDocument).not.toHaveBeenCalled()
@@ -361,7 +409,7 @@ describe(DownloadHandler.name, () => {
           ])('should block URL that resolves to %s', async (_, ip, family) => {
             setUrl('http://private-host.com')
             const dns = await import('node:dns/promises')
-            vi.mocked(dns.default.lookup).mockResolvedValueOnce([{ address: ip, family } as LookupAddress] as unknown as LookupAddress)
+            ;(vi.mocked(dns.default.lookup) as ReturnType<typeof vi.fn>).mockResolvedValue([{ address: ip, family }])
 
             await runEvent()
 
