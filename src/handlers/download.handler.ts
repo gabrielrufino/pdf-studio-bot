@@ -103,50 +103,75 @@ export class DownloadHandler extends BaseHandler {
     return parseResult.data
   }
 
+  private static readonly MAX_REDIRECTS = 5
+  private static readonly MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024 // 50MB hard cap
+
   private async downloadPdfWithSsrfProtection(url: string): Promise<Buffer> {
-    const MAX_REDIRECTS = 5
-    const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024 // 50MB hard cap
     let currentUrl = url
 
-    for (let i = 0; i < MAX_REDIRECTS; i++) {
+    for (let i = 0; i < DownloadHandler.MAX_REDIRECTS; i++) {
       const parsed = new URL(currentUrl)
       await this.validateUrl(parsed.href)
 
       const response = await fetch(currentUrl, { redirect: 'manual' })
 
-      if (response.status >= 300 && response.status < 400 && response.headers.get('location')) {
-        const locationHeader = response.headers.get('location')!
-        const nextUrl = new URL(locationHeader, parsed.href)
-
-        if (!['http:', 'https:'].includes(nextUrl.protocol)) {
-          throw new Error('Only HTTP/HTTPS redirects are allowed')
-        }
-
-        currentUrl = nextUrl.href
+      const redirectUrl = this.getRedirectUrl(response, parsed)
+      if (redirectUrl) {
+        currentUrl = redirectUrl
         continue
       }
 
-      const contentLength = response.headers.get('content-length')
-      if (contentLength) {
-        const parsedLength = parseInt(contentLength, 10)
-        if (parsedLength > MAX_FILE_SIZE_BYTES) {
-          throw new Error('PDF download exceeds maximum allowed size')
-        }
-      }
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch PDF: ${response.statusText}`)
-      }
+      this.validateResponse(response)
 
       const arrayBuffer = await response.arrayBuffer()
-      if (arrayBuffer.byteLength > MAX_FILE_SIZE_BYTES) {
-        throw new Error('PDF download exceeds maximum allowed size')
-      }
+      this.validateBufferSize(arrayBuffer)
 
       return Buffer.from(arrayBuffer)
     }
 
     throw new Error('Too many redirects')
+  }
+
+  private getRedirectUrl(response: Response, parsed: URL): string | null {
+    if (response.status >= 300 && response.status < 400) {
+      const locationHeader = response.headers.get('location')
+      if (locationHeader) {
+        let nextUrl: URL
+        try {
+          nextUrl = new URL(locationHeader, parsed.href)
+        }
+        catch {
+          return null
+        }
+
+        if (!['http:', 'https:'].includes(nextUrl.protocol)) {
+          throw new Error('Only HTTP/HTTPS redirects are allowed')
+        }
+
+        return nextUrl.href
+      }
+    }
+    return null
+  }
+
+  private validateResponse(response: Response): void {
+    const contentLength = response.headers.get('content-length')
+    if (contentLength) {
+      const parsedLength = parseInt(contentLength, 10)
+      if (parsedLength > DownloadHandler.MAX_FILE_SIZE_BYTES) {
+        throw new Error('PDF download exceeds maximum allowed size')
+      }
+    }
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch PDF: ${response.statusText}`)
+    }
+  }
+
+  private validateBufferSize(arrayBuffer: ArrayBuffer): void {
+    if (arrayBuffer.byteLength > DownloadHandler.MAX_FILE_SIZE_BYTES) {
+      throw new Error('PDF download exceeds maximum allowed size')
+    }
   }
 
   private setupRequestInterception(page: Page): void {
