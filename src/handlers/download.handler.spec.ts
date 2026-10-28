@@ -1,4 +1,3 @@
-import type { LookupAddress } from 'node:dns'
 import type fs from 'node:fs/promises'
 import type { HTTPRequest } from 'puppeteer'
 import type { Browser } from '../config/browser'
@@ -465,7 +464,7 @@ describe(DownloadHandler.name, () => {
               }
               const dns = await import('node:dns/promises')
               // Mock dns lookup to return a private IP
-              vi.mocked(dns.default.lookup).mockResolvedValueOnce([{ address: '10.0.0.1', family: 4 } as LookupAddress] as unknown as LookupAddress)
+              ;(vi.mocked(dns.default.lookup) as ReturnType<typeof vi.fn>).mockResolvedValue([{ address: '10.0.0.1', family: 4 }])
 
               requestHandler(mockRequestDns as unknown as HTTPRequest)
               // Wait for microtasks
@@ -483,7 +482,7 @@ describe(DownloadHandler.name, () => {
                 continue: mockContinueSafe,
               }
               // Mock dns lookup to return a public IP
-              vi.mocked(dns.default.lookup).mockResolvedValueOnce([{ address: '8.8.8.8', family: 4 } as LookupAddress] as unknown as LookupAddress)
+              ;(vi.mocked(dns.default.lookup) as ReturnType<typeof vi.fn>).mockResolvedValue([{ address: '8.8.8.8', family: 4 }])
 
               requestHandler(mockRequestSafe as unknown as HTTPRequest)
               // Wait for microtasks
