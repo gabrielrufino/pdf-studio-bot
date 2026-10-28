@@ -71,7 +71,7 @@ describe(ProHandler.name, () => {
 
       await handler.onCommand(ctx)
 
-      expect(ctx.reply).toHaveBeenCalledWith(`Active since ${startDate.toLocaleDateString()}`, { parse_mode: 'HTML' })
+      expect(ctx.reply).toHaveBeenCalledWith(`Active since ${startDate.toLocaleDateString('en')}`, { parse_mode: 'HTML' })
       expect(ctx.session.command).toBeNull()
     })
 

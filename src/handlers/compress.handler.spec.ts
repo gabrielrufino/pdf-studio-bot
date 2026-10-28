@@ -94,7 +94,7 @@ describe(CompressHandler.name, () => {
         vi.mocked(PDFDocument.load).mockResolvedValue({
           getPageCount: vi.fn().mockReturnValue(1),
           save: vi.fn().mockResolvedValue(Buffer.from('small')),
-        } as any)
+        } as unknown as PDFDocument)
 
         const downloadMock = vi.fn().mockResolvedValue('/tmp/input.pdf')
         ctx.getFile = vi.fn().mockResolvedValue({ download: downloadMock })
@@ -115,7 +115,7 @@ describe(CompressHandler.name, () => {
         vi.mocked(PDFDocument.load).mockResolvedValue({
           getPageCount: vi.fn().mockReturnValue(1),
           save: vi.fn().mockResolvedValue(Buffer.from('this is larger than the original file')),
-        } as any)
+        } as unknown as PDFDocument)
 
         const downloadMock = vi.fn().mockResolvedValue('/tmp/input.pdf')
         ctx.getFile = vi.fn().mockResolvedValue({ download: downloadMock })

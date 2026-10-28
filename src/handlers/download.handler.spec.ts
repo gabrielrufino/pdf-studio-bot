@@ -5,7 +5,7 @@ import type { Browser } from '../config/browser'
 import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
 import { Buffer } from 'node:buffer'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { CommandEnum } from '../enums/command.enum'
 import { DownloadHandler } from './download.handler'
 
@@ -78,7 +78,9 @@ describe(DownloadHandler.name, () => {
 
   const runEvent = () => handler.events['msg:text'](ctx)
 
-  const unstubFetch = () => vi.unstubAllGlobals()
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
 
   const directPdfFetchMock = () => mockFetch({
     ok: true,
@@ -120,8 +122,6 @@ describe(DownloadHandler.name, () => {
             expect.objectContaining({ filename: expectedFilename }),
           )
           expect(mockUserRepository.incrementUsage).toHaveBeenCalledWith(123, 3)
-
-          unstubFetch()
         })
       })
 
@@ -148,8 +148,6 @@ describe(DownloadHandler.name, () => {
           expect(fetchMock).toHaveBeenLastCalledWith('https://cdn.example.com/final.pdf', { redirect: 'manual' })
           expect(mockBrowser.getInstance).not.toHaveBeenCalled()
           expect(ctx.replyWithDocument).toHaveBeenCalled()
-
-          unstubFetch()
         })
 
         it('should reply with error when too many redirects occur', async () => {
@@ -168,8 +166,6 @@ describe(DownloadHandler.name, () => {
           expect(fetchMock).toHaveBeenCalledTimes(5)
           expect(ctx.reply).toHaveBeenCalledWith('download_error')
           expect(mockBrowser.getInstance).not.toHaveBeenCalled()
-
-          unstubFetch()
         })
 
         it('should reject downloads with non-HTTP(S) redirect targets', async () => {
@@ -185,8 +181,6 @@ describe(DownloadHandler.name, () => {
           expect(fetchMock).toHaveBeenCalledTimes(1)
           expect(ctx.reply).toHaveBeenCalledWith('download_error')
           expect(mockBrowser.getInstance).not.toHaveBeenCalled()
-
-          unstubFetch()
         })
 
         it('should reject downloads exceeding max file size', async () => {
@@ -201,8 +195,6 @@ describe(DownloadHandler.name, () => {
 
           expect(ctx.reply).toHaveBeenCalledWith('download_error')
           expect(mockBrowser.getInstance).not.toHaveBeenCalled()
-
-          unstubFetch()
         })
 
         it('should reply with error when direct PDF download fails', async () => {
@@ -218,8 +210,57 @@ describe(DownloadHandler.name, () => {
 
           expect(ctx.reply).toHaveBeenCalledWith('download_error')
           expect(mockBrowser.getInstance).not.toHaveBeenCalled()
+        })
+      })
 
-          unstubFetch()
+      describe('ssrf protection for direct PDF downloads', () => {
+        it('should reject .pdf URLs with private IP host', async () => {
+          setUrl('https://127.0.0.1/file.pdf')
+          mockFetch({
+            ok: true,
+            arrayBuffer: vi.fn().mockResolvedValue(Buffer.from('pdf bytes')),
+            headers: new Map(),
+            status: 200,
+          })
+
+          await runEvent()
+
+          expect(ctx.reply).toHaveBeenCalledWith('download_error')
+          expect(mockBrowser.getInstance).not.toHaveBeenCalled()
+        })
+
+        it('should reject .pdf URL that resolves to private IP', async () => {
+          setUrl('https://private-host.com/file.pdf')
+          const dns = await import('node:dns/promises')
+          vi.mocked(dns.default.lookup).mockResolvedValueOnce([{ address: '10.0.0.1', family: 4 } as LookupAddress] as unknown as LookupAddress)
+          mockFetch({
+            ok: true,
+            arrayBuffer: vi.fn().mockResolvedValue(Buffer.from('pdf bytes')),
+            headers: new Map(),
+            status: 200,
+          })
+
+          await runEvent()
+
+          expect(ctx.reply).toHaveBeenCalledWith('download_error')
+          expect(mockBrowser.getInstance).not.toHaveBeenCalled()
+        })
+
+        it('should reject public .pdf URL that redirects to private target', async () => {
+          setUrl('https://example.com/redirect.pdf')
+          const redirectResponse = {
+            ok: true,
+            status: 302,
+            headers: new Map<string, string>([['location', 'http://127.0.0.1/malicious.pdf']]),
+          }
+          const fetchMock = vi.fn().mockResolvedValue(redirectResponse)
+          vi.stubGlobal('fetch', fetchMock)
+
+          await runEvent()
+
+          expect(fetchMock).toHaveBeenCalled()
+          expect(ctx.reply).toHaveBeenCalledWith('download_error')
+          expect(mockBrowser.getInstance).not.toHaveBeenCalled()
         })
       })
 
