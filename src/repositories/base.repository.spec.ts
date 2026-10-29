@@ -1,12 +1,8 @@
 import { MongoClient } from 'mongodb'
-import { MongoMemoryServer } from 'mongodb-memory-server'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { BaseRepository } from './base.repository'
 
 describe(BaseRepository.name, () => {
-  let mongod: MongoMemoryServer
-  let client: MongoClient
-
   class TestRepository extends BaseRepository<{ name: string, updated_at: Date }> {
     constructor(database: any) {
       super({
@@ -28,15 +24,16 @@ describe(BaseRepository.name, () => {
     }
   }
 
+  let client: MongoClient
+
   beforeAll(async () => {
-    mongod = await MongoMemoryServer.create()
-    client = new MongoClient(mongod.getUri())
+    const uri = process.env.__MONGODB_URI__!
+    client = new MongoClient(uri)
     await client.connect()
   })
 
   afterAll(async () => {
     await client.close()
-    await mongod.stop()
   })
 
   it('should initialize correctly when collection does not exist', async () => {

@@ -1,5 +1,4 @@
 import { MongoClient, MongoServerError } from 'mongodb'
-import { MongoMemoryServer } from 'mongodb-memory-server'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { EventEntity } from '../entities/event.entity'
 import { EventEnum } from '../enums/event.enum'
@@ -7,13 +6,12 @@ import { EventRepository } from './event.repository'
 
 describe(EventRepository.name, () => {
   let eventRepository: EventRepository
-  let mongod: MongoMemoryServer
   let client: MongoClient
 
   beforeAll(async () => {
-    mongod = await MongoMemoryServer.create()
-    process.env.MONGODB_CONNECTION_STRING = mongod.getUri()
-    client = new MongoClient(mongod.getUri())
+    const uri = process.env.__MONGODB_URI__!
+    process.env.MONGODB_CONNECTION_STRING = uri
+    client = new MongoClient(uri)
     const database = client.db('pdf_studio_test')
 
     eventRepository = new EventRepository(database)
@@ -22,7 +20,6 @@ describe(EventRepository.name, () => {
 
   afterAll(async () => {
     await client.close()
-    await mongod.stop()
   })
 
   it('should insert event successfully', async () => {

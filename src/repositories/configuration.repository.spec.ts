@@ -1,16 +1,14 @@
 import { MongoClient } from 'mongodb'
-import { MongoMemoryServer } from 'mongodb-memory-server'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { ConfigurationRepository } from './configuration.repository'
 
 describe(ConfigurationRepository.name, () => {
   let configurationRepository: ConfigurationRepository
-  let mongod: MongoMemoryServer
   let client: MongoClient
 
   beforeAll(async () => {
-    mongod = await MongoMemoryServer.create()
-    client = new MongoClient(mongod.getUri())
+    const uri = process.env.__MONGODB_URI__!
+    client = new MongoClient(uri)
     await client.connect()
     const database = client.db('pdf_studio_test')
     configurationRepository = new ConfigurationRepository(database)
@@ -19,7 +17,6 @@ describe(ConfigurationRepository.name, () => {
 
   afterAll(async () => {
     await client.close()
-    await mongod.stop()
   })
 
   describe(ConfigurationRepository.prototype.findGlobalConfig.name, () => {
