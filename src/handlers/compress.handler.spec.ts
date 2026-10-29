@@ -44,10 +44,28 @@ vi.mock('../config/logger', () => ({
   },
 }))
 
+function createMockCtx(): CustomContext {
+  return {
+    from: { id: 123 },
+    user: {
+      id: 123,
+      plan_type: PlanTypeEnum.Free,
+      daily_usage_count: 0,
+      is_blocked: false,
+      last_usage_date: new Date(),
+    },
+    t: vi.fn(key => key),
+    reply: vi.fn(),
+    replyWithDocument: vi.fn(),
+    getFile: vi.fn().mockResolvedValue({ download: vi.fn().mockResolvedValue('/tmp/input.pdf') }),
+    session: { params: {} },
+    message: { document: { mime_type: 'application/pdf', file_size: 100 } },
+  } as unknown as CustomContext
+}
+
 describe(CompressHandler.name, () => {
   let userRepository: UserRepository
   let handler: CompressHandler
-  let ctx: any
 
   beforeEach(() => {
     userRepository = {
@@ -55,23 +73,6 @@ describe(CompressHandler.name, () => {
       decrementUsage: vi.fn().mockResolvedValue({}),
     } as unknown as UserRepository
     handler = new CompressHandler(userRepository)
-
-    ctx = {
-      from: { id: 123 },
-      user: {
-        id: 123,
-        plan_type: PlanTypeEnum.Free,
-        daily_usage_count: 0,
-        is_blocked: false,
-        last_usage_date: new Date(),
-      },
-      t: vi.fn(key => key),
-      reply: vi.fn(),
-      replyWithDocument: vi.fn(),
-      getFile: vi.fn().mockResolvedValue({ download: vi.fn().mockResolvedValue('/tmp/input.pdf') }),
-      session: { params: {} },
-      message: { document: { mime_type: 'application/pdf', file_size: 100 } },
-    } as unknown as CustomContext
   })
 
   afterEach(() => {
@@ -80,6 +81,7 @@ describe(CompressHandler.name, () => {
 
   describe(CompressHandler.prototype.onCommand.name, () => {
     it('should ask for file', async () => {
+      const ctx = createMockCtx()
       await handler.onCommand(ctx)
 
       expect(ctx.reply).toHaveBeenCalledWith('compress_send_file')
@@ -90,14 +92,12 @@ describe(CompressHandler.name, () => {
   describe('events', () => {
     describe('msg:document', () => {
       it('should successfully compress PDF and send the document', async () => {
+        const ctx = createMockCtx()
         vi.mocked(fs.readFile).mockResolvedValue(Buffer.from('pdf data'))
         vi.mocked(PDFDocument.load).mockResolvedValue({
           getPageCount: vi.fn().mockReturnValue(1),
           save: vi.fn().mockResolvedValue(Buffer.from('small')),
         } as unknown as PDFDocument)
-
-        const downloadMock = vi.fn().mockResolvedValue('/tmp/input.pdf')
-        ctx.getFile = vi.fn().mockResolvedValue({ download: downloadMock })
 
         await handler.events['msg:document']!(ctx)
 
@@ -111,14 +111,12 @@ describe(CompressHandler.name, () => {
       })
 
       it('should reply with no_reduction message when compressed file is not smaller', async () => {
+        const ctx = createMockCtx()
         vi.mocked(fs.readFile).mockResolvedValue(Buffer.from('pdf data'))
         vi.mocked(PDFDocument.load).mockResolvedValue({
           getPageCount: vi.fn().mockReturnValue(1),
           save: vi.fn().mockResolvedValue(Buffer.from('this is larger than the original file')),
         } as unknown as PDFDocument)
-
-        const downloadMock = vi.fn().mockResolvedValue('/tmp/input.pdf')
-        ctx.getFile = vi.fn().mockResolvedValue({ download: downloadMock })
 
         await handler.events['msg:document']!(ctx)
 
@@ -129,6 +127,7 @@ describe(CompressHandler.name, () => {
       })
 
       it('should reply with error when user not found', async () => {
+        const ctx = createMockCtx()
         ctx.user = null
         await handler.events['msg:document']!(ctx)
 
@@ -137,6 +136,7 @@ describe(CompressHandler.name, () => {
       })
 
       it('should return silently on InvalidFileError', async () => {
+        const ctx = createMockCtx() as CustomContext & { message: { document: { mime_type: string } } }
         ctx.message.document.mime_type = 'image/png'
         await handler.events['msg:document']!(ctx)
 
@@ -146,6 +146,7 @@ describe(CompressHandler.name, () => {
       })
 
       it('should return silently on LimitExceededError', async () => {
+        const ctx = createMockCtx() as CustomContext & { message: { document: { file_size: number } } }
         ctx.message.document.file_size = 99999999999
         await handler.events['msg:document']!(ctx)
 
@@ -155,6 +156,7 @@ describe(CompressHandler.name, () => {
       })
 
       it('should throw error when file download fails', async () => {
+        const ctx = createMockCtx()
         ctx.getFile = vi.fn().mockResolvedValue({ download: vi.fn().mockResolvedValue(undefined) })
 
         await handler.events['msg:document']!(ctx)
@@ -164,6 +166,7 @@ describe(CompressHandler.name, () => {
       })
 
       it('should reply with error when PDFDocument.load throws (corrupted PDF)', async () => {
+        const ctx = createMockCtx()
         ctx.getFile = vi.fn().mockResolvedValue({ download: vi.fn().mockResolvedValue('/tmp/input.pdf') })
         vi.mocked(PDFDocument.load).mockRejectedValue(new Error('Unexpected end of file'))
 
@@ -175,6 +178,7 @@ describe(CompressHandler.name, () => {
       })
 
       it('should reply with error when pdfDoc.save throws', async () => {
+        const ctx = createMockCtx()
         ctx.getFile = vi.fn().mockResolvedValue({ download: vi.fn().mockResolvedValue('/tmp/input.pdf') })
         vi.mocked(fs.readFile).mockResolvedValue(Buffer.from('pdf data'))
         vi.mocked(PDFDocument.load).mockResolvedValue({

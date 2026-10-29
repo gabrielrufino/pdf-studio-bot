@@ -73,14 +73,31 @@ describe(DownloadHandler.name, () => {
     }
   }
 
-  const createDirectPdfResponse = () => ({
+  const createDirectPdfResponse = (): Response => ({
     ok: true,
-    arrayBuffer: vi.fn().mockResolvedValue(Buffer.from('pdf bytes')),
-    headers: new Map(),
     status: 200,
+    statusText: 'OK',
+    headers: new Headers(),
+    redirected: false,
+    type: 'basic' as Response['type'],
+    url: '',
+    bodyUsed: false,
+    arrayBuffer: () => Promise.resolve(Buffer.from('pdf bytes').buffer),
+    blob: () => Promise.resolve(new Blob()),
+    formData: () => Promise.resolve(new FormData()),
+    json: () => Promise.resolve({}),
+    text: () => Promise.resolve(Buffer.from('pdf bytes').toString()),
+    bytes: () => Promise.resolve(Buffer.from('pdf bytes')),
+    clone: () => createDirectPdfResponse(),
+    body: new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(Buffer.from('pdf bytes'))
+        controller.close()
+      },
+    }),
   })
 
-  const mockFetch = (response: object) => {
+  const mockFetch = (response: Parameters<ReturnType<typeof vi.fn>['mockResolvedValue']>[0]) => {
     const fetchMock = vi.fn().mockResolvedValue(response)
     vi.stubGlobal('fetch', fetchMock)
     return fetchMock

@@ -119,30 +119,32 @@ export class DownloadHandler extends BaseHandler {
       const response = await fetch(currentUrl, { redirect: 'manual', signal: controller.signal })
       clearTimeout(timeoutId)
 
-      const redirectUrl = this.getRedirectUrl(response, parsed)
-      if (redirectUrl) {
-        currentUrl = redirectUrl
+      const nextUrl = this.getRedirectUrl(response, parsed)
+      if (nextUrl) {
+        await this.validateUrl(nextUrl.href)
+        currentUrl = nextUrl.href
         continue
       }
 
       this.validateResponse(response)
 
-      const arrayBuffer = await response.arrayBuffer()
-      this.validateBufferSize(arrayBuffer)
-
-      return Buffer.from(arrayBuffer)
+      const buffer = await this.readBodyWithLimit(response)
+      return buffer
     }
 
     throw new Error('Too many redirects')
   }
 
-  private getRedirectUrl(response: Response, parsed: URL): string | null {
+  private getRedirectUrl(
+    response: Response,
+    parsed: URL,
+  ): URL | null {
     if (response.status >= 300 && response.status < 400) {
-      const locationHeader = response.headers.get('location')
-      if (locationHeader) {
+      const location = response.headers.get('location')
+      if (location) {
         let nextUrl: URL
         try {
-          nextUrl = new URL(locationHeader, parsed.href)
+          nextUrl = new URL(location, parsed.href)
         }
         catch {
           return null
@@ -152,7 +154,7 @@ export class DownloadHandler extends BaseHandler {
           throw new Error('Only HTTP/HTTPS redirects are allowed')
         }
 
-        return nextUrl.href
+        return nextUrl
       }
     }
     return null
@@ -176,6 +178,52 @@ export class DownloadHandler extends BaseHandler {
     if (arrayBuffer.byteLength > DownloadHandler.MAX_FILE_SIZE_BYTES) {
       throw new Error('PDF download exceeds maximum allowed size')
     }
+  }
+
+  private async readBodyWithLimit(response: Response): Promise<Buffer> {
+    const contentLength = response.headers.get('content-length')
+    if (contentLength) {
+      const declaredSize = Number.parseInt(contentLength, 10)
+      if (!Number.isNaN(declaredSize) && declaredSize > DownloadHandler.MAX_FILE_SIZE_BYTES) {
+        throw new Error('PDF download exceeds maximum allowed size')
+      }
+    }
+
+    const body = response.body as ReadableStream<Uint8Array> | undefined
+    if (body) {
+      return this.readFromStream(body)
+    }
+
+    // Fallback for mocked responses without a body stream
+    const arrayBuffer = await response.arrayBuffer()
+    return Buffer.from(arrayBuffer)
+  }
+
+  private async readFromStream(body: ReadableStream<Uint8Array>): Promise<Buffer> {
+    const reader = body.getReader()
+    const chunks: Uint8Array[] = []
+    let totalBytes = 0
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) {
+          break
+        }
+
+        totalBytes += value.length
+        if (totalBytes > DownloadHandler.MAX_FILE_SIZE_BYTES) {
+          throw new Error('PDF download exceeds maximum allowed size')
+        }
+
+        chunks.push(value)
+      }
+    }
+    finally {
+      reader.releaseLock()
+    }
+
+    return Buffer.concat(chunks, totalBytes)
   }
 
   private setupRequestInterception(page: Page): void {
