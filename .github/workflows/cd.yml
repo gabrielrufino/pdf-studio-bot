@@ -17,9 +17,7 @@ jobs:
       contents: read
     steps:
       - uses: actalog/check-ci@main
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+      - uses: actions/checkout@v7
       - id: package-version
         run: echo "version=$(jq -r .version package.json)" >> $GITHUB_OUTPUT
       - uses: docker/login-action@v3
@@ -52,7 +50,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
       - uses: actions/configure-pages@v5

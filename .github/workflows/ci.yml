@@ -15,7 +15,7 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actalog/node-ci@v3
         with:
           package-manager: pnpm
@@ -34,7 +34,7 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actalog/dockerfile-ci@v2
         with:
           image-name: gabrielrufino/pdfstudio-bot
