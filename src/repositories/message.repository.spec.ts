@@ -1,5 +1,4 @@
 import { MongoClient, ObjectId } from 'mongodb'
-import { MongoMemoryServer } from 'mongodb-memory-server'
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { MessageEntity } from '../entities/message.entity'
@@ -7,19 +6,20 @@ import { MessageRepository } from './message.repository'
 
 describe(MessageRepository.name, () => {
   let messageRepository: MessageRepository
-  let mongod: MongoMemoryServer
+  let client: MongoClient
 
   beforeAll(async () => {
-    mongod = await MongoMemoryServer.create()
+    const uri = process.env.__MONGODB_URI__!
+    client = new MongoClient(uri)
+    await client.connect()
 
-    const database = new MongoClient(mongod.getUri())
-      .db('pdf_studio_test')
+    const database = client.db('pdf_studio_test')
 
     messageRepository = new MessageRepository(database)
   })
 
   afterAll(async () => {
-    await mongod!.stop()
+    await client.close()
   })
 
   it('should create a message', async () => {

@@ -5,6 +5,7 @@ Your personal PDF assistant on Telegram. Fast, secure, and multi-language.
 ## Features
 
 - **Download from URL**: Convert any webpage or document link to PDF instantly.
+- **Compress PDF**: Reduce the file size of your PDFs efficiently.
 - **Add Password**: Protect and encrypt your PDF files with a secure password.
 - **Remove Password**: Unlock and decrypt password-protected PDFs with the correct password.
 - **Split PDF**: Separate multi-page documents into individual PDF pages.

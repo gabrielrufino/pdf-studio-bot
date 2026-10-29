@@ -2,6 +2,7 @@ import type { Page, PDFOptions } from 'puppeteer'
 import type { Browser } from '../config/browser'
 import type { UserRepository } from '../repositories/user.repository'
 import type { CustomContext } from '../types/custom-context.type'
+import { Buffer } from 'node:buffer'
 import dns from 'node:dns/promises'
 import fs from 'node:fs/promises'
 import { isIP } from 'node:net'
@@ -14,6 +15,8 @@ import { CommandEnum } from '../enums/command.enum'
 import { SessionValidationError } from '../errors/session-validation.error'
 import { DownloadParamsSchema } from '../schemas/download-params.schema'
 import { BaseHandler } from './base.handler'
+
+const SANITIZE_FILENAME_REGEX = /[/\\[\]{}()<>:;|=,*?"']/g
 
 export class DownloadHandler extends BaseHandler {
   constructor(
@@ -42,6 +45,29 @@ export class DownloadHandler extends BaseHandler {
         await this.validateUrl(url)
 
         await this.runWithUsage(ctx, this.userRepository, async () => {
+          const folder = await fs.mkdtemp(path.join(os.tmpdir(), 'pdffromlink-'))
+          await fs.chmod(folder, 0o700)
+
+          ctx.session.params = {
+            ...params,
+            path: folder,
+          }
+
+          const parsedUrl = new URL(url)
+          const isPdfUrl = parsedUrl.pathname.toLowerCase().endsWith('.pdf')
+
+          if (isPdfUrl) {
+            const pdfBytes = await this.downloadPdfWithSsrfProtection(url)
+            const filePath = path.join(folder, 'file.pdf')
+            await fs.writeFile(filePath, pdfBytes)
+
+            const filenameFromUrl = path.basename(parsedUrl.pathname) || 'document.pdf'
+            const sanitizedFilename = filenameFromUrl.replace(SANITIZE_FILENAME_REGEX, '').trim() || 'document.pdf'
+            const document = new InputFile(filePath, sanitizedFilename)
+            await ctx.replyWithDocument(document)
+            return
+          }
+
           const browserInstance = await this.browser.getInstance()
           page = await browserInstance.newPage()
           await this.processDownload(page, url, ctx, params)
@@ -75,6 +101,129 @@ export class DownloadHandler extends BaseHandler {
       throw new SessionValidationError()
     }
     return parseResult.data
+  }
+
+  private static readonly MAX_REDIRECTS = 5
+  private static readonly MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024 // 50MB hard cap
+  private static readonly FETCH_TIMEOUT_MS = 30_000
+
+  private async downloadPdfWithSsrfProtection(url: string): Promise<Buffer> {
+    let currentUrl = url
+
+    for (let i = 0; i < DownloadHandler.MAX_REDIRECTS; i++) {
+      const parsed = new URL(currentUrl)
+      await this.validateUrl(parsed.href)
+
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), DownloadHandler.FETCH_TIMEOUT_MS)
+      const response = await fetch(currentUrl, { redirect: 'manual', signal: controller.signal })
+      clearTimeout(timeoutId)
+
+      const nextUrl = this.getRedirectUrl(response, parsed)
+      if (nextUrl) {
+        await this.validateUrl(nextUrl.href)
+        currentUrl = nextUrl.href
+        continue
+      }
+
+      this.validateResponse(response)
+
+      const buffer = await this.readBodyWithLimit(response)
+      return buffer
+    }
+
+    throw new Error('Too many redirects')
+  }
+
+  private getRedirectUrl(
+    response: Response,
+    parsed: URL,
+  ): URL | null {
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get('location')
+      if (location) {
+        let nextUrl: URL
+        try {
+          nextUrl = new URL(location, parsed.href)
+        }
+        catch {
+          return null
+        }
+
+        if (!['http:', 'https:'].includes(nextUrl.protocol)) {
+          throw new Error('Only HTTP/HTTPS redirects are allowed')
+        }
+
+        return nextUrl
+      }
+    }
+    return null
+  }
+
+  private validateResponse(response: Response): void {
+    const contentLength = response.headers.get('content-length')
+    if (contentLength) {
+      const parsedLength = Number.parseInt(contentLength, 10)
+      if (parsedLength > DownloadHandler.MAX_FILE_SIZE_BYTES) {
+        throw new Error('PDF download exceeds maximum allowed size')
+      }
+    }
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch PDF: ${response.statusText}`)
+    }
+  }
+
+  private validateBufferSize(arrayBuffer: ArrayBuffer): void {
+    if (arrayBuffer.byteLength > DownloadHandler.MAX_FILE_SIZE_BYTES) {
+      throw new Error('PDF download exceeds maximum allowed size')
+    }
+  }
+
+  private async readBodyWithLimit(response: Response): Promise<Buffer> {
+    const contentLength = response.headers.get('content-length')
+    if (contentLength) {
+      const declaredSize = Number.parseInt(contentLength, 10)
+      if (!Number.isNaN(declaredSize) && declaredSize > DownloadHandler.MAX_FILE_SIZE_BYTES) {
+        throw new Error('PDF download exceeds maximum allowed size')
+      }
+    }
+
+    const body = response.body as ReadableStream<Uint8Array> | undefined
+    if (body) {
+      return this.readFromStream(body)
+    }
+
+    // Fallback for mocked responses without a body stream
+    const arrayBuffer = await response.arrayBuffer()
+    return Buffer.from(arrayBuffer)
+  }
+
+  private async readFromStream(body: ReadableStream<Uint8Array>): Promise<Buffer> {
+    const reader = body.getReader()
+    const chunks: Uint8Array[] = []
+    let totalBytes = 0
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) {
+          break
+        }
+
+        totalBytes += value.length
+        if (totalBytes > DownloadHandler.MAX_FILE_SIZE_BYTES) {
+          throw new Error('PDF download exceeds maximum allowed size')
+        }
+
+        chunks.push(value)
+      }
+    }
+    finally {
+      reader.releaseLock()
+    }
+
+    return Buffer.concat(chunks, totalBytes)
   }
 
   private setupRequestInterception(page: Page): void {
@@ -113,7 +262,7 @@ export class DownloadHandler extends BaseHandler {
     page: Page,
     url: string,
     ctx: CustomContext,
-    params: Record<string, unknown>,
+    _params: Record<string, unknown>,
   ): Promise<string> {
     await page.setRequestInterception(true)
     this.setupRequestInterception(page)
@@ -122,14 +271,8 @@ export class DownloadHandler extends BaseHandler {
       waitUntil: 'networkidle0',
     })
 
-    const folder = await fs.mkdtemp(path.join(os.tmpdir(), 'pdffromlink-'))
-    await fs.chmod(folder, 0o700)
+    const folder = (ctx.session.params as { path: string }).path
     const filePath = path.join(folder, 'file.pdf')
-
-    ctx.session.params = {
-      ...params,
-      path: folder,
-    }
 
     await page.pdf({
       path: filePath,
@@ -137,7 +280,7 @@ export class DownloadHandler extends BaseHandler {
     })
 
     const title = await page.title()
-    const sanitizedTitle = title.replace(/[/\\[\]{}()<>:;|=,*?"']/g, '').trim() || 'document'
+    const sanitizedTitle = title.replace(SANITIZE_FILENAME_REGEX, '').trim() || 'document'
     const document = new InputFile(filePath, `${sanitizedTitle}.pdf`)
 
     await ctx.replyWithDocument(document)

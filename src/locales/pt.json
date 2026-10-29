@@ -10,6 +10,7 @@
   "operation_join": "➕ Juntar",
   "operation_pdftoimages": "🖼️ PDF para Imagens",
   "operation_pro": "💎 Pro",
+  "operation_subscription": "💎 Minha Assinatura",
   "operation_putpassword": "🔐 Colocar Senha",
   "operation_removepassword": "🔓 Remover Senha",
   "operation_split": "✂️ Dividir",
@@ -29,7 +30,7 @@
   "join_merging": "🔄 Mesclando seus arquivos PDF...",
   "join_success": "✅ Aqui está seu arquivo PDF mesclado!",
   "join_error": "❌ Ocorreu um erro ao juntar seus arquivos PDF. Por favor, tente novamente mais tarde.",
-  "download_send_url": "🌐 Envie-me um URL e eu o converterei para PDF!\n\n📝 Suportado: sites, artigos, documentação\n⚠️ Nota: Alguns sites podem bloquear o acesso automatizado",
+  "download_send_url": "🌐 Envie-me um URL e eu o converterei para PDF!\n\n📝 Suportado: sites, artigos, documentação, links diretos de PDF\n⚠️ Nota: Alguns sites podem bloquear o acesso automatizado",
   "download_error": "❌ Ocorreu um erro ao converter o URL para PDF.",
   "pdftoimages_send_file": "🖼️ Envie-me um arquivo PDF e eu converterei suas páginas em imagens!",
   "pdftoimages_converting": "🔄 Convertendo seu PDF em imagens...",
@@ -52,6 +53,7 @@
   "feedback_send_message": "💬 Por favor, envie seu feedback. Ele será enviado diretamente ao desenvolvedor.",
   "feedback_success": "✅ Obrigado pelo seu feedback!",
   "pro_already_pro": "🌟 Você já é um usuário Pro!",
+  "subscription_info": "💎 <b>Sua Assinatura Pro</b>\n\n✨ Status: Ativo\n📅 Desde: {date}\n🚀 Limite: 50 operações/dia",
   "pro_upgrade": "💎 Atualize para Pro para mais uso diário e recursos!",
   "pro_success": "🎉 Obrigado por assinar o PRO! Você agora tem acesso total a todos os recursos.",
   "version_info": "🤖 <b>PDF Studio Bot</b>\n\nVersão: {version}\nDesenvolvedor: @gabrielrufino",
@@ -76,5 +78,11 @@
   "extracttext_send_file": "📝 Me envie um arquivo PDF e eu extrairei o texto para você!",
   "extracttext_extracting": "🔄 Extraindo texto do seu PDF...",
   "extracttext_success": "✅ Aqui está o texto extraído do seu PDF!",
-  "extracttext_error": "❌ Ocorreu um erro ao extrair texto do seu PDF. Por favor, tente novamente mais tarde."
+  "extracttext_error": "❌ Ocorreu um erro ao extrair texto do seu PDF. Por favor, tente novamente mais tarde.",
+  "operation_compress": "🗜️ Comprimir",
+  "compress_send_file": "🗜️ Envie-me o arquivo PDF que deseja comprimir.",
+  "compress_compressing": "🔄 Comprimindo seu arquivo PDF...",
+  "compress_success": "✅ Aqui está o seu arquivo PDF comprimido!",
+  "compress_error": "❌ Ocorreu um erro ao comprimir seu arquivo PDF. Por favor, tente novamente mais tarde.",
+  "compress_no_reduction": "⚠️ Não foi possível comprimir mais o arquivo. O resultado seria do mesmo tamanho ou maior que o original."
 }

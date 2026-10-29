@@ -1,5 +1,4 @@
 import { MongoClient, ObjectId } from 'mongodb'
-import { MongoMemoryServer } from 'mongodb-memory-server'
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { UserEntity } from '../entities/user.entity'
@@ -8,14 +7,13 @@ import { UserRepository } from './user.repository'
 
 describe(UserRepository.name, () => {
   let userRepository: UserRepository
-  let mongod: MongoMemoryServer
   let client: MongoClient
 
   beforeAll(async () => {
-    mongod = await MongoMemoryServer.create()
+    const uri = process.env.__MONGODB_URI__!
 
-    process.env.MONGODB_CONNECTION_STRING = mongod.getUri()
-    client = new MongoClient(mongod.getUri())
+    process.env.MONGODB_CONNECTION_STRING = uri
+    client = new MongoClient(uri)
     const database = client.db('pdf_studio_test')
 
     userRepository = new UserRepository(database)
@@ -23,7 +21,6 @@ describe(UserRepository.name, () => {
 
   afterAll(async () => {
     await client.close()
-    await mongod!.stop()
   })
 
   it('should create a user', async () => {

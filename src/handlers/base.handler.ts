@@ -10,6 +10,7 @@ import { PlanTypeEnum } from '../enums/plan-type.enum'
 import { InvalidFileError } from '../errors/invalid-file.error'
 import { LimitExceededError } from '../errors/limit-exceeded.error'
 import { SessionValidationError } from '../errors/session-validation.error'
+import { UserNotFoundError } from '../errors/user-not-found.error'
 
 export abstract class BaseHandler {
   public abstract readonly command: CommandEnum
@@ -138,6 +139,50 @@ export abstract class BaseHandler {
         await this.decrementUsage(ctx, userRepository)
       }
       throw error
+    }
+  }
+
+  protected async processDocument(
+    ctx: CustomContext,
+    userRepository: UserRepository,
+    processing: (inputPath: string) => Promise<void>,
+    errorKey: string,
+    paths: { inputPath?: string, outputPath?: string },
+  ): Promise<void> {
+    try {
+      await this.validatePDF(ctx)
+
+      if (!ctx.user) {
+        throw new UserNotFoundError()
+      }
+
+      const fileSize = ctx.message?.document?.file_size ?? 0
+      await this.checkLimits(ctx, { fileSize })
+
+      await this.runWithUsage(ctx, userRepository, async () => {
+        const file = await ctx.getFile()
+        paths.inputPath = await file.download()
+
+        if (!paths.inputPath) {
+          throw new Error('Failed to download file')
+        }
+
+        await processing(paths.inputPath)
+      })
+    }
+    catch (error) {
+      if (error instanceof InvalidFileError || error instanceof LimitExceededError) {
+        return
+      }
+
+      this.logger.error(error)
+      await ctx.reply(ctx.t(errorKey))
+    }
+    finally {
+      ctx.session.params = {
+        paths: [paths.inputPath, paths.outputPath].filter(Boolean) as string[],
+      }
+      await this.resetSession(ctx)
     }
   }
 

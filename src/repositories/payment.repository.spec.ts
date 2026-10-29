@@ -1,5 +1,4 @@
 import { MongoClient, ObjectId } from 'mongodb'
-import { MongoMemoryServer } from 'mongodb-memory-server'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { PaymentEntity } from '../entities/payment.entity'
 import { CurrencyEnum } from '../enums/currency.enum'
@@ -7,12 +6,11 @@ import { PaymentRepository } from './payment.repository'
 
 describe(PaymentRepository.name, () => {
   let paymentRepository: PaymentRepository
-  let mongod: MongoMemoryServer
   let client: MongoClient
 
   beforeAll(async () => {
-    mongod = await MongoMemoryServer.create()
-    client = new MongoClient(mongod.getUri())
+    const uri = process.env.__MONGODB_URI__!
+    client = new MongoClient(uri)
     await client.connect()
     const database = client.db('pdf_studio_test')
     paymentRepository = new PaymentRepository(database)
@@ -20,7 +18,6 @@ describe(PaymentRepository.name, () => {
 
   afterAll(async () => {
     await client.close()
-    await mongod.stop()
   })
 
   it('should create a payment', async () => {

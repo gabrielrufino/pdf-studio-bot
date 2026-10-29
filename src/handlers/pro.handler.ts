@@ -60,7 +60,9 @@ export class ProHandler extends BaseHandler {
     const user = await this.userRepository.findByTelegramId(userId)
 
     if (user?.plan_type === PlanTypeEnum.Pro) {
-      await ctx.reply(ctx.t('pro_already_pro'))
+      const locale = ctx.session?.language || user.language || 'en'
+      const date = user.plan_started_at ? new Date(user.plan_started_at).toLocaleDateString(locale) : '-'
+      await ctx.reply(ctx.t('subscription_info').replace('{date}', date), { parse_mode: 'HTML' })
       await this.resetSession(ctx)
       return
     }
