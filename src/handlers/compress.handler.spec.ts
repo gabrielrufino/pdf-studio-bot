@@ -162,6 +162,32 @@ describe(CompressHandler.name, () => {
         expect(logger.error).toHaveBeenCalled()
         expect(ctx.reply).toHaveBeenCalledWith('compress_error')
       })
+
+      it('should reply with error when PDFDocument.load throws (corrupted PDF)', async () => {
+        ctx.getFile = vi.fn().mockResolvedValue({ download: vi.fn().mockResolvedValue('/tmp/input.pdf') })
+        vi.mocked(PDFDocument.load).mockRejectedValue(new Error('Unexpected end of file'))
+
+        await handler.events['msg:document']!(ctx)
+
+        expect(logger.error).toHaveBeenCalled()
+        expect(ctx.reply).toHaveBeenCalledWith('compress_error')
+        expect(ctx.replyWithDocument).not.toHaveBeenCalled()
+      })
+
+      it('should reply with error when pdfDoc.save throws', async () => {
+        ctx.getFile = vi.fn().mockResolvedValue({ download: vi.fn().mockResolvedValue('/tmp/input.pdf') })
+        vi.mocked(fs.readFile).mockResolvedValue(Buffer.from('pdf data'))
+        vi.mocked(PDFDocument.load).mockResolvedValue({
+          getPageCount: vi.fn().mockReturnValue(1),
+          save: vi.fn().mockRejectedValue(new Error('Save failed')),
+        } as unknown as PDFDocument)
+
+        await handler.events['msg:document']!(ctx)
+
+        expect(logger.error).toHaveBeenCalled()
+        expect(ctx.reply).toHaveBeenCalledWith('compress_error')
+        expect(ctx.replyWithDocument).not.toHaveBeenCalled()
+      })
     })
   })
 })
