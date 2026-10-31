@@ -7,15 +7,23 @@ import { InputFile } from 'grammy'
 import { PasswordParamsSchema } from '../schemas/password-params.schema'
 import { BaseHandler } from './base.handler'
 
+/**
+ * Abstract handler base for password-protected PDF operations (remove-password, put-password).
+ */
 export abstract class PasswordBaseHandler extends BaseHandler {
   constructor(protected readonly userRepository: UserRepository) {
     super()
   }
 
+  /** Localized prefix used for i18n message keys */
   protected abstract get prefix(): string
 
+  /** Executes the PDF operation using ghostscript; creates output at the given path */
   protected abstract processPDF(input: string, output: string, password?: string): Promise<void>
 
+  /**
+   * Multi-step event handlers: first asks for the PDF document, then collects the password via text.
+   */
   public readonly events = {
     'msg:document': async (ctx: CustomContext) => {
       const params = this.validateParams(PasswordParamsSchema, ctx.session.params)
@@ -85,6 +93,7 @@ export abstract class PasswordBaseHandler extends BaseHandler {
     },
   }
 
+  /** Initializes the session and prompts the user to send a PDF document */
   public async onCommand(ctx: CustomContext): Promise<void> {
     await this.setSessionCommand(ctx)
     ctx.session.params = { path: null }
