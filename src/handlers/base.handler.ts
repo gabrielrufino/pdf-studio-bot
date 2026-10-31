@@ -13,14 +13,26 @@ import { SessionValidationError } from '../errors/session-validation.error'
 import { UserNotFoundError } from '../errors/user-not-found.error'
 
 export abstract class BaseHandler {
+  /** Telegram command enum value */
   public abstract readonly command: CommandEnum
+
+  /** Description of the command */
   public abstract readonly description: string
+
+  /** Additional event handlers keyed by filter query */
   public abstract readonly events: Partial<Record<FilterQuery, (ctx: CustomContext) => Promise<void>>>
+
+  /** Main entry point invoked when a user triggers the command */
   public abstract onCommand(ctx: CustomContext): Promise<void>
+
+  /** Whether this handler enforces daily usage limits */
   public readonly hasUsageLimits: boolean = true
 
   protected readonly logger = logger
 
+  /**
+   * Validates params against a Zod schema, throwing {@link SessionValidationError} on failure.
+   */
   protected validateParams<T>(schema: z.ZodSchema<T>, params: unknown): T {
     const result = schema.safeParse(params)
 
@@ -32,6 +44,10 @@ export abstract class BaseHandler {
     return result.data
   }
 
+  /**
+   * Verifies that the incoming message contains a PDF document (MIME type `application/pdf`).
+   * Replies with an error message and throws {@link InvalidFileError} otherwise.
+   */
   protected async validatePDF(ctx: CustomContext): Promise<void> {
     if (ctx.message?.document?.mime_type !== 'application/pdf') {
       await ctx.reply(ctx.t('invalid_pdf'))
@@ -39,22 +55,36 @@ export abstract class BaseHandler {
     }
   }
 
+  /**
+   * Stores the current command in the user session and cleans up old temporary files.
+   */
   protected async setSessionCommand(ctx: CustomContext) {
     await this.removeTemporaryFiles(ctx)
     ctx.session.command = this.command
   }
 
+  /**
+   * Resets the user session, clearing both the command reference and stored parameters,
+   * then removes associated temporary files.
+   */
   protected async resetSession(ctx: CustomContext) {
     await this.removeTemporaryFiles(ctx)
     ctx.session.command = null
     ctx.session.params = null
   }
 
+  /**
+   * Sends a localized message indicating the user has reached their daily usage limit.
+   */
   protected async notifyLimitExceeded(ctx: CustomContext): Promise<void> {
     const isPro = ctx.user?.plan_type === PlanTypeEnum.Pro
     await ctx.reply(ctx.t(isPro ? 'pro_limit_reached' : 'free_limit_reached'))
   }
 
+  /**
+   * Checks file size and page count against plan-specific limits, throwing
+   * {@link LimitExceededError} when either threshold is breached.
+   */
   protected async checkLimits(
     ctx: CustomContext,
     options: { fileSize?: number, pagesCount?: number },
@@ -84,6 +114,10 @@ export abstract class BaseHandler {
     }
   }
 
+  /**
+   * Increments the user's daily usage counter through the repository.
+   * Returns `true` if successful; sends a limit-reached notification and returns `false` otherwise.
+   */
   protected async incrementUsage(ctx: CustomContext, userRepository: UserRepository): Promise<boolean> {
     const isPro = ctx.user?.plan_type === PlanTypeEnum.Pro
     const limit = isPro ? DAILY_LIMITS[PlanTypeEnum.Pro] : DAILY_LIMITS[PlanTypeEnum.Free]
@@ -103,6 +137,10 @@ export abstract class BaseHandler {
     return true
   }
 
+  /**
+   * Decrements the user's daily usage counter through the repository.
+   * Returns `true` if the counter was updated successfully.
+   */
   protected async decrementUsage(ctx: CustomContext, userRepository: UserRepository): Promise<boolean> {
     const userId = ctx.from?.id
     if (!userId) {
@@ -118,6 +156,10 @@ export abstract class BaseHandler {
     return true
   }
 
+  /**
+   * Executes an asynchronous action while managing daily usage accounting.
+   * Automatically decrements the usage counter if the action throws before completing.
+   */
   protected async runWithUsage(
     ctx: CustomContext,
     userRepository: UserRepository,
@@ -142,6 +184,11 @@ export abstract class BaseHandler {
     }
   }
 
+  /**
+   * Orchestrates the full lifecycle of processing a PDF document: validates MIME type,
+   * enforces limits, downloads the file, delegates to the `processing` callback, handles errors
+   * with localized messages, and cleans up the session afterwards.
+   */
   protected async processDocument(
     ctx: CustomContext,
     userRepository: UserRepository,
@@ -186,6 +233,9 @@ export abstract class BaseHandler {
     }
   }
 
+  /**
+   * Removes all temporary files and directories referenced in the current session's parameters.
+   */
   private async removeTemporaryFiles(ctx: CustomContext) {
     const params = ctx.session.params
 
