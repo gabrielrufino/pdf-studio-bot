@@ -24,6 +24,8 @@ flowchart TD
     C -->|Yes| E{PRO expired?}
     E -->|Yes| F[Downgrade to Free]
     E -->|No| G{User blocked?}
+    D --> G
+    F --> G
     G -->|Yes| H[Reply limit reached]
     G -->|No| I{Todays date = last_usage_date?}
     I -->|No| Z

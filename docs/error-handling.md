@@ -10,7 +10,7 @@ Errors are caught at the handler boundary in `src/index.ts` and mapped to locali
 |-------|---------|----------------------|
 | `SessionValidationError` | Invalid or missing session parameters. | Reply with `⚠️ {error.message}` and reset session. |
 | `InvalidFileError` | The message is not a valid PDF document. | Reply with the localized `invalid_pdf` message. |
-| `LimitExceededError` | File size or page count exceeds plan limits. | Reply with `free_limit_reached` or `pro_limit_reached`. |
+| `LimitExceededError` | File size or page count exceeds plan limits. | Caught internally by handlers; never reaches global handler. |
 | `UserNotFoundError` | No user record exists in the database. | Treated as unexpected error. |
 | Other errors | Unexpected failures (PDF parsing, network, etc.). | Log error and reply with `unexpected_error`. |
 
@@ -27,7 +27,6 @@ flowchart TD
     C --> H[Reset session]
     D --> I[Return silently]
     E --> I
-    G --> H
 ```
 
 ## Per-Handler Error Patterns

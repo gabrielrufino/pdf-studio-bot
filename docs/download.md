@@ -64,4 +64,4 @@ flowchart TD
 - Handler: `DownloadHandler` uses Puppeteer for HTML pages and `fetch` for direct PDFs.
 - SSRF protection checks both the hostname and resolved DNS addresses with `ipaddr.js`.
 - Request interception inside Puppeteer aborts requests to private IPs.
-- Max redirects: 5. Fetch timeout: 30 seconds.
+- Max redirects: 4. Fetch timeout: 30 seconds.

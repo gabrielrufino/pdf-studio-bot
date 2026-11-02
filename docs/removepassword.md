@@ -7,7 +7,7 @@ The `/removepassword` command removes password protection from a PDF, given the 
 ## Business Rules
 
 - User sends the password-protected PDF first, then sends the current password.
-- The password message is deleted after processing.
+- The password message is deleted before processing (best-effort; processing continues if deletion fails).
 - If the password is incorrect, processing fails and the user receives an error.
 - Consumes one daily operation.
 

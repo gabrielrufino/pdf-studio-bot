@@ -48,7 +48,7 @@ stateDiagram-v2
     AwaitingFile --> Error : invalid PDF or limit exceeded
     AwaitingRange --> Processing : valid range
     AwaitingRange --> InvalidRange : malformed or out of bounds
-    InvalidRange --> AwaitingRange : prompt again
+    InvalidRange --> Error : remove file, reset session, must restart
     Processing --> Success : file sent
     Success --> [*]
     Error --> [*]

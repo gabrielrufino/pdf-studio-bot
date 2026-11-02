@@ -46,4 +46,5 @@ stateDiagram-v2
 
 - Handler: `HelpHandler` receives the full handler array and includes itself.
 - Buttons use `InlineKeyboard` with command names as callback data.
-- Unknown buttons are answered with `answerCallbackQuery` at the bot level in `src/index.ts`.
+- Callbacks with no active command (including unknown callback data) are routed to `HelpHandler`.
+- The bot-level fallback only handles callbacks when an active command has no matching `callback_query` handler.

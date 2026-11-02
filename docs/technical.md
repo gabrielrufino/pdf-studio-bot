@@ -118,7 +118,7 @@ interface SessionData {
 
 ## Security Controls
 
-- **SSRF protection**: `DownloadHandler` blocks URLs resolving to private, loopback, link-local, or unique-local IPs.
+- **SSRF protection**: `DownloadHandler` resolves hostnames and checks addresses before requests, but connections use the hostname rather than the checked address. This reduces SSRF risk but does not fully prevent DNS rebinding attacks. Enforce egress rules at the network layer where applicable.
 - **File validation**: every document handler checks `mime_type === 'application/pdf'`.
 - **Size and page limits**: enforced before download/processing.
 - **Log redaction**: `deepRedact` removes values for keys like `BOT_TOKEN`, `token`, `apiKey`, `Authorization`.

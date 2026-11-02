@@ -33,8 +33,10 @@ sequenceDiagram
         U->>B: pre_checkout_query
         B->>U: answerPreCheckoutQuery(true)
         U->>B: successful_payment
-        B->>R: update plan_type = PRO
-        B->>P: create PaymentEntity
+        par concurrent (Promise.all, non-transactional)
+            B->>R: update plan_type = PRO
+            B->>P: create PaymentEntity
+        end
         B->>U: pro_success
     end
 ```
@@ -58,4 +60,4 @@ stateDiagram-v2
 - Listens to `pre_checkout_query` and `message:successful_payment` events.
 - Payment payload is `'pdf-studio-pro-subscription'`.
 - Currency is `XTR` (Telegram Stars).
-- `usageLimitMiddleware` checks PRO expiration daily and downgrades expired plans.
+- `usageLimitMiddleware` checks PRO expiration on each command or matching event and downgrades the plan if expired.
