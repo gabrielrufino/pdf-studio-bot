@@ -21,12 +21,10 @@ flowchart TD
     A[Handler throws] --> B{Error type?}
     B -->|SessionValidationError| C[Reply validation message]
     B -->|InvalidFileError| D[Reply invalid PDF message]
-    B -->|LimitExceededError| E[Reply limit reached message]
     B -->|Other| F[Log error]
     F --> G[Reply unexpected_error]
     C --> H[Reset session]
     D --> I[Return silently]
-    E --> I
 ```
 
 ## Per-Handler Error Patterns
