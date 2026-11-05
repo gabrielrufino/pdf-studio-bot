@@ -28,7 +28,12 @@ export class DownloadHandler extends BaseHandler {
 
   private static readonly PDF_CONFIG: Partial<PDFOptions> = {
     format: 'A4' as const,
-    margin: { top: '1cm', right: '1cm', bottom: '1cm', left: '1cm' },
+    margin: {
+      top: '1cm',
+      right: '1cm',
+      bottom: '1cm',
+      left: '1cm',
+    },
     printBackground: true,
   }
 
@@ -312,7 +317,9 @@ export class DownloadHandler extends BaseHandler {
   }
 
   private isPrivateIP(ip: string): boolean {
-    const cleanIp = ip.startsWith('[') && ip.endsWith(']') ? ip.slice(1, -1) : ip
+    const cleanIp = ip.startsWith('[') && ip.endsWith(']')
+      ? ip.slice(1, -1)
+      : ip
 
     if (!isIP(cleanIp)) {
       return false
@@ -324,7 +331,13 @@ export class DownloadHandler extends BaseHandler {
         addr = (addr as ipaddr.IPv6).toIPv4Address()
       }
       const range = addr.range()
-      return ['uniqueLocal', 'linkLocal', 'loopback', 'private', 'unspecified'].includes(range)
+      return [
+        'uniqueLocal',
+        'linkLocal',
+        'loopback',
+        'private',
+        'unspecified',
+      ].includes(range)
     }
     catch {
       return false

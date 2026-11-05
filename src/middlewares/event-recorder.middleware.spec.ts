@@ -38,10 +38,12 @@ describe(eventRecorderMiddleware.name, () => {
     }
     await eventRecorderMiddleware(ctx, next)
     expect(next).toHaveBeenCalled()
-    expect(eventRepository.insertMany).toHaveBeenCalledWith([expect.objectContaining({
-      event: EventEnum.CommandStart,
-      telegram_user: { id: 123 },
-    })])
+    expect(eventRepository.insertMany).toHaveBeenCalledWith([
+      expect.objectContaining({
+        event: EventEnum.CommandStart,
+        telegram_user: { id: 123 },
+      }),
+    ])
   })
 
   it('should record specific ButtonPro if callbackQuery data is pro', async () => {
@@ -51,24 +53,30 @@ describe(eventRecorderMiddleware.name, () => {
     }
     await eventRecorderMiddleware(ctx, next)
     expect(next).toHaveBeenCalled()
-    expect(eventRepository.insertMany).toHaveBeenCalledWith([expect.objectContaining({
-      event: EventEnum.ButtonPro,
-      telegram_user: { id: 123 },
-    })])
+    expect(eventRepository.insertMany).toHaveBeenCalledWith([
+      expect.objectContaining({
+        event: EventEnum.ButtonPro,
+        telegram_user: { id: 123 },
+      }),
+    ])
   })
 
   it('should record FileReceived if document is present', async () => {
     const ctx: any = {
       from: { id: 123 },
-      message: { document: { mime_type: 'application/pdf' } },
+      message: {
+        document: { mime_type: 'application/pdf' },
+      },
     }
     await eventRecorderMiddleware(ctx, next)
     expect(next).toHaveBeenCalled()
-    expect(eventRepository.insertMany).toHaveBeenCalledWith([expect.objectContaining({
-      event: EventEnum.FileReceived,
-      telegram_user: { id: 123 },
-      metadata: { mime_type: 'application/pdf' },
-    })])
+    expect(eventRepository.insertMany).toHaveBeenCalledWith([
+      expect.objectContaining({
+        event: EventEnum.FileReceived,
+        telegram_user: { id: 123 },
+        metadata: { mime_type: 'application/pdf' },
+      }),
+    ])
   })
 
   it('should not record anything for unknown command', async () => {

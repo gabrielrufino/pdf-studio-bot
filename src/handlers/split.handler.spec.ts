@@ -25,16 +25,25 @@ describe(SplitHandler.name, () => {
       decrementUsage: vi.fn().mockResolvedValue({}),
     } as unknown as UserRepository
     handler = new SplitHandler(mockUserRepository)
-    ctx = { t: (key: string) => key, from: { id: 123 }, user: { plan_type: 'free' }, session: {
-      command: null,
-      params: {} as any,
-    }, message: {
-      document: {
-        mime_type: 'application/pdf',
+    ctx = {
+      t: (key: string) => key,
+      from: { id: 123 },
+      user: { plan_type: 'free' },
+      session: {
+        command: null,
+        params: {} as any,
       },
-    }, getFile: vi.fn().mockResolvedValue({
-      download: vi.fn().mockResolvedValue('/tmp/fake.pdf'),
-    }), reply: vi.fn(), replyWithDocument: vi.fn() } as unknown as CustomContext
+      message: {
+        document: {
+          mime_type: 'application/pdf',
+        },
+      },
+      getFile: vi.fn().mockResolvedValue({
+        download: vi.fn().mockResolvedValue('/tmp/fake.pdf'),
+      }),
+      reply: vi.fn(),
+      replyWithDocument: vi.fn(),
+    } as unknown as CustomContext
   })
 
   it('should have correct command', () => {

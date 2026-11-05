@@ -32,7 +32,9 @@ export class PdfToImagesHandler extends BaseHandler {
           return {
             type: 'photo',
             media: new InputFile(imagePath, `page-${currentPage}.png`),
-            caption: index === 0 ? `🖼️ Pages ${i + 1}-${i + chunk.length} of ${totalPages}` : undefined,
+            caption: index === 0
+              ? `🖼️ Pages ${i + 1}-${i + chunk.length} of ${totalPages}`
+              : undefined,
           }
         })
         await ctx.api.sendMediaGroup(ctx.chat!.id, mediaGroup)

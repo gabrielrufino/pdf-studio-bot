@@ -9,7 +9,9 @@ import { LimitExceededError } from '../errors/limit-exceeded.error'
 import { RotateHandler } from './rotate.handler'
 
 const { mockSetRotation } = vi.hoisted(() => {
-  return { mockSetRotation: vi.fn() }
+  return {
+    mockSetRotation: vi.fn(),
+  }
 })
 
 vi.mock('pdf-lib', () => ({
@@ -18,7 +20,10 @@ vi.mock('pdf-lib', () => ({
     load: vi.fn().mockResolvedValue({
       getPageCount: vi.fn().mockReturnValue(1),
       getPages: vi.fn().mockReturnValue([
-        { getRotation: vi.fn().mockReturnValue({ angle: 0 }), setRotation: mockSetRotation },
+        {
+          getRotation: vi.fn().mockReturnValue({ angle: 0 }),
+          setRotation: mockSetRotation,
+        },
       ]),
       save: vi.fn().mockResolvedValue(Buffer.from('test')),
     }),
@@ -56,7 +61,9 @@ describe(RotateHandler.name, () => {
 
     handler = new RotateHandler(userRepository)
     // @ts-expect-error logger is protected
-    handler.logger = { error: vi.fn() } as any
+    handler.logger = {
+      error: vi.fn(),
+    } as any
 
     ctx = {
       session: { command: CommandEnum.Rotate, params: null },
@@ -77,7 +84,9 @@ describe(RotateHandler.name, () => {
           file_size: 100,
         }),
       },
-      message: { document: { file_id: 'doc-id', file_size: 100, mime_type: 'application/pdf' } },
+      message: {
+        document: { file_id: 'doc-id', file_size: 100, mime_type: 'application/pdf' },
+      },
       callbackQuery: { data: 'rotate_90' },
     } as unknown as CustomContext
 
@@ -124,7 +133,10 @@ describe(RotateHandler.name, () => {
       expect(ctx.answerCallbackQuery).toHaveBeenCalled()
       expect(ctx.editMessageText).toHaveBeenCalledWith('rotate_rotating')
       expect(ctx.replyWithDocument).toHaveBeenCalledWith(
-        expect.objectContaining({ name: 'rotated.pdf', path: expect.stringMatching(/rotate-[a-f0-9-]+\.pdf$/) }),
+        expect.objectContaining({
+          name: 'rotated.pdf',
+          path: expect.stringMatching(/rotate-[a-f0-9-]+\.pdf$/),
+        }),
         { caption: 'rotate_success' },
       )
 
@@ -184,7 +196,10 @@ describe(RotateHandler.name, () => {
 
       expect((handler as any).logger.error).toHaveBeenCalledWith({ error: err1, path: '/tmp/test.pdf' }, 'Failed to remove input file.')
       expect((handler as any).logger.error).toHaveBeenCalledWith(
-        { error: err2, path: expect.stringMatching(/rotate-[a-f0-9-]+\.pdf$/) },
+        {
+          error: err2,
+          path: expect.stringMatching(/rotate-[a-f0-9-]+\.pdf$/),
+        },
         'Failed to remove output file.',
       )
     })

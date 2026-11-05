@@ -9,7 +9,10 @@ describe(VersionHandler.name, () => {
 
   beforeEach(() => {
     handler = new VersionHandler()
-    ctx = { t: (key: string) => key, reply: vi.fn() } as unknown as CustomContext
+    ctx = {
+      t: (key: string) => key,
+      reply: vi.fn(),
+    } as unknown as CustomContext
   })
 
   it('should have correct command', () => {

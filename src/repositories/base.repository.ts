@@ -36,7 +36,9 @@ export abstract class BaseRepository<T extends Document & { updated_at: Date }> 
 
     if (this.indexes.length > 0) {
       await this.collection.createIndexes(
-        this.indexes.map(index => ({ key: { [index as string]: 1 } })),
+        this.indexes.map(index => ({
+          key: { [index as string]: 1 },
+        })),
       )
     }
 

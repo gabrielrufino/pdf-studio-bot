@@ -47,7 +47,9 @@ describe(PasswordBaseHandler.name, () => {
         command: null,
         params: { path: null },
       },
-      message: { document: { mime_type: 'application/pdf' } },
+      message: {
+        document: { mime_type: 'application/pdf' },
+      },
       reply: vi.fn(),
       replyWithDocument: vi.fn(),
       deleteMessage: vi.fn().mockResolvedValue(true),
@@ -103,7 +105,10 @@ describe(PasswordBaseHandler.name, () => {
 
       it('should process PDF and reply with document', async () => {
         ctx.session.params = { path: '/tmp/input.pdf' }
-        Object.defineProperty(ctx, 'message', { value: { text: 'mypassword' }, writable: true })
+        Object.defineProperty(ctx, 'message', {
+          value: { text: 'mypassword' },
+          writable: true,
+        })
         await handler.events['msg:text'](ctx)
 
         expect(ctx.reply).toHaveBeenCalledWith('test_processing')
@@ -118,7 +123,10 @@ describe(PasswordBaseHandler.name, () => {
 
       it('should handle processPDF error and reply with error', async () => {
         ctx.session.params = { path: '/tmp/input.pdf' }
-        Object.defineProperty(ctx, 'message', { value: { text: 'fail' }, writable: true })
+        Object.defineProperty(ctx, 'message', {
+          value: { text: 'fail' },
+          writable: true,
+        })
         await handler.events['msg:text'](ctx)
         expect(ctx.reply).toHaveBeenCalledWith('test_error')
       })
@@ -136,7 +144,10 @@ describe(PasswordBaseHandler.name, () => {
         ],
       ])('should handle %s error silently', async (_, failPath, expectedLogMessage) => {
         ctx.session.params = { path: '/tmp/input.pdf' }
-        Object.defineProperty(ctx, 'message', { value: { text: 'mypassword' }, writable: true })
+        Object.defineProperty(ctx, 'message', {
+          value: { text: 'mypassword' },
+          writable: true,
+        })
 
         vi.spyOn(fs, 'rm').mockImplementation(async (path: any) => {
           if (path === failPath)
@@ -147,14 +158,19 @@ describe(PasswordBaseHandler.name, () => {
         await handler.events['msg:text'](ctx)
 
         expect(loggerSpy).toHaveBeenCalledWith(
-          expect.objectContaining({ error: expect.any(Error) }),
+          expect.objectContaining({
+            error: expect.any(Error),
+          }),
           expectedLogMessage,
         )
       })
 
       it('should handle ctx.deleteMessage error silently', async () => {
         ctx.session.params = { path: '/tmp/input.pdf' }
-        Object.defineProperty(ctx, 'message', { value: { text: 'mypassword' }, writable: true })
+        Object.defineProperty(ctx, 'message', {
+          value: { text: 'mypassword' },
+          writable: true,
+        })
         vi.mocked(ctx.deleteMessage).mockRejectedValueOnce(new Error('delete failed'))
         const loggerSpy = vi.spyOn((handler as any).logger, 'error')
         await handler.events['msg:text'](ctx)

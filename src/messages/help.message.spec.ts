@@ -82,8 +82,12 @@ describe(HelpMessage.name, () => {
 
   describe('caching', () => {
     it('should return the cached result for the same language and handlers', () => {
-      const ctx1 = createMockCtx({ session: { language: LanguageEnum.English } })
-      const ctx2 = createMockCtx({ session: { language: LanguageEnum.English } })
+      const ctx1 = createMockCtx({
+        session: { language: LanguageEnum.English },
+      })
+      const ctx2 = createMockCtx({
+        session: { language: LanguageEnum.English },
+      })
 
       const result1 = new HelpMessage(mockHandlers, ctx1).build()
       const result2 = new HelpMessage(mockHandlers, ctx2).build()
@@ -92,8 +96,14 @@ describe(HelpMessage.name, () => {
     })
 
     it('should return different results for different languages', () => {
-      const ctxEn = createMockCtx({ session: { language: LanguageEnum.English }, t: (key: string) => `${key}_en` })
-      const ctxPt = createMockCtx({ session: { language: LanguageEnum.Portuguese }, t: (key: string) => `${key}_pt` })
+      const ctxEn = createMockCtx({
+        session: { language: LanguageEnum.English },
+        t: (key: string) => `${key}_en`,
+      })
+      const ctxPt = createMockCtx({
+        session: { language: LanguageEnum.Portuguese },
+        t: (key: string) => `${key}_pt`,
+      })
 
       const resultEn = new HelpMessage(mockHandlers, ctxEn).build()
       const resultPt = new HelpMessage(mockHandlers, ctxPt).build()
@@ -107,7 +117,9 @@ describe(HelpMessage.name, () => {
       const otherHandlers: BaseHandler[] = [
         { command: CommandEnum.Download, description: '' } as unknown as BaseHandler,
       ]
-      const ctxEn = createMockCtx({ session: { language: LanguageEnum.English } })
+      const ctxEn = createMockCtx({
+        session: { language: LanguageEnum.English },
+      })
 
       const result1 = new HelpMessage(mockHandlers, ctxEn).build()
       const result2 = new HelpMessage(otherHandlers, ctxEn).build()
@@ -116,8 +128,12 @@ describe(HelpMessage.name, () => {
     })
 
     it('should fallback to en when session language is undefined', () => {
-      const ctxNoLang = createMockCtx({ session: { language: undefined } })
-      const ctxEn = createMockCtx({ session: { language: LanguageEnum.English } })
+      const ctxNoLang = createMockCtx({
+        session: { language: undefined },
+      })
+      const ctxEn = createMockCtx({
+        session: { language: LanguageEnum.English },
+      })
 
       const result1 = new HelpMessage(mockHandlers, ctxNoLang).build()
       const result2 = new HelpMessage(mockHandlers, ctxEn).build()
@@ -127,7 +143,10 @@ describe(HelpMessage.name, () => {
 
     it('should not call ctx.t again when returning cached result', () => {
       const t = vi.fn((key: string) => key)
-      const ctx1 = createMockCtx({ session: { language: LanguageEnum.English }, t })
+      const ctx1 = createMockCtx({
+        session: { language: LanguageEnum.English },
+        t,
+      })
 
       new HelpMessage(mockHandlers, ctx1).build()
       const callCountAfterFirst = t.mock.calls.length
