@@ -17,6 +17,10 @@ Run in this sequence before completion:
 2. `pnpm build:check`
 3. `pnpm test`
 
+## Documentation Maintenance
+
+Whenever a feature is added, removed, or changed, the corresponding `docs/<feature>.md` file must be reviewed and updated if necessary. New features require a new `docs/<feature>.md` document following the existing structure (Overview, Business Rules, User Flow, State Machine, Technical Notes). Keep business and technical aspects in sync with the implementation.
+
 ## Architecture & Code Conventions
 - **Entrypoint**: `src/index.ts`
 - **Barrel Files**: Every directory under `src/` requires an `index.ts` re-exporting public symbols.
