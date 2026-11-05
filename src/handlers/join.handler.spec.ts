@@ -25,16 +25,25 @@ describe(JoinHandler.name, () => {
     } as unknown as UserRepository
 
     handler = new JoinHandler(mockUserRepository)
-    ctx = { t: (key: string) => key, from: { id: 123 }, user: { plan_type: 'free' }, session: {
-      command: null,
-      params: { paths: [] } as JoinParams,
-    }, message: {
-      text: '',
-      document: {
-        mime_type: 'application/pdf',
-        file_name: 'test.pdf',
+    ctx = {
+      t: (key: string) => key,
+      from: { id: 123 },
+      user: { plan_type: 'free' },
+      session: {
+        command: null,
+        params: { paths: [] } as JoinParams,
       },
-    }, getFile: vi.fn(), reply: vi.fn(), replyWithDocument: vi.fn() } as unknown as CustomContext
+      message: {
+        text: '',
+        document: {
+          mime_type: 'application/pdf',
+          file_name: 'test.pdf',
+        },
+      },
+      getFile: vi.fn(),
+      reply: vi.fn(),
+      replyWithDocument: vi.fn(),
+    } as unknown as CustomContext
   })
 
   it('should have correct command', () => {
@@ -142,7 +151,9 @@ describe(JoinHandler.name, () => {
 
   describe('joinPDFs', () => {
     it('should reply with warning if less than 2 files', async () => {
-      ; (ctx.session.params as JoinParams).paths = [join(process.cwd(), 'assets/page-3.pdf')]
+      ; (ctx.session.params as JoinParams).paths = [
+        join(process.cwd(), 'assets/page-3.pdf'),
+      ]
 
       await (handler as any).joinPDFs(ctx)
 
@@ -216,7 +227,9 @@ describe(JoinHandler.name, () => {
 
         await (handler as any).joinPDFs(ctx)
 
-        expect(loggerSpy).toHaveBeenCalledWith(expect.objectContaining({ error: expect.any(Error) }), expect.stringContaining('Failed to remove'))
+        expect(loggerSpy).toHaveBeenCalledWith(expect.objectContaining({
+          error: expect.any(Error),
+        }), expect.stringContaining('Failed to remove'))
       }
       finally {
         await fs.rm(tempDir, { recursive: true, force: true })

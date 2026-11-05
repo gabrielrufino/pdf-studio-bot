@@ -8,7 +8,9 @@ describe('joinParamsSchema', () => {
   })
 
   it('should accept an array of strings', () => {
-    const result = JoinParamsSchema.parse({ paths: ['file1.pdf', 'file2.pdf'] })
+    const result = JoinParamsSchema.parse({
+      paths: ['file1.pdf', 'file2.pdf'],
+    })
     expect(result.paths).toEqual(['file1.pdf', 'file2.pdf'])
   })
 })

@@ -40,17 +40,28 @@ describe(PdfToImagesHandler.name, () => {
     } as unknown as UserRepository
 
     handler = new PdfToImagesHandler(mockUserRepository)
-    ctx = { t: (key: string) => key, from: { id: 123 }, user: { plan_type: PlanTypeEnum.Pro }, chat: { id: 456 }, session: {
-      command: null,
-    }, message: {
-      document: {
-        mime_type: 'application/pdf',
+    ctx = {
+      t: (key: string) => key,
+      from: { id: 123 },
+      user: { plan_type: PlanTypeEnum.Pro },
+      chat: { id: 456 },
+      session: {
+        command: null,
       },
-    }, getFile: vi.fn().mockResolvedValue({
-      download: vi.fn().mockResolvedValue('/tmp/test.pdf'),
-    }), reply: vi.fn(), replyWithPhoto: vi.fn(), api: {
-      sendMediaGroup: vi.fn(),
-    } } as unknown as CustomContext
+      message: {
+        document: {
+          mime_type: 'application/pdf',
+        },
+      },
+      getFile: vi.fn().mockResolvedValue({
+        download: vi.fn().mockResolvedValue('/tmp/test.pdf'),
+      }),
+      reply: vi.fn(),
+      replyWithPhoto: vi.fn(),
+      api: {
+        sendMediaGroup: vi.fn(),
+      },
+    } as unknown as CustomContext
   })
 
   it('should have correct command', () => {
@@ -78,7 +89,10 @@ describe(PdfToImagesHandler.name, () => {
 
       it('should convert PDF to images and send them as a media group', async () => {
         ctx.session.command = CommandEnum.PdfToImages
-        const mockImages = [Buffer.from([1, 2, 3]), Buffer.from([4, 5, 6])]
+        const mockImages = [
+          Buffer.from([1, 2, 3]),
+          Buffer.from([4, 5, 6]),
+        ]
         const mockDocument = {
           length: 2,
           [Symbol.asyncIterator]: vi.fn().mockReturnValue(mockImages[Symbol.iterator]()),
@@ -96,7 +110,9 @@ describe(PdfToImagesHandler.name, () => {
 
       it('should convert PDF to images and send them as a photo if only one page', async () => {
         ctx.session.command = CommandEnum.PdfToImages
-        const mockImages = [Buffer.from([1, 2, 3])]
+        const mockImages = [
+          Buffer.from([1, 2, 3]),
+        ]
         const mockDocument = {
           length: 1,
           [Symbol.asyncIterator]: vi.fn().mockReturnValue(mockImages[Symbol.iterator]()),
@@ -121,7 +137,9 @@ describe(PdfToImagesHandler.name, () => {
 
       it('should log error if removing temporary files fails', async () => {
         ctx.session.command = CommandEnum.PdfToImages
-        const mockImages = [Buffer.from([1, 2, 3])]
+        const mockImages = [
+          Buffer.from([1, 2, 3]),
+        ]
         const mockDocument = {
           length: 1,
           [Symbol.asyncIterator]: vi.fn().mockReturnValue(mockImages[Symbol.iterator]()),
@@ -134,12 +152,16 @@ describe(PdfToImagesHandler.name, () => {
 
         await handler.events['msg:document'](ctx)
 
-        expect(loggerSpy).toHaveBeenCalledWith(expect.objectContaining({ error: expect.any(Error) }), expect.stringContaining('Failed to remove'))
+        expect(loggerSpy).toHaveBeenCalledWith(expect.objectContaining({
+          error: expect.any(Error),
+        }), expect.stringContaining('Failed to remove'))
       })
 
       it('should log error if removing input file fails', async () => {
         ctx.session.command = CommandEnum.PdfToImages
-        const mockImages = [Buffer.from([1, 2, 3])]
+        const mockImages = [
+          Buffer.from([1, 2, 3]),
+        ]
         const mockDocument = {
           length: 1,
           [Symbol.asyncIterator]: vi.fn().mockReturnValue(mockImages[Symbol.iterator]()),
@@ -156,7 +178,9 @@ describe(PdfToImagesHandler.name, () => {
 
         await handler.events['msg:document'](ctx)
 
-        expect(loggerSpy).toHaveBeenCalledWith(expect.objectContaining({ error: expect.any(Error) }), 'Failed to remove input file.')
+        expect(loggerSpy).toHaveBeenCalledWith(expect.objectContaining({
+          error: expect.any(Error),
+        }), 'Failed to remove input file.')
       })
 
       it('should handle errors during conversion', async () => {
@@ -170,7 +194,10 @@ describe(PdfToImagesHandler.name, () => {
 
       it('should handle writeFile failure and still clean up temp dir (no race condition)', async () => {
         ctx.session.command = CommandEnum.PdfToImages
-        const mockImages = [Buffer.from([1, 2, 3]), Buffer.from([4, 5, 6])]
+        const mockImages = [
+          Buffer.from([1, 2, 3]),
+          Buffer.from([4, 5, 6]),
+        ]
         const mockDocument = {
           length: 2,
           [Symbol.asyncIterator]: vi.fn().mockReturnValue(mockImages[Symbol.iterator]()),

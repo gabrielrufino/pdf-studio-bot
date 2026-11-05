@@ -57,9 +57,13 @@ function createMockCtx(): CustomContext {
     t: vi.fn(key => key),
     reply: vi.fn(),
     replyWithDocument: vi.fn(),
-    getFile: vi.fn().mockResolvedValue({ download: vi.fn().mockResolvedValue('/tmp/input.pdf') }),
+    getFile: vi.fn().mockResolvedValue({
+      download: vi.fn().mockResolvedValue('/tmp/input.pdf'),
+    }),
     session: { params: {} },
-    message: { document: { mime_type: 'application/pdf', file_size: 100 } },
+    message: {
+      document: { mime_type: 'application/pdf', file_size: 100 },
+    },
   } as unknown as CustomContext
 }
 
@@ -157,7 +161,9 @@ describe(CompressHandler.name, () => {
 
       it('should throw error when file download fails', async () => {
         const ctx = createMockCtx()
-        ctx.getFile = vi.fn().mockResolvedValue({ download: vi.fn().mockResolvedValue(undefined) })
+        ctx.getFile = vi.fn().mockResolvedValue({
+          download: vi.fn().mockResolvedValue(undefined),
+        })
 
         await handler.events['msg:document']!(ctx)
 
@@ -167,7 +173,9 @@ describe(CompressHandler.name, () => {
 
       it('should reply with error when PDFDocument.load throws (corrupted PDF)', async () => {
         const ctx = createMockCtx()
-        ctx.getFile = vi.fn().mockResolvedValue({ download: vi.fn().mockResolvedValue('/tmp/input.pdf') })
+        ctx.getFile = vi.fn().mockResolvedValue({
+          download: vi.fn().mockResolvedValue('/tmp/input.pdf'),
+        })
         vi.mocked(PDFDocument.load).mockRejectedValue(new Error('Unexpected end of file'))
 
         await handler.events['msg:document']!(ctx)
@@ -179,7 +187,9 @@ describe(CompressHandler.name, () => {
 
       it('should reply with error when pdfDoc.save throws', async () => {
         const ctx = createMockCtx()
-        ctx.getFile = vi.fn().mockResolvedValue({ download: vi.fn().mockResolvedValue('/tmp/input.pdf') })
+        ctx.getFile = vi.fn().mockResolvedValue({
+          download: vi.fn().mockResolvedValue('/tmp/input.pdf'),
+        })
         vi.mocked(fs.readFile).mockResolvedValue(Buffer.from('pdf data'))
         vi.mocked(PDFDocument.load).mockResolvedValue({
           getPageCount: vi.fn().mockReturnValue(1),

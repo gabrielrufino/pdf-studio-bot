@@ -19,9 +19,13 @@ vi.mock('node:fs/promises', async (importOriginal) => {
 vi.mock('node:dns/promises', () => {
   const ip = ['1', '1', '1', '1'].join('.')
   return {
-    lookup: vi.fn().mockResolvedValue([{ address: ip, family: 4 }]),
+    lookup: vi.fn().mockResolvedValue([
+      { address: ip, family: 4 },
+    ]),
     default: {
-      lookup: vi.fn().mockResolvedValue([{ address: ip, family: 4 }]),
+      lookup: vi.fn().mockResolvedValue([
+        { address: ip, family: 4 },
+      ]),
     },
   }
 })
@@ -37,7 +41,9 @@ describe(DownloadHandler.name, () => {
 
     // Ensure the DNS mock always returns a public IP by default, regardless of previous test modifications.
     const dns = await import('node:dns/promises')
-    ;(vi.mocked(dns.default.lookup) as ReturnType<typeof vi.fn>).mockResolvedValue([{ address: '1.1.1.1', family: 4 }])
+    ;(vi.mocked(dns.default.lookup) as ReturnType<typeof vi.fn>).mockResolvedValue([
+      { address: '1.1.1.1', family: 4 },
+    ])
 
     mockBrowser = {
       getInstance: vi.fn().mockResolvedValue({
@@ -59,12 +65,19 @@ describe(DownloadHandler.name, () => {
     } as unknown as UserRepository
 
     handler = new DownloadHandler(mockBrowser, mockUserRepository)
-    ctx = { t: (key: string) => key, from: { id: 123 }, session: {
-      command: null,
-      params: { url: null },
-    }, message: {
-      text: 'https://example.com',
-    }, reply: vi.fn(), replyWithDocument: vi.fn() } as unknown as CustomContext
+    ctx = {
+      t: (key: string) => key,
+      from: { id: 123 },
+      session: {
+        command: null,
+        params: { url: null },
+      },
+      message: {
+        text: 'https://example.com',
+      },
+      reply: vi.fn(),
+      replyWithDocument: vi.fn(),
+    } as unknown as CustomContext
   })
 
   const setUrl = (url: string) => {
@@ -110,7 +123,9 @@ describe(DownloadHandler.name, () => {
 
     // Reset DNS mock state left over from tests that override it.
     const dns = await import('node:dns/promises')
-    ;(vi.mocked(dns.default.lookup) as ReturnType<typeof vi.fn>).mockResolvedValue([{ address: '1.1.1.1', family: 4 }])
+    ;(vi.mocked(dns.default.lookup) as ReturnType<typeof vi.fn>).mockResolvedValue([
+      { address: '1.1.1.1', family: 4 },
+    ])
   })
 
   it('should have correct command', () => {
@@ -155,7 +170,9 @@ describe(DownloadHandler.name, () => {
           const firstResponse = {
             ok: true,
             status: 302,
-            headers: new Map<string, string>([['location', 'https://cdn.example.com/final.pdf']]),
+            headers: new Map<string, string>([
+              ['location', 'https://cdn.example.com/final.pdf'],
+            ]),
           }
           const secondResponse = {
             ok: true,
@@ -180,7 +197,9 @@ describe(DownloadHandler.name, () => {
           const redirectResponse = {
             ok: true,
             status: 302,
-            headers: new Map<string, string>([['location', redirectUrl]]),
+            headers: new Map<string, string>([
+              ['location', redirectUrl],
+            ]),
           }
           const fetchMock = vi.fn().mockResolvedValue(redirectResponse)
           vi.stubGlobal('fetch', fetchMock)
@@ -197,7 +216,9 @@ describe(DownloadHandler.name, () => {
           const fetchMock = mockFetch({
             ok: true,
             status: 302,
-            headers: new Map<string, string>([['location', 'ftp://evil.com/file.pdf']]),
+            headers: new Map<string, string>([
+              ['location', 'ftp://evil.com/file.pdf'],
+            ]),
           })
 
           await runEvent()
@@ -211,7 +232,9 @@ describe(DownloadHandler.name, () => {
           setUrl('https://example.com/huge.pdf')
           mockFetch({
             ok: true,
-            headers: new Map<string, string>([['content-length', '60000000']]),
+            headers: new Map<string, string>([
+              ['content-length', '60000000'],
+            ]),
             status: 200,
           })
 
@@ -253,7 +276,9 @@ describe(DownloadHandler.name, () => {
         it('should reject .pdf URL that resolves to private IP', async () => {
           setUrl('https://private-host.com/file.pdf')
           const dns = await import('node:dns/promises')
-          ;(vi.mocked(dns.default.lookup) as ReturnType<typeof vi.fn>).mockResolvedValue([{ address: '10.0.0.1', family: 4 }])
+          ;(vi.mocked(dns.default.lookup) as ReturnType<typeof vi.fn>).mockResolvedValue([
+            { address: '10.0.0.1', family: 4 },
+          ])
           mockFetch(createDirectPdfResponse())
 
           await runEvent()
@@ -267,7 +292,9 @@ describe(DownloadHandler.name, () => {
           const redirectResponse = {
             ok: true,
             status: 302,
-            headers: new Map<string, string>([['location', 'http://127.0.0.1/malicious.pdf']]),
+            headers: new Map<string, string>([
+              ['location', 'http://127.0.0.1/malicious.pdf'],
+            ]),
           }
           const fetchMock = vi.fn().mockResolvedValue(redirectResponse)
           vi.stubGlobal('fetch', fetchMock)
@@ -284,12 +311,16 @@ describe(DownloadHandler.name, () => {
           const firstRedirect = {
             ok: true,
             status: 302,
-            headers: new Map<string, string>([['location', 'https://cdn.example.com/step.pdf']]),
+            headers: new Map<string, string>([
+              ['location', 'https://cdn.example.com/step.pdf'],
+            ]),
           }
           const secondRedirect = {
             ok: true,
             status: 302,
-            headers: new Map<string, string>([['location', 'http://192.168.0.1/internal.pdf']]),
+            headers: new Map<string, string>([
+              ['location', 'http://192.168.0.1/internal.pdf'],
+            ]),
           }
           const fetchMock = vi.fn().mockResolvedValueOnce(firstRedirect).mockResolvedValueOnce(secondRedirect)
           vi.stubGlobal('fetch', fetchMock)
@@ -306,7 +337,9 @@ describe(DownloadHandler.name, () => {
           const redirectResponse = {
             ok: true,
             status: 302,
-            headers: new Map<string, string>([['location', 'https://resolved-private.com/file.pdf']]),
+            headers: new Map<string, string>([
+              ['location', 'https://resolved-private.com/file.pdf'],
+            ]),
           }
           const fetchMock = vi.fn().mockResolvedValue(redirectResponse)
           vi.stubGlobal('fetch', fetchMock)
@@ -315,9 +348,13 @@ describe(DownloadHandler.name, () => {
           const dnsModule = await import('node:dns/promises')
           ;(vi.mocked(dnsModule.default.lookup) as ReturnType<typeof vi.fn>).mockImplementation(async (hostname: string) => {
             if (hostname === 'resolved-private.com') {
-              return [{ address: '10.10.10.10', family: 4 }]
+              return [
+                { address: '10.10.10.10', family: 4 },
+              ]
             }
-            return [{ address: '1.1.1.1', family: 4 }]
+            return [
+              { address: '1.1.1.1', family: 4 },
+            ]
           })
 
           await runEvent()
@@ -381,7 +418,9 @@ describe(DownloadHandler.name, () => {
           await runEvent()
           // @ts-expect-error logger is protected
           expect(handler.logger.error).toHaveBeenCalledWith(
-            expect.objectContaining({ error: expect.any(Error) }),
+            expect.objectContaining({
+              error: expect.any(Error),
+            }),
             'Failed to close page.',
           )
         })
@@ -425,7 +464,9 @@ describe(DownloadHandler.name, () => {
           ])('should block URL that resolves to %s', async (_, ip, family) => {
             setUrl('http://private-host.com')
             const dns = await import('node:dns/promises')
-            ;(vi.mocked(dns.default.lookup) as ReturnType<typeof vi.fn>).mockResolvedValue([{ address: ip, family }])
+            ;(vi.mocked(dns.default.lookup) as ReturnType<typeof vi.fn>).mockResolvedValue([
+              { address: ip, family },
+            ])
 
             await runEvent()
 
@@ -481,7 +522,9 @@ describe(DownloadHandler.name, () => {
               }
               const dns = await import('node:dns/promises')
               // Mock dns lookup to return a private IP
-              ;(vi.mocked(dns.default.lookup) as ReturnType<typeof vi.fn>).mockResolvedValue([{ address: '10.0.0.1', family: 4 }])
+              ;(vi.mocked(dns.default.lookup) as ReturnType<typeof vi.fn>).mockResolvedValue([
+                { address: '10.0.0.1', family: 4 },
+              ])
 
               requestHandler(mockRequestDns as unknown as HTTPRequest)
               // Wait for microtasks
@@ -499,7 +542,9 @@ describe(DownloadHandler.name, () => {
                 continue: mockContinueSafe,
               }
               // Mock dns lookup to return a public IP
-              ;(vi.mocked(dns.default.lookup) as ReturnType<typeof vi.fn>).mockResolvedValue([{ address: '8.8.8.8', family: 4 }])
+              ;(vi.mocked(dns.default.lookup) as ReturnType<typeof vi.fn>).mockResolvedValue([
+                { address: '8.8.8.8', family: 4 },
+              ])
 
               requestHandler(mockRequestSafe as unknown as HTTPRequest)
               // Wait for microtasks

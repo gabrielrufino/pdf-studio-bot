@@ -22,7 +22,12 @@ describe(usageLimitMiddleware.name, () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2024-01-15T12:00:00.000Z'))
     next = vi.fn()
-    ctx = { t: (key: string) => key, from: { id: 12345 }, reply: vi.fn(), user: undefined }
+    ctx = {
+      t: (key: string) => key,
+      from: { id: 12345 },
+      reply: vi.fn(),
+      user: undefined,
+    }
     handler = {
       hasUsageLimits: true,
     }

@@ -98,14 +98,18 @@ describe(ExtractHandler.name, () => {
       })
 
       it('should reject invalid format', async () => {
-        Object.defineProperty(ctx, 'message', { value: { text: 'invalid format' } })
+        Object.defineProperty(ctx, 'message', {
+          value: { text: 'invalid format' },
+        })
         await handler.events['msg:text'](ctx)
 
         expect(ctx.reply).toHaveBeenCalledWith('extract_invalid_range')
       })
 
       it('should reject reverse range', async () => {
-        Object.defineProperty(ctx, 'message', { value: { text: '5-1' } })
+        Object.defineProperty(ctx, 'message', {
+          value: { text: '5-1' },
+        })
         await handler.events['msg:text'](ctx)
 
         expect(ctx.reply).toHaveBeenCalledWith('extract_invalid_range')
@@ -118,7 +122,9 @@ describe(ExtractHandler.name, () => {
         try {
           await fs.copyFile(`${process.cwd()}/assets/lorem-ipsum.pdf`, targetPath)
           ;(ctx.session.params as any).path = targetPath
-          Object.defineProperty(ctx, 'message', { value: { text: '1-3' } })
+          Object.defineProperty(ctx, 'message', {
+            value: { text: '1-3' },
+          })
 
           const muhammara = await import('muhammara')
           const mockAppend = vi.fn()
@@ -153,7 +159,9 @@ describe(ExtractHandler.name, () => {
         try {
           await fs.copyFile(`${process.cwd()}/assets/lorem-ipsum.pdf`, targetPath)
           ;(ctx.session.params as any).path = targetPath
-          Object.defineProperty(ctx, 'message', { value: { text: '1-3' } })
+          Object.defineProperty(ctx, 'message', {
+            value: { text: '1-3' },
+          })
 
           const rmSpy = vi.spyOn(fs, 'rm').mockImplementation(async (filePath) => {
             if (filePath === targetPath)
@@ -164,7 +172,10 @@ describe(ExtractHandler.name, () => {
 
           await handler.events['msg:text'](ctx)
 
-          expect(loggerSpy).toHaveBeenCalledWith({ error: expect.any(Error), path: targetPath }, 'Failed to remove input file.')
+          expect(loggerSpy).toHaveBeenCalledWith({
+            error: expect.any(Error),
+            path: targetPath,
+          }, 'Failed to remove input file.')
           rmSpy.mockRestore()
         }
         finally {
@@ -179,7 +190,9 @@ describe(ExtractHandler.name, () => {
         try {
           await fs.copyFile(`${process.cwd()}/assets/lorem-ipsum.pdf`, targetPath)
           ;(ctx.session.params as any).path = targetPath
-          Object.defineProperty(ctx, 'message', { value: { text: '1-3' } })
+          Object.defineProperty(ctx, 'message', {
+            value: { text: '1-3' },
+          })
 
           const rmSpy = vi.spyOn(fs, 'rm').mockImplementation(async (filePath) => {
             if (typeof filePath === 'string' && filePath.includes('extract-'))
@@ -190,7 +203,10 @@ describe(ExtractHandler.name, () => {
 
           await handler.events['msg:text'](ctx)
 
-          expect(loggerSpy).toHaveBeenCalledWith({ error: expect.any(Error), path: expect.any(String) }, 'Failed to remove output file.')
+          expect(loggerSpy).toHaveBeenCalledWith({
+            error: expect.any(Error),
+            path: expect.any(String),
+          }, 'Failed to remove output file.')
           expect(rmSpy).toHaveBeenCalledWith(expect.any(String), { force: true, recursive: true })
           rmSpy.mockRestore()
         }
@@ -201,7 +217,9 @@ describe(ExtractHandler.name, () => {
 
       it('should log error and reply with extract_error if generic error occurs in msg:text', async () => {
         ;(ctx.session.params as any).path = '/tmp/fake.pdf'
-        Object.defineProperty(ctx, 'message', { value: { text: '1-3' } })
+        Object.defineProperty(ctx, 'message', {
+          value: { text: '1-3' },
+        })
 
         // Mock muhammara to throw
         const muhammara = await import('muhammara')

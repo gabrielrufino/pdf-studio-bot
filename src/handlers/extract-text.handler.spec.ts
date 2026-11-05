@@ -67,9 +67,13 @@ describe(ExtractTextHandler.name, () => {
       t: vi.fn(key => key),
       reply: vi.fn(),
       replyWithDocument: vi.fn(),
-      getFile: vi.fn().mockResolvedValue({ download: vi.fn().mockResolvedValue('/tmp/input.pdf') }),
+      getFile: vi.fn().mockResolvedValue({
+        download: vi.fn().mockResolvedValue('/tmp/input.pdf'),
+      }),
       session: { params: {} },
-      message: { document: { mime_type: 'application/pdf', file_size: 100 } },
+      message: {
+        document: { mime_type: 'application/pdf', file_size: 100 },
+      },
     } as unknown as CustomContext
   })
 
@@ -134,7 +138,9 @@ describe(ExtractTextHandler.name, () => {
       })
 
       it('should throw error when file download fails', async () => {
-        ctx.getFile = vi.fn().mockResolvedValue({ download: vi.fn().mockResolvedValue(undefined) })
+        ctx.getFile = vi.fn().mockResolvedValue({
+          download: vi.fn().mockResolvedValue(undefined),
+        })
 
         await handler.events['msg:document']!(ctx)
 
@@ -175,7 +181,10 @@ describe(ExtractTextHandler.name, () => {
           'Failed to remove temporary file/folder.',
         )
         expect(logger.error).toHaveBeenCalledWith(
-          { error: rmError, path: expect.stringMatching(/\/tmp\/extract-text-[a-f0-9-]+\.txt/) },
+          {
+            error: rmError,
+            path: expect.stringMatching(/\/tmp\/extract-text-[a-f0-9-]+\.txt/),
+          },
           'Failed to remove temporary file/folder.',
         )
       })
