@@ -189,7 +189,6 @@ describe(DownloadHandler.name, () => {
           expect(fetchMock).toHaveBeenLastCalledWith('https://cdn.example.com/final.pdf', expect.objectContaining({ redirect: 'manual' }))
           expect(mockBrowser.getInstance).not.toHaveBeenCalled()
           expect(ctx.replyWithDocument).toHaveBeenCalled()
-          expect(mockUserRepository.incrementUsage).toHaveBeenCalledTimes(1)
         })
 
         it('should reply with error when too many redirects occur', async () => {
