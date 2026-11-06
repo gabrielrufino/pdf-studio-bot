@@ -92,7 +92,7 @@ describe(usageLimitMiddleware.name, () => {
     expect(next).toHaveBeenCalled()
   })
 
-  it('should block if Free user reaches limit', async () => {
+  it('should pass control to next regardless of user limit', async () => {
     const user = {
       _id: 'user-id',
       plan_type: PlanTypeEnum.Free,
@@ -105,25 +105,7 @@ describe(usageLimitMiddleware.name, () => {
     const middleware = usageLimitMiddleware(handler)
     await middleware(ctx, next)
 
-    expect(ctx.reply).toHaveBeenCalledWith(expect.stringContaining('free_limit_reached'))
-    expect(next).not.toHaveBeenCalled()
-  })
-
-  it('should block if Pro user reaches limit (50)', async () => {
-    const user = {
-      _id: 'user-id',
-      plan_type: PlanTypeEnum.Pro,
-      is_blocked: false,
-      daily_usage_count: 50,
-      last_usage_date: '2024-01-15',
-    }
-    vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
-
-    const middleware = usageLimitMiddleware(handler)
-    await middleware(ctx, next)
-
-    expect(ctx.reply).toHaveBeenCalledWith(expect.stringContaining('pro_limit_reached'))
-    expect(next).not.toHaveBeenCalled()
+    expect(next).toHaveBeenCalled()
   })
 
   it('should allow if Pro user is within limit', async () => {
@@ -187,23 +169,6 @@ describe(usageLimitMiddleware.name, () => {
     expect(next).toHaveBeenCalled()
   })
 
-  it('should block if user is blocked', async () => {
-    const user = {
-      _id: 'user-id',
-      plan_type: PlanTypeEnum.Free,
-      is_blocked: true,
-      daily_usage_count: 0,
-      last_usage_date: '2024-01-15',
-    }
-    vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
-
-    const middleware = usageLimitMiddleware(handler)
-    await middleware(ctx, next)
-
-    expect(next).not.toHaveBeenCalled()
-    expect(ctx.reply).toHaveBeenCalled()
-  })
-
   it('should allow if usage count is high but last usage date is from a previous day', async () => {
     const user = {
       _id: 'user-id',
@@ -220,7 +185,7 @@ describe(usageLimitMiddleware.name, () => {
     expect(next).toHaveBeenCalled()
   })
 
-  it('should fallback to Free limits when plan_type is undefined', async () => {
+  it('should allow if user has exceeded daily limit (enforcement moved to incrementUsage)', async () => {
     const user = {
       _id: 'user-id',
       plan_type: undefined,
@@ -233,7 +198,6 @@ describe(usageLimitMiddleware.name, () => {
     const middleware = usageLimitMiddleware(handler)
     await middleware(ctx, next)
 
-    expect(next).not.toHaveBeenCalled()
-    expect(ctx.reply).toHaveBeenCalledWith('free_limit_reached')
+    expect(next).toHaveBeenCalled()
   })
 })
