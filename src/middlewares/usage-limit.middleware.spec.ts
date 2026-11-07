@@ -12,6 +12,13 @@ vi.mock('../repositories', () => ({
   },
 }))
 
+vi.mock('../config/constants', () => ({
+  DAILY_LIMITS: {
+    free: 3,
+    pro: 50,
+  },
+}))
+
 describe(usageLimitMiddleware.name, () => {
   let next: any
   let ctx: any
@@ -92,12 +99,12 @@ describe(usageLimitMiddleware.name, () => {
     expect(next).toHaveBeenCalled()
   })
 
-  it('should pass control to next regardless of user limit', async () => {
+  it('should call next if user is within daily limit', async () => {
     const user = {
       _id: 'user-id',
       plan_type: PlanTypeEnum.Free,
       is_blocked: false,
-      daily_usage_count: 3,
+      daily_usage_count: 2,
       last_usage_date: '2024-01-15',
     }
     vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
@@ -106,6 +113,7 @@ describe(usageLimitMiddleware.name, () => {
     await middleware(ctx, next)
 
     expect(next).toHaveBeenCalled()
+    expect(ctx.reply).not.toHaveBeenCalled()
   })
 
   it('should allow if Pro user is within limit', async () => {
@@ -122,6 +130,92 @@ describe(usageLimitMiddleware.name, () => {
     await middleware(ctx, next)
 
     expect(next).toHaveBeenCalled()
+    expect(ctx.reply).not.toHaveBeenCalled()
+  })
+
+  it('should reject if Free user has exceeded daily limit', async () => {
+    const user = {
+      _id: 'user-id',
+      plan_type: PlanTypeEnum.Free,
+      is_blocked: false,
+      daily_usage_count: 3,
+      last_usage_date: '2024-01-15',
+    }
+    vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
+
+    const middleware = usageLimitMiddleware(handler)
+    await middleware(ctx, next)
+
+    expect(next).not.toHaveBeenCalled()
+    expect(ctx.reply).toHaveBeenCalledWith('free_limit_reached')
+  })
+
+  it('should reject if Pro user has exceeded daily limit', async () => {
+    const user = {
+      _id: 'user-id',
+      plan_type: PlanTypeEnum.Pro,
+      is_blocked: false,
+      daily_usage_count: 50,
+      last_usage_date: '2024-01-15',
+    }
+    vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
+
+    const middleware = usageLimitMiddleware(handler)
+    await middleware(ctx, next)
+
+    expect(next).not.toHaveBeenCalled()
+    expect(ctx.reply).toHaveBeenCalledWith('pro_limit_reached')
+  })
+
+  it('should allow if usage count equals limit but last_usage_date is not today', async () => {
+    const user = {
+      _id: 'user-id',
+      plan_type: PlanTypeEnum.Free,
+      is_blocked: false,
+      daily_usage_count: 3,
+      last_usage_date: '2024-01-14',
+    }
+    vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
+
+    const middleware = usageLimitMiddleware(handler)
+    await middleware(ctx, next)
+
+    expect(next).toHaveBeenCalled()
+    expect(ctx.reply).not.toHaveBeenCalled()
+  })
+
+  it('should allow if usage count exceeds limit but last_usage_date is from a previous day', async () => {
+    const user = {
+      _id: 'user-id',
+      plan_type: PlanTypeEnum.Free,
+      is_blocked: false,
+      daily_usage_count: 100,
+      last_usage_date: '2000-01-01',
+    }
+    vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
+
+    const middleware = usageLimitMiddleware(handler)
+    await middleware(ctx, next)
+
+    expect(next).toHaveBeenCalled()
+    expect(ctx.reply).not.toHaveBeenCalled()
+  })
+
+  it('should allow if user has no last_usage_date even if count is high', async () => {
+    const user = {
+      _id: 'user-id',
+      plan_type: PlanTypeEnum.Free,
+      is_blocked: false,
+      daily_usage_count: 100,
+      last_usage_date: undefined,
+    }
+    vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
+
+    const middleware = usageLimitMiddleware(handler)
+    await middleware(ctx, next)
+
+    expect(next).toHaveBeenCalled()
+    expect(ctx.reply).not.toHaveBeenCalled()
   })
 
   it('should revert to Free if Pro plan has expired', async () => {
@@ -146,6 +240,7 @@ describe(usageLimitMiddleware.name, () => {
       plan_started_at: null,
     })
     expect(next).toHaveBeenCalled()
+    expect(ctx.reply).not.toHaveBeenCalled()
   })
 
   it('should not revert to Free if Pro plan has not expired', async () => {
@@ -166,38 +261,6 @@ describe(usageLimitMiddleware.name, () => {
     await middleware(ctx, next)
 
     expect(userRepository.updateById).not.toHaveBeenCalled()
-    expect(next).toHaveBeenCalled()
-  })
-
-  it('should allow if usage count is high but last usage date is from a previous day', async () => {
-    const user = {
-      _id: 'user-id',
-      plan_type: PlanTypeEnum.Free,
-      is_blocked: false,
-      daily_usage_count: 100,
-      last_usage_date: '2000-01-01',
-    }
-    vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
-
-    const middleware = usageLimitMiddleware(handler)
-    await middleware(ctx, next)
-
-    expect(next).toHaveBeenCalled()
-  })
-
-  it('should allow if user has exceeded daily limit (enforcement moved to incrementUsage)', async () => {
-    const user = {
-      _id: 'user-id',
-      plan_type: undefined,
-      is_blocked: false,
-      daily_usage_count: 3,
-      last_usage_date: '2024-01-15',
-    }
-    vi.mocked(userRepository.findByTelegramId).mockResolvedValueOnce(user as any)
-
-    const middleware = usageLimitMiddleware(handler)
-    await middleware(ctx, next)
-
     expect(next).toHaveBeenCalled()
   })
 })

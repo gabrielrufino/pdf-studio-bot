@@ -1,6 +1,7 @@
 import type { NextFunction } from 'grammy'
 import type { BaseHandler } from '../handlers/base.handler'
 import type { CustomContext } from '../types/custom-context.type'
+import { DAILY_LIMITS } from '../config/constants'
 import { UserEntity } from '../entities/user.entity'
 import { LanguageEnum } from '../enums/language.enum'
 import { PlanTypeEnum } from '../enums/plan-type.enum'
@@ -39,6 +40,14 @@ export function usageLimitMiddleware(handler: BaseHandler) {
     }
 
     ctx.user = user
+
+    const isPro = ctx.user.plan_type === PlanTypeEnum.Pro
+    const limit = isPro ? DAILY_LIMITS[PlanTypeEnum.Pro] : DAILY_LIMITS[PlanTypeEnum.Free]
+
+    if (user.daily_usage_count >= limit && user.last_usage_date === new Date().toISOString().split('T')[0]) {
+      await ctx.reply(ctx.t(isPro ? 'pro_limit_reached' : 'free_limit_reached'))
+      return
+    }
 
     return next()
   }

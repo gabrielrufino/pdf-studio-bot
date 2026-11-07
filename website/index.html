@@ -351,6 +351,16 @@
             box-shadow: 0 12px 24px -8px rgba(37, 99, 235, 0.15);
         }
 
+        @media (prefers-reduced-motion: reduce) {
+            .feature-card {
+                transition: box-shadow 0.2s ease, border-color 0.2s ease;
+            }
+
+            .btn {
+                transition: background-color 0.2s ease;
+            }
+        }
+
         .feature-card h3 {
             margin: 0 0 0.75rem;
         }
