@@ -41,18 +41,11 @@ export function usageLimitMiddleware(handler: BaseHandler) {
 
     ctx.user = user
 
-    const limit = DAILY_LIMITS[user.plan_type || PlanTypeEnum.Free]
+    const isPro = ctx.user.plan_type === PlanTypeEnum.Pro
+    const limit = isPro ? DAILY_LIMITS[PlanTypeEnum.Pro] : DAILY_LIMITS[PlanTypeEnum.Free]
 
-    const today = new Date().toISOString().split('T')[0]
-    const isWithinLimit = !user.is_blocked && (user.last_usage_date !== today || (user.daily_usage_count || 0) < limit)
-
-    if (!isWithinLimit) {
-      if (user.plan_type === PlanTypeEnum.Pro) {
-        await ctx.reply(ctx.t('pro_limit_reached'))
-      }
-      else {
-        await ctx.reply(ctx.t('free_limit_reached'))
-      }
+    if (user.daily_usage_count >= limit && user.last_usage_date === new Date().toISOString().split('T')[0]) {
+      await ctx.reply(ctx.t(isPro ? 'pro_limit_reached' : 'free_limit_reached'))
       return
     }
 

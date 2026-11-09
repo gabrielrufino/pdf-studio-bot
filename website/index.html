@@ -130,7 +130,24 @@
             background-color: var(--slate-50);
             color: var(--slate-900);
             margin: 0;
-            line-height: 1.5;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+        }
+
+        ::selection {
+            background: var(--blue-600);
+            color: white;
+        }
+
+        a {
+            text-underline-offset: 3px;
+        }
+
+        :focus-visible {
+            outline: 3px solid var(--blue-600);
+            outline-offset: 3px;
+            border-radius: 0.375rem;
         }
 
         .max-w-7xl {
@@ -235,8 +252,10 @@
             text-decoration: none;
             padding: 0.75rem 1.5rem;
             font-weight: 600;
+            white-space: nowrap;
             cursor: pointer;
             border: none;
+            transition: background-color 0.2s ease, transform 0.2s ease;
         }
 
         .btn-primary {
@@ -249,9 +268,27 @@
             background: var(--blue-700);
         }
 
+        .btn-primary:active {
+            transform: translateY(1px);
+        }
+
+        .btn-lg {
+            padding: 1rem 2rem;
+            font-size: 1.125rem;
+        }
+
+        header {
+            padding-top: 5rem;
+            padding-bottom: 5rem;
+        }
+
         header h1 {
-            font-size: 3rem;
-            margin-bottom: 1.5rem;
+            font-size: clamp(2.25rem, 5vw, 3.5rem);
+            font-weight: 800;
+            line-height: 1.2;
+            letter-spacing: -0.03em;
+            text-wrap: balance;
+            margin: 0 0 1.5rem;
         }
 
         header p {
@@ -259,10 +296,45 @@
             color: var(--slate-600);
             max-width: 40rem;
             margin: 0 auto 2.5rem;
+            text-wrap: pretty;
+        }
+
+        header .hero-meta {
+            max-width: none;
+            margin: 1.25rem auto 0;
+            font-size: 0.9375rem;
+            color: var(--slate-500);
+        }
+
+        .section-title {
+            font-size: clamp(1.875rem, 4vw, 2.5rem);
+            font-weight: 800;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+            text-wrap: balance;
+            margin: 0 0 1rem;
+        }
+
+        .section-intro {
+            font-size: 1.125rem;
+            color: var(--slate-600);
+            margin: 0;
         }
 
         .features-grid {
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: 1fr;
+        }
+
+        @media (min-width: 640px) {
+            .features-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .features-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
         }
 
         .feature-card {
@@ -270,17 +342,40 @@
             padding: 2rem;
             border-radius: 1rem;
             border: 1px solid var(--slate-200);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
         }
 
         .feature-card:hover {
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+            border-color: var(--blue-100);
+            box-shadow: 0 12px 24px -8px rgba(37, 99, 235, 0.15);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .feature-card {
+                transition: box-shadow 0.2s ease, border-color 0.2s ease;
+            }
+
+            .btn {
+                transition: background-color 0.2s ease;
+            }
+        }
+
+        .feature-card h3 {
+            margin: 0 0 0.75rem;
+        }
+
+        .feature-card p {
+            margin: 0;
+            color: var(--slate-600);
+            font-size: 1rem;
         }
 
         .icon-box {
-            width: 3rem;
-            height: 3rem;
+            width: 3.5rem;
+            height: 3.5rem;
             background: var(--blue-100);
-            color: var(--blue-600);
+            color: var(--blue-700);
             border-radius: 0.75rem;
             display: flex;
             align-items: center;
@@ -293,39 +388,114 @@
             color: white;
         }
 
+        .how-it-works p {
+            color: #eff6ff;
+        }
+
+        .how-it-works h3 {
+            margin: 0 0 0.5rem;
+        }
+
+        .steps-grid {
+            grid-template-columns: 1fr;
+            gap: 3rem;
+            text-align: center;
+        }
+
+        @media (min-width: 640px) {
+            .steps-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .faq-list {
+            max-width: 48rem;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
         .step-circle {
             width: 4rem;
             height: 4rem;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.35);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.5rem;
+            font-weight: 700;
             margin: 0 auto 1.5rem;
+        }
+
+        .faq-item {
+            border-bottom: 1px solid var(--slate-200);
+            padding-bottom: 1.5rem;
+        }
+
+        .faq-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .faq-item h3 {
+            margin: 0 0 0.5rem;
+            color: var(--slate-900);
+        }
+
+        .faq-item p {
+            margin: 0;
+            color: var(--slate-600);
         }
 
         footer {
             border-top: 1px solid var(--slate-200);
         }
 
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
         .footer-links a {
-            margin-left: 1.5rem;
             color: var(--slate-600);
             text-decoration: none;
         }
 
         .footer-links a:hover {
             color: var(--blue-600);
+            text-decoration: underline;
         }
 
-        @media (max-width: 768px) {
-            header h1 {
-                font-size: 2.25rem;
+        @media (max-width: 640px) {
+            header {
+                padding-top: 3.5rem;
+                padding-bottom: 3.5rem;
             }
 
-            .hidden-mobile {
-                display: none;
+            .py-20 {
+                padding-top: 3.5rem;
+                padding-bottom: 3.5rem;
+            }
+
+            .section-intro {
+                font-size: 1rem;
+            }
+
+            nav .btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.875rem;
+            }
+
+            nav .brand {
+                font-size: 1.125rem;
+            }
+
+            .btn-primary.btn-lg {
+                width: 100%;
+                box-sizing: border-box;
             }
         }
     </style>
@@ -335,32 +505,32 @@
     <nav>
         <div class="max-w-7xl px-4 flex justify-between items-center" style="width: 100%;">
             <div class="flex items-center">
-                <span class="text-blue-600 font-bold text-xl">PDF Studio Bot</span>
+                <span class="brand text-blue-600 font-bold text-xl">PDF Studio Bot</span>
             </div>
-            <div class="hidden-mobile">
+            <div>
                 <a href="https://t.me/PDFStudio_bot" target="_blank" rel="noopener noreferrer"
                     class="btn btn-primary">Open in Telegram</a>
             </div>
         </div>
     </nav>
 
-    <header class="py-16 bg-white">
+    <header class="bg-white">
         <div class="max-w-7xl px-4 text-center">
             <h1>The easiest way to <span class="text-blue-600">manage your PDFs with our Telegram Bot</span></h1>
             <p>Compress, download, protect, split, merge, and summarize PDF files directly from your Telegram. Fast, secure, and
                 multi-language.</p>
-            <div class="flex justify-center" style="gap: 1rem;">
-                <a href="https://t.me/PDFStudio_bot" target="_blank" rel="noopener noreferrer" class="btn btn-primary"
-                    style="padding: 1rem 2rem; font-size: 1.125rem;">Get Started Now</a>
+            <div class="flex justify-center">
+                <a href="https://t.me/PDFStudio_bot" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg">Get Started Now</a>
             </div>
+            <p class="hero-meta">Free to use · English · Español · Português</p>
         </div>
     </header>
 
     <section id="features" class="py-20">
         <div class="max-w-7xl px-4">
             <div class="text-center" style="margin-bottom: 4rem;">
-                <h2 style="font-size: 2rem;">Powerful PDF Tools on Telegram</h2>
-                <p style="color: var(--slate-600);">Everything you need to handle PDFs in one place.</p>
+                <h2 class="section-title">Powerful PDF Tools on Telegram</h2>
+                <p class="section-intro">Everything you need to handle PDFs in one place.</p>
             </div>
             <div class="grid features-grid gap-8">
                 <div class="feature-card">
@@ -375,9 +545,8 @@
                             </path>
                         </svg>
                     </div>
-                    <h3 class="font-bold text-xl" style="margin-bottom: 0.75rem;">Download from URL</h3>
-                    <p style="color: var(--slate-600); font-size: 0.875rem;">Send a link and receive the PDF of the page
-                        instantly.</p>
+                    <h3 class="font-bold text-xl">Download from URL</h3>
+                    <p>Send a link and receive the PDF of the page instantly.</p>
                 </div>
                 <div class="feature-card">
                     <div class="icon-box">
@@ -390,8 +559,8 @@
                             </path>
                         </svg>
                     </div>
-                    <h3 class="font-bold text-xl" style="margin-bottom: 0.75rem;">Compress PDF</h3>
-                    <p style="color: var(--slate-600); font-size: 0.875rem;">Reduce the file size of your PDFs while maintaining quality.</p>
+                    <h3 class="font-bold text-xl">Compress PDF</h3>
+                    <p>Reduce the file size of your PDFs while maintaining quality.</p>
                 </div>
                 <div class="feature-card">
                     <div class="icon-box">
@@ -404,8 +573,8 @@
                             </path>
                         </svg>
                     </div>
-                    <h3 class="font-bold text-xl" style="margin-bottom: 0.75rem;">Rotate PDF</h3>
-                    <p style="color: var(--slate-600); font-size: 0.875rem;">Rotate your PDF files by 90, 180, or -90 degrees.</p>
+                    <h3 class="font-bold text-xl">Rotate PDF</h3>
+                    <p>Rotate your PDF files by 90, 180, or -90 degrees.</p>
                 </div>
                 <div class="feature-card">
                     <div class="icon-box">
@@ -419,8 +588,8 @@
                             </path>
                         </svg>
                     </div>
-                    <h3 class="font-bold text-xl" style="margin-bottom: 0.75rem;">Add Password</h3>
-                    <p style="color: var(--slate-600); font-size: 0.875rem;">Protect your documents with a password in
+                    <h3 class="font-bold text-xl">Add Password</h3>
+                    <p>Protect your documents with a password in
                         just a few taps.</p>
                 </div>
                 <div class="feature-card">
@@ -434,8 +603,8 @@
                             </path>
                         </svg>
                     </div>
-                    <h3 class="font-bold text-xl" style="margin-bottom: 0.75rem;">Split PDF</h3>
-                    <p style="color: var(--slate-600); font-size: 0.875rem;">Separate PDF pages into individual files
+                    <h3 class="font-bold text-xl">Split PDF</h3>
+                    <p>Separate PDF pages into individual files
                         easily.</p>
                 </div>
                 <div class="feature-card">
@@ -449,8 +618,8 @@
                             </path>
                         </svg>
                     </div>
-                    <h3 class="font-bold text-xl" style="margin-bottom: 0.75rem;">Extract Pages</h3>
-                    <p style="color: var(--slate-600); font-size: 0.875rem;">Specify a start and end page to extract precisely what you need.</p>
+                    <h3 class="font-bold text-xl">Extract Pages</h3>
+                    <p>Specify a start and end page to extract precisely what you need.</p>
                 </div>
                 <div class="feature-card">
                     <div class="icon-box">
@@ -463,8 +632,8 @@
                             </path>
                         </svg>
                     </div>
-                    <h3 class="font-bold text-xl" style="margin-bottom: 0.75rem;">Merge PDFs</h3>
-                    <p style="color: var(--slate-600); font-size: 0.875rem;">Combine multiple PDF files into a single
+                    <h3 class="font-bold text-xl">Merge PDFs</h3>
+                    <p>Combine multiple PDF files into a single
                         document.</p>
                 </div>
                 <div class="feature-card">
@@ -479,8 +648,8 @@
                             </path>
                         </svg>
                     </div>
-                    <h3 class="font-bold text-xl" style="margin-bottom: 0.75rem;">Remove Password</h3>
-                    <p style="color: var(--slate-600); font-size: 0.875rem;">Unlock password-protected PDFs easily if
+                    <h3 class="font-bold text-xl">Remove Password</h3>
+                    <p>Unlock password-protected PDFs easily if
                         you have the password.</p>
                 </div>
                 <div class="feature-card">
@@ -495,8 +664,8 @@
                             </path>
                         </svg>
                     </div>
-                    <h3 class="font-bold text-xl" style="margin-bottom: 0.75rem;">PDF to Images</h3>
-                    <p style="color: var(--slate-600); font-size: 0.875rem;">Convert PDF pages into high-quality images
+                    <h3 class="font-bold text-xl">PDF to Images</h3>
+                    <p>Convert PDF pages into high-quality images
                         in seconds.</p>
                 </div>
                 <div class="feature-card">
@@ -511,8 +680,8 @@
                             </path>
                         </svg>
                     </div>
-                    <h3 class="font-bold text-xl" style="margin-bottom: 0.75rem;">Multi-language</h3>
-                    <p style="color: var(--slate-600); font-size: 0.875rem;">Available in English, Spanish, and
+                    <h3 class="font-bold text-xl">Multi-language</h3>
+                    <p>Available in English, Spanish, and
                         Portuguese for your convenience.</p>
                 </div>
                 <div class="feature-card">
@@ -529,8 +698,8 @@
                             </path>
                         </svg>
                     </div>
-                    <h3 class="font-bold text-xl" style="margin-bottom: 0.75rem;">PRO Subscription</h3>
-                    <p style="color: var(--slate-600); font-size: 0.875rem;">Upgrade via Telegram Stars for higher
+                    <h3 class="font-bold text-xl">PRO Subscription</h3>
+                    <p>Upgrade via Telegram Stars for higher
                         daily usage limits (up to 50 ops/day).</p>
                 </div>
                 <div class="feature-card">
@@ -544,8 +713,8 @@
                             </path>
                         </svg>
                     </div>
-                    <h3 class="font-bold text-xl" style="margin-bottom: 0.75rem;">Feedback & Support</h3>
-                    <p style="color: var(--slate-600); font-size: 0.875rem;">Send suggestions and feedback directly
+                    <h3 class="font-bold text-xl">Feedback & Support</h3>
+                    <p>Send suggestions and feedback directly
                         to the developer within Telegram.</p>
                 </div>
             </div>
@@ -555,25 +724,24 @@
     <section class="py-20 how-it-works">
         <div class="max-w-7xl px-4">
             <div class="text-center" style="margin-bottom: 4rem;">
-                <h2 style="font-size: 2rem;">How it Works?</h2>
-                <p style="color: rgba(255,255,255,0.8);">Simple, fast, and efficient.</p>
+                <h2 class="section-title">How It Works</h2>
+                <p class="section-intro">Simple, fast, and efficient.</p>
             </div>
-            <div class="grid"
-                style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 3rem; text-align: center;">
+            <div class="grid steps-grid">
                 <div>
                     <div class="step-circle">1</div>
-                    <h3 class="font-bold text-xl" style="margin-bottom: 0.5rem;">Open the Bot</h3>
-                    <p style="color: rgba(255,255,255,0.8);">Click "Get Started" or send /start on Telegram.</p>
+                    <h3 class="font-bold text-xl">Open the Bot</h3>
+                    <p>Click "Get Started" or send /start on Telegram.</p>
                 </div>
                 <div>
                     <div class="step-circle">2</div>
-                    <h3 class="font-bold text-xl" style="margin-bottom: 0.5rem;">Choose an Action</h3>
-                    <p style="color: rgba(255,255,255,0.8);">Select an action and send your file or link.</p>
+                    <h3 class="font-bold text-xl">Choose an Action</h3>
+                    <p>Select an action and send your file or link.</p>
                 </div>
                 <div>
                     <div class="step-circle">3</div>
-                    <h3 class="font-bold text-xl" style="margin-bottom: 0.5rem;">Receive the Result</h3>
-                    <p style="color: rgba(255,255,255,0.8);">The bot processes and sends the output in seconds.</p>
+                    <h3 class="font-bold text-xl">Receive the Result</h3>
+                    <p>The bot processes and sends the output in seconds.</p>
                 </div>
             </div>
         </div>
@@ -582,25 +750,25 @@
     <section id="faq" class="py-20 bg-white" style="border-top: 1px solid var(--slate-200);">
         <div class="max-w-7xl px-4">
             <div class="text-center" style="margin-bottom: 4rem;">
-                <h2 style="font-size: 2rem;">Frequently Asked Questions</h2>
-                <p style="color: var(--slate-600);">Got questions? We've got answers.</p>
+                <h2 class="section-title">Frequently Asked Questions</h2>
+                <p class="section-intro">Got questions? We've got answers.</p>
             </div>
-            <div style="max-width: 48rem; margin: 0 auto; display: flex; flex-direction: column; gap: 2rem;">
-                <div style="border-bottom: 1px solid var(--slate-200); padding-bottom: 1.5rem;">
-                    <h3 class="font-bold text-xl" style="margin-bottom: 0.5rem; color: var(--slate-900);">What is PDF Studio Bot?</h3>
-                    <p style="color: var(--slate-600);">PDF Studio Bot is an all-in-one Telegram bot designed to manage, edit, protect, split, and merge PDF files directly from your chat. No software installation is required.</p>
+            <div class="faq-list">
+                <div class="faq-item">
+                    <h3 class="font-bold text-xl">What is PDF Studio Bot?</h3>
+                    <p>PDF Studio Bot is an all-in-one Telegram bot designed to manage, edit, protect, split, and merge PDF files directly from your chat. No software installation is required.</p>
                 </div>
-                <div style="border-bottom: 1px solid var(--slate-200); padding-bottom: 1.5rem;">
-                    <h3 class="font-bold text-xl" style="margin-bottom: 0.5rem; color: var(--slate-900);">Is PDF Studio Bot free to use?</h3>
-                    <p style="color: var(--slate-600);">Yes, the bot is free to use with generous daily limits. If you need higher daily limits (up to 50 operations per day), you can easily upgrade to a PRO subscription using Telegram Stars.</p>
+                <div class="faq-item">
+                    <h3 class="font-bold text-xl">Is PDF Studio Bot free to use?</h3>
+                    <p>Yes, the bot is free to use with generous daily limits. If you need higher daily limits (up to 50 operations per day), you can easily upgrade to a PRO subscription using Telegram Stars.</p>
                 </div>
-                <div style="border-bottom: 1px solid var(--slate-200); padding-bottom: 1.5rem;">
-                    <h3 class="font-bold text-xl" style="margin-bottom: 0.5rem; color: var(--slate-900);">Is it safe to send my files to the bot?</h3>
-                    <p style="color: var(--slate-600);">Absolutely. Security is our top priority. All files are processed securely and automatically deleted from our servers after the requested operation is completed.</p>
+                <div class="faq-item">
+                    <h3 class="font-bold text-xl">Is it safe to send my files to the bot?</h3>
+                    <p>Absolutely. Security is our top priority. All files are processed securely and automatically deleted from our servers after the requested operation is completed.</p>
                 </div>
-                <div style="border-bottom: 1px solid var(--slate-200); padding-bottom: 1.5rem;">
-                    <h3 class="font-bold text-xl" style="margin-bottom: 0.5rem; color: var(--slate-900);">Does the bot support multiple languages?</h3>
-                    <p style="color: var(--slate-600);">Yes! The bot supports English, Spanish, and Portuguese, and will adjust to your language automatically, or you can change it manually using settings.</p>
+                <div class="faq-item">
+                    <h3 class="font-bold text-xl">Does the bot support multiple languages?</h3>
+                    <p>Yes! The bot supports English, Spanish, and Portuguese, and will adjust to your language automatically, or you can change it manually using settings.</p>
                 </div>
             </div>
         </div>

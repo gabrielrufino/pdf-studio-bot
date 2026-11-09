@@ -176,4 +176,12 @@ export class UserRepository extends BaseRepository<UserEntity> {
       ? new UserEntity(result as any)
       : null
   }
+
+  /**
+   * Returns whether the user has reached their daily usage limit.
+   */
+  public isAtLimit(user: UserEntity, limit: number): boolean {
+    const today = new Date().toISOString().split('T')[0]
+    return user.daily_usage_count >= limit && user.last_usage_date === today
+  }
 }
